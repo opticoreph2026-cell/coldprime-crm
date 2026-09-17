@@ -1,21 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum ProjectStatus {
-  QUOTATION
-  APPROVED
-  INSTALLATION
-  TESTING
-  COMMISSIONING
-  COMPLETED
-  ON_HOLD
-  CANCELLED
 }
 
 model AdminUser {
