@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/lib/prisma/client/client";
 import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\juliu\\AppData\\Local\\Temp\\opencode";
@@ -36,8 +37,8 @@ export async function POST(request: Request) {
           const existing = await prisma.company.findFirst({
             where: {
               OR: [
-                { name: { equals: row.company, mode: "insensitive" } },
-                ...(row.email ? [{ email: { equals: row.email, mode: "insensitive" } }] : []),
+                { name: { equals: row.company, mode: Prisma.QueryMode.insensitive } },
+                ...(row.email ? [{ email: { equals: row.email, mode: Prisma.QueryMode.insensitive } }] : []),
               ],
             },
           });
