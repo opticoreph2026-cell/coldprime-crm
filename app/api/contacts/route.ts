@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "../prisma/client/client";
 
 export async function GET(request: Request) {
   try {
@@ -10,13 +11,13 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ContactWhereInput = {};
 
     if (search) {
       where.OR = [
-        { firstName: { contains: search, mode: "insensitive" } },
-        { lastName: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
+        { firstName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
         { mobile: { contains: search } },
       ];
     }

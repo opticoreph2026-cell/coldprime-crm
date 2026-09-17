@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "../prisma/client/client";
 
 export async function GET(request: Request) {
   try {
@@ -11,12 +12,12 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ProjectWhereInput = {};
     if (search) {
       where.OR = [
-        { projectName: { contains: search, mode: "insensitive" } },
-        { company: { name: { contains: search, mode: "insensitive" } } },
-        { projectLocation: { contains: search, mode: "insensitive" } },
+        { projectName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { company: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+        { projectLocation: { contains: search, mode: Prisma.QueryMode.insensitive } },
       ];
     }
     if (status) where.status = status;

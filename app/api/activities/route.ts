@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "../prisma/client/client";
 
 export async function GET(request: Request) {
   try {
@@ -15,14 +16,14 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ActivityWhereInput = {};
 
     if (search) {
       where.OR = [
-        { contactPerson: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { notes: { contains: search, mode: "insensitive" } },
-        { company: { name: { contains: search, mode: "insensitive" } } },
+        { contactPerson: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { description: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { notes: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { company: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } },
       ];
     }
     if (type) where.type = type;
@@ -35,8 +36,8 @@ export async function GET(request: Request) {
 
     if (from || to) {
       where.date = {};
-      if (from) (where.date as Record<string, unknown>).gte = new Date(from);
-      if (to) (where.date as Record<string, unknown>).lte = new Date(to);
+      if (from) (where.date as Prisma.DateTimeFilter).gte = new Date(from);
+      if (to) (where.date as Prisma.DateTimeFilter).lte = new Date(to);
     }
 
     const [activities, total] = await Promise.all([
