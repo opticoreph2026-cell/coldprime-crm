@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  QUOTATION
+  APPROVED
+  INSTALLATION
+  TESTING
+  COMMISSIONING
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model Company {
+  id        String        @id @default(cuid())
+  name      String
+  industry  String        @default("Other")
+  address   String?
+  website   String?
+  email     String?
+  phone     String?
+  status    String        @default("Active")
+  notes     String?
+  source    String?
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  contacts  Contact[]
+  projects  Project[]
+  activities Activity[]
+  leads     Lead[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([status])
+  @@map("companies")
+}
+
+model Contact {
+  id                String   @id @default(cuid())
+  companyId         String
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  firstName         String
+  lastName          String?
+  position          String?
+  email             String?
+  mobile            String?
+  landline          String?
+  contactPreference String?
+  status            String   @default("Active")
+  notes             String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  projects          Project[]
+  activities        Activity[]
+  leads             Lead[]
+
+  @@index([companyId])
+  @@index([email])
+  @@index([mobile])
+  @@map("contacts")
+}
+
+model Lead {
+  id              String   @id @default(cuid())
+  companyId       String?
+  company         Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  contactId       String?
+  contact         Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  source          String?
+  industry        String?
+  status          String   @default("New")
+  priority        String   @default("Medium")
+  estimatedValue  Decimal? @db.Decimal(12, 2)
+  lastContactDate DateTime?
+  nextFollowUp    DateTime?
+  assignedTo      String?
+  notes           String?
+  dateAdded       DateTime @default(now()) @map("date_added")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([companyId])
+  @@index([nextFollowUp])
+  @@map("leads")
+}
+
+model Project {
+  id                  String   @id @default(cuid())
+  companyId           String
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  projectName         String
+  projectLocation     String?
+  projectType         String?
+  status              String   @default("Quotation")
+  contactId           String?
+  contact             Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  assignedTo          String?
+  source              String?
+  quotationDate       DateTime?
+  startDate           DateTime?
+  targetCompletion    DateTime?
+  actualCompletion    DateTime?
+  installationStatus  String?
+  testingStatus       String?
+  commissioningStatus String?
+  remarks             String?
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  activities          Activity[]
+
+  @@index([companyId])
+  @@index([status])
+  @@map("projects")
+}
+
+model Activity {
+  id            String   @id @default(cuid())
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  projectId     String?
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contactId     String?
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  type          String
+  date          DateTime @default(now())
+  time          String?
+  performedBy   String?
+  contactPerson String?
+  description   String?
+  result        String?
+  nextAction    String?
+  nextFollowUp  DateTime?
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([companyId])
+  @@index([projectId])
+  @@index([contactId])
+  @@index([date])
+  @@index([nextFollowUp])
+  @@map("activities")
+}
+
+model StatusDefinition {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([name, type])
+  @@map("status_definitions")
+}
+
+model ImportBatch {
+  id           String   @id @default(cuid())
+  filename     String
+  sheetName    String?
+  totalRows    Int      @default(0)
+  importedRows Int      @default(0)
+  skippedRows  Int      @default(0)
+  errorRows    Int      @default(0)
+  status       String   @default("pending")
+  errors       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("import_batches")
+}

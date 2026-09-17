@@ -1,0 +1,99 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\juliu\\AppData\\Local\\Temp\\opencode";
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { filePath, action } = body;
+
+    if (!filePath) {
+      return NextResponse.json({ error: "File path is required" }, { status: 400 });
+    }
+
+    if (action === "preview") {
+      const preview = parseExcelFile(filePath);
+      return NextResponse.json(preview);
+    }
+
+    if (action === "import") {
+      const preview = parseExcelFile(filePath);
+      const merged = mergeImportData(preview);
+
+      let imported = 0;
+      let skipped = 0;
+      const errors: { company: string; reason: string }[] = [];
+
+      for (const row of merged) {
+        try {
+          if (!row.company) {
+            skipped++;
+            continue;
+          }
+
+          const existing = await prisma.company.findFirst({
+            where: {
+              OR: [
+                { name: { equals: row.company, mode: "insensitive" } },
+                ...(row.email ? [{ email: { equals: row.email, mode: "insensitive" } }] : []),
+              ],
+            },
+          });
+
+          if (existing) {
+            skipped++;
+            continue;
+          }
+
+          await prisma.company.create({
+            data: {
+              name: row.company,
+              industry: row.industry || "Other",
+              email: row.email || null,
+              phone: row.phone || null,
+              address: row.address || null,
+              website: row.website || null,
+              status: "Active",
+              notes: row.remarks || null,
+              source: `Import: ${row.sheetName}`,
+            },
+          });
+
+          imported++;
+        } catch (err) {
+          errors.push({
+            company: row.company || "Unknown",
+            reason: err instanceof Error ? err.message : "Unknown error",
+          });
+        }
+      }
+
+      const batch = await prisma.importBatch.create({
+        data: {
+          filename: filePath.split(/[/\\]/).pop() || filePath,
+          totalRows: merged.length,
+          importedRows: imported,
+          skippedRows: skipped,
+          errorRows: errors.length,
+          status: "completed",
+          errors: errors.length > 0 ? JSON.stringify(errors) : null,
+        },
+      });
+
+      return NextResponse.json({
+        batchId: batch.id,
+        imported,
+        skipped,
+        errors,
+        total: merged.length,
+      });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error) {
+    console.error("Error importing:", error);
+    return NextResponse.json({ error: "Import failed" }, { status: 500 });
+  }
+}

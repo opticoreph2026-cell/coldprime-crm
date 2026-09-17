@@ -1,0 +1,157 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+
+interface Project {
+  id: string;
+  projectName: string;
+  projectLocation: string | null;
+  projectType: string | null;
+  status: string;
+  startDate: string | null;
+  targetCompletion: string | null;
+  installationStatus: string | null;
+  testingStatus: string | null;
+  commissioningStatus: string | null;
+  remarks: string | null;
+  company: { id: string; name: string };
+}
+
+interface CompanyOption { id: string; name: string }
+
+const STATUSES = ["Quotation", "Approved", "Installation", "Testing", "Commissioning", "Completed", "On Hold", "Cancelled"];
+const SUB_STATUSES = ["Not Started", "In Progress", "Completed", "Passed", "Failed", "Deficiencies"];
+
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ companyId: "", projectName: "", projectLocation: "", projectType: "", status: "Quotation", startDate: "", targetCompletion: "", installationStatus: "", testingStatus: "", commissioningStatus: "", remarks: "" });
+
+  const fetchProjects = useCallback(async () => {
+    const params = new URLSearchParams({ page: String(page), limit: "50" });
+    if (search) params.set("search", search);
+    if (statusFilter) params.set("status", statusFilter);
+    const res = await fetch(`/api/projects?${params}`);
+    const data = await res.json();
+    setProjects(data.data || []);
+    setTotal(data.pagination?.total || 0);
+  }, [page, search, statusFilter]);
+
+  useEffect(() => {
+    fetchProjects();
+    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name }))));
+  }, [fetchProjects]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    setShowForm(false);
+    fetchProjects();
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
+    await fetch(`/api/projects/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    fetchProjects();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this project?")) return;
+    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    fetchProjects();
+  };
+
+  const getBadge = (status: string) => {
+    if (["Completed"].includes(status)) return "badge-green";
+    if (["Cancelled"].includes(status)) return "badge-red";
+    if (["Quotation"].includes(status)) return "badge-blue";
+    if (["On Hold"].includes(status)) return "badge-gray";
+    return "badge-yellow";
+  };
+
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Projects</h1>
+          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} projects total</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? "Cancel" : "+ New Project"}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>New Project</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company *</label><select required style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Project Name *</label><input required style={{ width: "100%" }} value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Location</label><input style={{ width: "100%" }} value={form.projectLocation} onChange={(e) => setForm({ ...form, projectLocation: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Type</label><input style={{ width: "100%" }} value={form.projectType} onChange={(e) => setForm({ ...form, projectType: e.target.value })} placeholder="HVAC Installation, Testing..." /></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label><select style={{ width: "100%" }} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Start Date</label><input type="date" style={{ width: "100%" }} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Target Completion</label><input type="date" style={{ width: "100%" }} value={form.targetCompletion} onChange={(e) => setForm({ ...form, targetCompletion: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Installation Status</label><select style={{ width: "100%" }} value={form.installationStatus} onChange={(e) => setForm({ ...form, installationStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Testing Status</label><select style={{ width: "100%" }} value={form.testingStatus} onChange={(e) => setForm({ ...form, testingStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Commissioning Status</label><select style={{ width: "100%" }} value={form.commissioningStatus} onChange={(e) => setForm({ ...form, commissioningStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Remarks</label><textarea rows={2} style={{ width: "100%" }} value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></div>
+          </div>
+          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+            <button type="submit" className="btn btn-primary">Create Project</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+        <input placeholder="Search projects..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
+          <option value="">All Statuses</option>
+          {STATUSES.map((s) => <option key={s}>{s}</option>)}
+        </select>
+      </div>
+
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+        <table>
+          <thead>
+            <tr><th>Company</th><th>Project</th><th>Location</th><th>Status</th><th>Installation</th><th>Testing</th><th>Commissioning</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {projects.map((p) => (
+              <tr key={p.id}>
+                <td style={{ fontWeight: 500 }}>{p.company.name}</td>
+                <td>{p.projectName}</td>
+                <td>{p.projectLocation || "-"}</td>
+                <td>
+                  <select value={p.status} onChange={(e) => handleStatusChange(p.id, e.target.value)} style={{ padding: "2px 6px", fontSize: "0.75rem" }}>
+                    {STATUSES.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </td>
+                <td>{p.installationStatus || "-"}</td>
+                <td>{p.testingStatus || "-"}</td>
+                <td>{p.commissioningStatus || "-"}</td>
+                <td>
+                  <button className="btn btn-ghost" onClick={() => handleDelete(p.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                </td>
+              </tr>
+            ))}
+            {projects.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No projects found</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      {total > 50 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+          <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+          <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {Math.ceil(total / 50)}</span>
+          <button className="btn btn-secondary" disabled={page >= Math.ceil(total / 50)} onClick={() => setPage(page + 1)}>Next</button>
+        </div>
+      )}
+    </div>
+  );
+}
