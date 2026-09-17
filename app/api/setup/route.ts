@@ -3,8 +3,17 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST() {
   try {
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS import_batches CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS status_definitions CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS activities CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS projects CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS leads CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS contacts CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS companies CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS admin_users CASCADE`);
+
     await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS admin_users (
+      CREATE TABLE admin_users (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         email TEXT UNIQUE NOT NULL,
         name TEXT,
@@ -14,7 +23,7 @@ export async function POST() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
 
-      CREATE TABLE IF NOT EXISTS companies (
+      CREATE TABLE companies (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         name TEXT NOT NULL,
         industry TEXT NOT NULL DEFAULT 'Other',
@@ -28,115 +37,115 @@ export async function POST() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name);
-      CREATE INDEX IF NOT EXISTS idx_companies_phone ON companies(phone);
-      CREATE INDEX IF NOT EXISTS idx_companies_status ON companies(status);
+      CREATE INDEX idx_companies_name ON companies(name);
+      CREATE INDEX idx_companies_phone ON companies(phone);
+      CREATE INDEX idx_companies_status ON companies(status);
 
-      CREATE TABLE IF NOT EXISTS contacts (
+      CREATE TABLE contacts (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-        first_name TEXT NOT NULL,
-        last_name TEXT,
+        companyId TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        firstName TEXT NOT NULL,
+        lastName TEXT,
         position TEXT,
         email TEXT,
         mobile TEXT,
         landline TEXT,
-        contact_preference TEXT,
+        contactPreference TEXT,
         status TEXT NOT NULL DEFAULT 'Active',
         notes TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX IF NOT EXISTS idx_contacts_company_id ON contacts(company_id);
-      CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
-      CREATE INDEX IF NOT EXISTS idx_contacts_mobile ON contacts(mobile);
+      CREATE INDEX idx_contacts_company_id ON contacts(companyId);
+      CREATE INDEX idx_contacts_email ON contacts(email);
+      CREATE INDEX idx_contacts_mobile ON contacts(mobile);
 
-      CREATE TABLE IF NOT EXISTS leads (
+      CREATE TABLE leads (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
-        contact_id TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+        companyId TEXT REFERENCES companies(id) ON DELETE SET NULL,
+        contactId TEXT REFERENCES contacts(id) ON DELETE SET NULL,
         source TEXT,
         industry TEXT,
         status TEXT NOT NULL DEFAULT 'New',
         priority TEXT NOT NULL DEFAULT 'Medium',
-        estimated_value DECIMAL(12,2),
-        last_contact_date TIMESTAMP,
-        next_follow_up TIMESTAMP,
-        assigned_to TEXT,
+        estimatedValue DECIMAL(12,2),
+        lastContactDate TIMESTAMP,
+        nextFollowUp TIMESTAMP,
+        assignedTo TEXT,
         notes TEXT,
         date_added TIMESTAMP NOT NULL DEFAULT NOW(),
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
-      CREATE INDEX IF NOT EXISTS idx_leads_company_id ON leads(company_id);
-      CREATE INDEX IF NOT EXISTS idx_leads_next_follow_up ON leads(next_follow_up);
+      CREATE INDEX idx_leads_status ON leads(status);
+      CREATE INDEX idx_leads_company_id ON leads(companyId);
+      CREATE INDEX idx_leads_next_follow_up ON leads(nextFollowUp);
 
-      CREATE TABLE IF NOT EXISTS projects (
+      CREATE TABLE projects (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-        project_name TEXT NOT NULL,
-        project_location TEXT,
-        project_type TEXT,
+        companyId TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        projectName TEXT NOT NULL,
+        projectLocation TEXT,
+        projectType TEXT,
         status TEXT NOT NULL DEFAULT 'Quotation',
-        contact_id TEXT REFERENCES contacts(id) ON DELETE SET NULL,
-        assigned_to TEXT,
+        contactId TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+        assignedTo TEXT,
         source TEXT,
-        quotation_date TIMESTAMP,
-        start_date TIMESTAMP,
-        target_completion TIMESTAMP,
-        actual_completion TIMESTAMP,
-        installation_status TEXT,
-        testing_status TEXT,
-        commissioning_status TEXT,
+        quotationDate TIMESTAMP,
+        startDate TIMESTAMP,
+        targetCompletion TIMESTAMP,
+        actualCompletion TIMESTAMP,
+        installationStatus TEXT,
+        testingStatus TEXT,
+        commissioningStatus TEXT,
         remarks TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX IF NOT EXISTS idx_projects_company_id ON projects(company_id);
-      CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+      CREATE INDEX idx_projects_company_id ON projects(companyId);
+      CREATE INDEX idx_projects_status ON projects(status);
 
-      CREATE TABLE IF NOT EXISTS activities (
+      CREATE TABLE activities (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
-        project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
-        contact_id TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+        companyId TEXT REFERENCES companies(id) ON DELETE SET NULL,
+        projectId TEXT REFERENCES projects(id) ON DELETE SET NULL,
+        contactId TEXT REFERENCES contacts(id) ON DELETE SET NULL,
         type TEXT NOT NULL,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
         time TEXT,
-        performed_by TEXT,
-        contact_person TEXT,
+        performedBy TEXT,
+        contactPerson TEXT,
         description TEXT,
         result TEXT,
-        next_action TEXT,
-        next_follow_up TIMESTAMP,
+        nextAction TEXT,
+        nextFollowUp TIMESTAMP,
         notes TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX IF NOT EXISTS idx_activities_company_id ON activities(company_id);
-      CREATE INDEX IF NOT EXISTS idx_activities_project_id ON activities(project_id);
-      CREATE INDEX IF NOT EXISTS idx_activities_contact_id ON activities(contact_id);
-      CREATE INDEX IF NOT EXISTS idx_activities_date ON activities(date);
-      CREATE INDEX IF NOT EXISTS idx_activities_next_follow_up ON activities(next_follow_up);
+      CREATE INDEX idx_activities_company_id ON activities(companyId);
+      CREATE INDEX idx_activities_project_id ON activities(projectId);
+      CREATE INDEX idx_activities_contact_id ON activities(contactId);
+      CREATE INDEX idx_activities_date ON activities(date);
+      CREATE INDEX idx_activities_next_follow_up ON activities(nextFollowUp);
 
-      CREATE TABLE IF NOT EXISTS status_definitions (
+      CREATE TABLE status_definitions (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
-        is_active BOOLEAN NOT NULL DEFAULT true,
+        isActive BOOLEAN NOT NULL DEFAULT true,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
         UNIQUE(name, type)
       );
 
-      CREATE TABLE IF NOT EXISTS import_batches (
+      CREATE TABLE import_batches (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         filename TEXT NOT NULL,
-        sheet_name TEXT,
-        total_rows INT NOT NULL DEFAULT 0,
-        imported_rows INT NOT NULL DEFAULT 0,
-        skipped_rows INT NOT NULL DEFAULT 0,
-        error_rows INT NOT NULL DEFAULT 0,
+        sheetName TEXT,
+        totalRows INT NOT NULL DEFAULT 0,
+        importedRows INT NOT NULL DEFAULT 0,
+        skippedRows INT NOT NULL DEFAULT 0,
+        errorRows INT NOT NULL DEFAULT 0,
         status TEXT NOT NULL DEFAULT 'pending',
         errors TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
