@@ -43,96 +43,96 @@ export async function POST() {
 
       CREATE TABLE contacts (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        companyId TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-        firstName TEXT NOT NULL,
-        lastName TEXT,
+        "companyId" TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        "firstName" TEXT NOT NULL,
+        "lastName" TEXT,
         position TEXT,
         email TEXT,
         mobile TEXT,
         landline TEXT,
-        contactPreference TEXT,
+        "contactPreference" TEXT,
         status TEXT NOT NULL DEFAULT 'Active',
         notes TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX idx_contacts_company_id ON contacts(companyId);
+      CREATE INDEX idx_contacts_company_id ON contacts("companyId");
       CREATE INDEX idx_contacts_email ON contacts(email);
       CREATE INDEX idx_contacts_mobile ON contacts(mobile);
 
       CREATE TABLE leads (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        companyId TEXT REFERENCES companies(id) ON DELETE SET NULL,
-        contactId TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+        "companyId" TEXT REFERENCES companies(id) ON DELETE SET NULL,
+        "contactId" TEXT REFERENCES contacts(id) ON DELETE SET NULL,
         source TEXT,
         industry TEXT,
         status TEXT NOT NULL DEFAULT 'New',
         priority TEXT NOT NULL DEFAULT 'Medium',
-        estimatedValue DECIMAL(12,2),
-        lastContactDate TIMESTAMP,
-        nextFollowUp TIMESTAMP,
-        assignedTo TEXT,
+        "estimatedValue" DECIMAL(12,2),
+        "lastContactDate" TIMESTAMP,
+        "nextFollowUp" TIMESTAMP,
+        "assignedTo" TEXT,
         notes TEXT,
         date_added TIMESTAMP NOT NULL DEFAULT NOW(),
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
       CREATE INDEX idx_leads_status ON leads(status);
-      CREATE INDEX idx_leads_company_id ON leads(companyId);
-      CREATE INDEX idx_leads_next_follow_up ON leads(nextFollowUp);
+      CREATE INDEX idx_leads_company_id ON leads("companyId");
+      CREATE INDEX idx_leads_next_follow_up ON leads("nextFollowUp");
 
       CREATE TABLE projects (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        companyId TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-        projectName TEXT NOT NULL,
-        projectLocation TEXT,
-        projectType TEXT,
+        "companyId" TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        "projectName" TEXT NOT NULL,
+        "projectLocation" TEXT,
+        "projectType" TEXT,
         status TEXT NOT NULL DEFAULT 'Quotation',
-        contactId TEXT REFERENCES contacts(id) ON DELETE SET NULL,
-        assignedTo TEXT,
+        "contactId" TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+        "assignedTo" TEXT,
         source TEXT,
-        quotationDate TIMESTAMP,
-        startDate TIMESTAMP,
-        targetCompletion TIMESTAMP,
-        actualCompletion TIMESTAMP,
-        installationStatus TEXT,
-        testingStatus TEXT,
-        commissioningStatus TEXT,
+        "quotationDate" TIMESTAMP,
+        "startDate" TIMESTAMP,
+        "targetCompletion" TIMESTAMP,
+        "actualCompletion" TIMESTAMP,
+        "installationStatus" TEXT,
+        "testingStatus" TEXT,
+        "commissioningStatus" TEXT,
         remarks TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX idx_projects_company_id ON projects(companyId);
+      CREATE INDEX idx_projects_company_id ON projects("companyId");
       CREATE INDEX idx_projects_status ON projects(status);
 
       CREATE TABLE activities (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        companyId TEXT REFERENCES companies(id) ON DELETE SET NULL,
-        projectId TEXT REFERENCES projects(id) ON DELETE SET NULL,
-        contactId TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+        "companyId" TEXT REFERENCES companies(id) ON DELETE SET NULL,
+        "projectId" TEXT REFERENCES projects(id) ON DELETE SET NULL,
+        "contactId" TEXT REFERENCES contacts(id) ON DELETE SET NULL,
         type TEXT NOT NULL,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
         time TEXT,
-        performedBy TEXT,
-        contactPerson TEXT,
+        "performedBy" TEXT,
+        "contactPerson" TEXT,
         description TEXT,
         result TEXT,
-        nextAction TEXT,
-        nextFollowUp TIMESTAMP,
+        "nextAction" TEXT,
+        "nextFollowUp" TIMESTAMP,
         notes TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE INDEX idx_activities_company_id ON activities(companyId);
-      CREATE INDEX idx_activities_project_id ON activities(projectId);
-      CREATE INDEX idx_activities_contact_id ON activities(contactId);
+      CREATE INDEX idx_activities_company_id ON activities("companyId");
+      CREATE INDEX idx_activities_project_id ON activities("projectId");
+      CREATE INDEX idx_activities_contact_id ON activities("contactId");
       CREATE INDEX idx_activities_date ON activities(date);
-      CREATE INDEX idx_activities_next_follow_up ON activities(nextFollowUp);
+      CREATE INDEX idx_activities_next_follow_up ON activities("nextFollowUp");
 
       CREATE TABLE status_definitions (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
-        isActive BOOLEAN NOT NULL DEFAULT true,
+        "isActive" BOOLEAN NOT NULL DEFAULT true,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
         UNIQUE(name, type)
@@ -141,11 +141,11 @@ export async function POST() {
       CREATE TABLE import_batches (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         filename TEXT NOT NULL,
-        sheetName TEXT,
-        totalRows INT NOT NULL DEFAULT 0,
-        importedRows INT NOT NULL DEFAULT 0,
-        skippedRows INT NOT NULL DEFAULT 0,
-        errorRows INT NOT NULL DEFAULT 0,
+        "sheetName" TEXT,
+        "totalRows" INT NOT NULL DEFAULT 0,
+        "importedRows" INT NOT NULL DEFAULT 0,
+        "skippedRows" INT NOT NULL DEFAULT 0,
+        "errorRows" INT NOT NULL DEFAULT 0,
         status TEXT NOT NULL DEFAULT 'pending',
         errors TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
