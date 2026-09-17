@@ -1,7 +1,24 @@
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 import { PrismaClient } from "../lib/prisma/client/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+function parseDatabaseUrl(url: string) {
+  const u = new URL(url);
+  return {
+    host: u.hostname,
+    port: parseInt(u.port) || 5432,
+    database: u.pathname.replace(/^\//, ""),
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    ssl: { rejectUnauthorized: false },
+  };
+}
+
+const opts = parseDatabaseUrl(process.env.DATABASE_URL!);
+const pool = new pg.Pool({ ...opts });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("Seeding Coldprime CRM database...");
