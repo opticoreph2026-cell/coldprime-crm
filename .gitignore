@@ -17,6 +17,9 @@ build/
 .DS_Store
 *.pem
 
+# prisma generated client
+lib/prisma/client/
+
 # debug
 npm-debug.log*
 
