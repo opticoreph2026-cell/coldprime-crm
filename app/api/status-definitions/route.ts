@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBranchFilter, requireAuth } from "@/lib/branch";
+import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 
 export async function GET() {
   try {
@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
-    const branchFilter = await getBranchFilter();
+    const branchId = await requireBranchId();
 
     const body = await request.json();
     const { name, type } = body;
@@ -37,9 +37,9 @@ export async function POST(request: Request) {
     }
 
     const status = await prisma.statusDefinition.upsert({
-      where: { branchId_name_type: { ...branchFilter, name, type } },
+      where: { branchId_name_type: { branchId, name, type } },
       update: { isActive: true },
-      create: { ...branchFilter, name, type, isActive: true },
+      create: { branchId, name, type, isActive: true },
     });
 
     return NextResponse.json(status, { status: 201 });
