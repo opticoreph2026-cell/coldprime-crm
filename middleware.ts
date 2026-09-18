@@ -1,30 +1,25 @@
-import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import authConfig from "@/lib/auth.config";
 
-const { auth } = NextAuth(authConfig);
+const publicPaths = ["/login", "/api/auth"];
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  const publicRoutes = ["/login", "/api/auth"];
-  const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
-
-  if (isPublic) {
-    if (req.auth && pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
+  if (publicPaths.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  if (!req.auth) {
-    const loginUrl = new URL("/login", req.url);
+  const sessionToken = request.cookies.get("authjs.session-token")?.value
+    || request.cookies.get("__Secure-authjs.session-token")?.value;
+
+  if (!sessionToken) {
+    const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
