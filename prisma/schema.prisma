@@ -40,7 +40,7 @@ model User {
   name      String
   password  String
   role      UserRole @default(STAFF)
-  branchId  String?
+  branchId  String?  @map("branch_id")
   branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
@@ -54,7 +54,7 @@ model User {
 
 model Company {
   id        String   @id @default(cuid())
-  branchId  String
+  branchId  String   @map("branch_id")
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   name      String
   industry  String   @default("Other")
@@ -85,7 +85,7 @@ model Company {
 
 model Contact {
   id                String   @id @default(cuid())
-  branchId          String
+  branchId          String   @map("branch_id")
   branch            Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId         String
   company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -113,7 +113,7 @@ model Contact {
 
 model Lead {
   id              String   @id @default(cuid())
-  branchId        String
+  branchId        String   @map("branch_id")
   branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId       String?
   company         Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -141,7 +141,7 @@ model Lead {
 
 model Project {
   id                  String   @id @default(cuid())
-  branchId            String
+  branchId            String   @map("branch_id")
   branch              Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId           String
   company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -173,7 +173,7 @@ model Project {
 
 model Activity {
   id            String   @id @default(cuid())
-  branchId      String
+  branchId      String   @map("branch_id")
   branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId     String?
   company       Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -204,7 +204,7 @@ model Activity {
 
 model StatusDefinition {
   id        String   @id @default(cuid())
-  branchId  String
+  branchId  String   @map("branch_id")
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   name      String
   type      String
@@ -219,7 +219,7 @@ model StatusDefinition {
 
 model ImportBatch {
   id           String   @id @default(cuid())
-  branchId     String
+  branchId     String   @map("branch_id")
   branch       Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   filename     String
   sheetName    String?
@@ -237,15 +237,15 @@ model ImportBatch {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String?
+  userId    String?  @map("user_id")
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  branchId  String
+  branchId  String   @map("branch_id")
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   action    String
   entity    String
-  entityId  String?
+  entityId  String?  @map("entity_id")
   details   Json?
-  ipAddress String?
+  ipAddress String?  @map("ip_address")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([branchId])
