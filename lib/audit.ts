@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { Prisma } from "./prisma/client/client";
 
 interface AuditParams {
   userId?: string;
@@ -19,7 +20,7 @@ export async function logAudit(params: AuditParams) {
         action: params.action,
         entity: params.entity,
         entityId: params.entityId || null,
-        details: params.details || null,
+        details: params.details ? JSON.parse(JSON.stringify(params.details)) : Prisma.JsonNull,
         ipAddress: params.ipAddress || null,
       },
     });
