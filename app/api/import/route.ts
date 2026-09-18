@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\juliu\\AppData\\Local\\Temp\\opencode";
 
 export async function POST(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const body = await request.json();
     const { filePath, action } = body;
 
@@ -40,6 +44,7 @@ export async function POST(request: Request) {
                 { name: { equals: row.company, mode: Prisma.QueryMode.insensitive } },
                 ...(row.email ? [{ email: { equals: row.email, mode: Prisma.QueryMode.insensitive } }] : []),
               ],
+              ...branchFilter,
             },
           });
 
@@ -50,6 +55,7 @@ export async function POST(request: Request) {
 
           await prisma.company.create({
             data: {
+              ...branchFilter,
               name: row.company,
               industry: row.industry || "Other",
               email: row.email || null,
@@ -73,6 +79,7 @@ export async function POST(request: Request) {
 
       const batch = await prisma.importBatch.create({
         data: {
+          ...branchFilter,
           filename: filePath.split(/[/\\]/).pop() || filePath,
           totalRows: merged.length,
           importedRows: imported,

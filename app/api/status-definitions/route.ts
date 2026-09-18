@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET() {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const statuses = await prisma.statusDefinition.findMany({
-      where: { isActive: true },
+      where: { ...branchFilter, isActive: true },
       orderBy: { name: "asc" },
     });
     return NextResponse.json(statuses);
@@ -19,6 +23,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const body = await request.json();
     const { name, type } = body;
 
@@ -29,12 +36,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const status = await prisma.statusDefinition.create({
-      data: {
-        name,
-        type,
-        isActive: true,
-      },
+    const status = await prisma.statusDefinition.upsert({
+      where: { branchId_name_type: { ...branchFilter, name, type } },
+      update: { isActive: true },
+      create: { ...branchFilter, name, type, isActive: true },
     });
 
     return NextResponse.json(status, { status: 201 });

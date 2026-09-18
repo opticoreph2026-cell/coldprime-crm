@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { exportCustomerDatabase, exportProjectReport, exportActivityReport, type ExportCompany, type ExportProject, type ExportActivity } from "@/lib/excel/export";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "customers";
 
@@ -12,6 +16,7 @@ export async function GET(request: Request) {
     switch (type) {
       case "customers": {
         const companies = await prisma.company.findMany({
+          where: branchFilter,
           include: {
             contacts: { take: 1, orderBy: { firstName: "asc" } },
             projects: { select: { id: true } },
@@ -41,6 +46,7 @@ export async function GET(request: Request) {
 
       case "projects": {
         const projects = await prisma.project.findMany({
+          where: branchFilter,
           include: { company: { select: { name: true } } },
           orderBy: { createdAt: "desc" },
         });
@@ -66,6 +72,7 @@ export async function GET(request: Request) {
 
       case "activities": {
         const activities = await prisma.activity.findMany({
+          where: branchFilter,
           include: {
             company: { select: { name: true } },
           },

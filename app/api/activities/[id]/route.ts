@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
-    const activity = await prisma.activity.findUnique({
-      where: { id },
+    const activity = await prisma.activity.findFirst({
+      where: { id, ...branchFilter },
       include: { company: true, project: true, contact: true },
     });
     if (!activity) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -23,7 +27,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
+    const existing = await prisma.activity.findFirst({ where: { id, ...branchFilter } });
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     const body = await request.json();
     const activity = await prisma.activity.update({
       where: { id },
@@ -51,7 +61,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
+    const existing = await prisma.activity.findFirst({ where: { id, ...branchFilter } });
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     await prisma.activity.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

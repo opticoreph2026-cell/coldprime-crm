@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET() {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
@@ -21,30 +25,33 @@ export async function GET() {
       newLeadsThisMonth,
       projectsByStatus,
     ] = await Promise.all([
-      prisma.company.count(),
-      prisma.contact.count(),
-      prisma.lead.count(),
-      prisma.project.count(),
-      prisma.lead.count({ where: { status: { notIn: ["Completed", "Cancelled", "Declined"] } } }),
-      prisma.project.count({ where: { status: { notIn: ["Completed", "Cancelled"] } } }),
+      prisma.company.count({ where: branchFilter }),
+      prisma.contact.count({ where: branchFilter }),
+      prisma.lead.count({ where: branchFilter }),
+      prisma.project.count({ where: branchFilter }),
+      prisma.lead.count({ where: { ...branchFilter, status: { notIn: ["Completed", "Cancelled", "Declined"] } } }),
+      prisma.project.count({ where: { ...branchFilter, status: { notIn: ["Completed", "Cancelled"] } } }),
       prisma.activity.count({
         where: {
+          ...branchFilter,
           nextFollowUp: { gte: new Date(), lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
         },
       }),
       prisma.activity.count({
         where: {
+          ...branchFilter,
           nextFollowUp: { lt: new Date() },
         },
       }),
       prisma.activity.count({
-        where: { date: { gte: startOfMonth } },
+        where: { ...branchFilter, date: { gte: startOfMonth } },
       }),
       prisma.lead.count({
-        where: { dateAdded: { gte: startOfMonth } },
+        where: { ...branchFilter, dateAdded: { gte: startOfMonth } },
       }),
       prisma.project.groupBy({
         by: ["status"],
+        where: branchFilter,
         _count: true,
         orderBy: { _count: { status: "desc" } },
       }),

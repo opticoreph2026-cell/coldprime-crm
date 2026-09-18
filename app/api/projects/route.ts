@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -12,7 +16,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Prisma.ProjectWhereInput = {};
+    const where: Prisma.ProjectWhereInput = { ...branchFilter };
     if (search) {
       where.OR = [
         { projectName: { contains: search, mode: Prisma.QueryMode.insensitive } },
@@ -43,12 +47,15 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Error fetching projects:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const body = await request.json();
     const {
       companyId, projectName, projectLocation, projectType, status,
@@ -62,6 +69,7 @@ export async function POST(request: Request) {
 
     const project = await prisma.project.create({
       data: {
+        ...branchFilter,
         companyId,
         projectName: projectName.trim(),
         projectLocation: projectLocation?.trim() || null,
@@ -86,6 +94,6 @@ export async function POST(request: Request) {
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
     console.error("Error creating project:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
   }
 }

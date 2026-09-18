@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
-    const lead = await prisma.lead.findUnique({
-      where: { id },
+    const lead = await prisma.lead.findFirst({
+      where: { id, ...branchFilter },
       include: {
         company: true,
         contact: true,
@@ -26,7 +30,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
+    const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter } });
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     const body = await request.json();
     const lead = await prisma.lead.update({
       where: { id },
@@ -51,7 +61,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
+    const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter } });
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     await prisma.lead.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

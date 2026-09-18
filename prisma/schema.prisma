@@ -7,44 +7,82 @@ datasource db {
   provider = "postgresql"
 }
 
-model AdminUser {
+enum UserRole {
+  HEAD_ADMIN
+  BRANCH_ADMIN
+  STAFF
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  domain    String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users           User[]
+  companies       Company[]
+  contacts        Contact[]
+  leads           Lead[]
+  projects        Project[]
+  activities      Activity[]
+  statusDefinitions StatusDefinition[]
+  importBatches   ImportBatch[]
+  auditLogs       AuditLog[]
+
+  @@map("branches")
+}
+
+model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String?
+  name      String
   password  String
-  role      String   @default("ADMIN")
+  role      UserRole @default(STAFF)
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("admin_users")
+  auditLogs AuditLog[]
+
+  @@index([branchId])
+  @@map("users")
 }
 
 model Company {
-  id        String        @id @default(cuid())
+  id        String   @id @default(cuid())
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   name      String
-  industry  String        @default("Other")
+  industry  String   @default("Other")
   address   String?
   website   String?
   email     String?
   phone     String?
-  status    String        @default("Active")
+  status    String   @default("Active")
   notes     String?
   source    String?
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   contacts  Contact[]
   projects  Project[]
   activities Activity[]
   leads     Lead[]
 
-  @@index([name])
+  @@index([branchId])
+  @@index([branchId, name])
+  @@index([branchId, status])
   @@index([phone])
-  @@index([status])
   @@map("companies")
 }
 
 model Contact {
   id                String   @id @default(cuid())
+  branchId          String
+  branch            Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId         String
   company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   firstName         String
@@ -62,6 +100,7 @@ model Contact {
   activities        Activity[]
   leads             Lead[]
 
+  @@index([branchId])
   @@index([companyId])
   @@index([email])
   @@index([mobile])
@@ -70,6 +109,8 @@ model Contact {
 
 model Lead {
   id              String   @id @default(cuid())
+  branchId        String
+  branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId       String?
   company         Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   contactId       String?
@@ -87,7 +128,8 @@ model Lead {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  @@index([status])
+  @@index([branchId])
+  @@index([branchId, status])
   @@index([companyId])
   @@index([nextFollowUp])
   @@map("leads")
@@ -95,6 +137,8 @@ model Lead {
 
 model Project {
   id                  String   @id @default(cuid())
+  branchId            String
+  branch              Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId           String
   company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   projectName         String
@@ -117,13 +161,16 @@ model Project {
   updatedAt           DateTime @updatedAt @map("updated_at")
   activities          Activity[]
 
+  @@index([branchId])
+  @@index([branchId, status])
   @@index([companyId])
-  @@index([status])
   @@map("projects")
 }
 
 model Activity {
   id            String   @id @default(cuid())
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   companyId     String?
   company       Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   projectId     String?
@@ -142,28 +189,34 @@ model Activity {
   notes         String?
   createdAt     DateTime @default(now()) @map("created_at")
 
+  @@index([branchId])
+  @@index([branchId, date])
   @@index([companyId])
   @@index([projectId])
   @@index([contactId])
-  @@index([date])
   @@index([nextFollowUp])
   @@map("activities")
 }
 
 model StatusDefinition {
   id        String   @id @default(cuid())
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   name      String
   type      String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([name, type])
+  @@unique([branchId, name, type])
+  @@index([branchId])
   @@map("status_definitions")
 }
 
 model ImportBatch {
   id           String   @id @default(cuid())
+  branchId     String
+  branch       Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   filename     String
   sheetName    String?
   totalRows    Int      @default(0)
@@ -174,5 +227,26 @@ model ImportBatch {
   errors       String?
   createdAt    DateTime @default(now()) @map("created_at")
 
+  @@index([branchId])
   @@map("import_batches")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([branchId])
+  @@index([userId])
+  @@index([branchId, createdAt])
+  @@index([entity, entityId])
+  @@map("audit_logs")
 }

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -11,7 +15,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Prisma.LeadWhereInput = {};
+    const where: Prisma.LeadWhereInput = { ...branchFilter };
     if (search) {
       where.OR = [
         { company: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } },
@@ -46,11 +50,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const body = await request.json();
     const { companyId, contactId, source, industry, priority, estimatedValue, assignedTo, notes } = body;
 
     const lead = await prisma.lead.create({
       data: {
+        ...branchFilter,
         companyId: companyId || null,
         contactId: contactId || null,
         source: source?.trim() || null,
@@ -66,6 +74,6 @@ export async function POST(request: Request) {
     return NextResponse.json(lead, { status: 201 });
   } catch (error) {
     console.error("Error creating lead:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
   }
 }

@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
-    const company = await prisma.company.findUnique({
-      where: { id },
+    const company = await prisma.company.findFirst({
+      where: { id, ...branchFilter },
       include: {
         contacts: { orderBy: { firstName: "asc" } },
         projects: { orderBy: { createdAt: "desc" } },
@@ -33,9 +37,15 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
     const body = await request.json();
     const { name, industry, address, website, email, phone, status, notes, source } = body;
+
+    const existing = await prisma.company.findFirst({ where: { id, ...branchFilter } });
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const company = await prisma.company.update({
       where: { id },
@@ -64,7 +74,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { id } = await params;
+    const existing = await prisma.company.findFirst({ where: { id, ...branchFilter } });
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     await prisma.company.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

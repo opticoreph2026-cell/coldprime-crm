@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from");
     const to = searchParams.get("to");
@@ -16,6 +20,7 @@ export async function GET(request: Request) {
     const [activities, leads, projects] = await Promise.all([
       prisma.activity.findMany({
         where: {
+          ...branchFilter,
           date: { gte: weekStart, lte: weekEnd },
         },
         include: { company: { select: { name: true } } },
@@ -23,12 +28,14 @@ export async function GET(request: Request) {
       }),
       prisma.lead.findMany({
         where: {
+          ...branchFilter,
           dateAdded: { gte: weekStart, lte: weekEnd },
         },
         include: { company: { select: { name: true } } },
       }),
       prisma.project.findMany({
         where: {
+          ...branchFilter,
           status: { in: ["Completed", "Commissioning", "Testing"] },
           updatedAt: { gte: weekStart, lte: weekEnd },
         },

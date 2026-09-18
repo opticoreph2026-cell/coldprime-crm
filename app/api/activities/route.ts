@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const type = searchParams.get("type") || "";
@@ -16,7 +20,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Prisma.ActivityWhereInput = {};
+    const where: Prisma.ActivityWhereInput = { ...branchFilter };
 
     if (search) {
       where.OR = [
@@ -66,6 +70,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const body = await request.json();
     const {
       companyId, projectId, contactId, type, date, time,
@@ -79,6 +86,7 @@ export async function POST(request: Request) {
 
     const activity = await prisma.activity.create({
       data: {
+        ...branchFilter,
         companyId: companyId || null,
         projectId: projectId || null,
         contactId: contactId || null,
@@ -98,6 +106,6 @@ export async function POST(request: Request) {
     return NextResponse.json(activity, { status: 201 });
   } catch (error) {
     console.error("Error creating activity:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create activity" }, { status: 500 });
   }
 }

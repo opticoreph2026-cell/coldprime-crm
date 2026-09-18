@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -12,7 +16,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
 
-    const where: Prisma.CompanyWhereInput = {};
+    const where: Prisma.CompanyWhereInput = { ...branchFilter };
 
     if (search) {
       where.OR = [
@@ -58,6 +62,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    const branchFilter = await getBranchFilter();
+
     const body = await request.json();
     const { name, industry, address, website, email, phone, status, notes, source } = body;
 
@@ -72,6 +79,7 @@ export async function POST(request: Request) {
           ...(email ? [{ email: { equals: email.trim(), mode: Prisma.QueryMode.insensitive } }] : []),
           ...(phone ? [{ phone: phone.trim() }] : []),
         ],
+        ...branchFilter,
       },
     });
 
@@ -89,6 +97,7 @@ export async function POST(request: Request) {
 
     const company = await prisma.company.create({
       data: {
+        ...branchFilter,
         name: name.trim(),
         industry: industry || "Other",
         address: address?.trim() || null,
