@@ -70,7 +70,7 @@ export default function UsersPage() {
     try {
       const url = editingId ? `/api/users/${editingId}` : "/api/users";
       const method = editingId ? "PUT" : "POST";
-      const body = { ...form };
+      const body: Record<string, any> = { ...form };
       if (editingId && !body.password) delete body.password;
 
       const res = await fetch(url, {

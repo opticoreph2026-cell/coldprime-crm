@@ -1,7 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma } from "./prisma";
+import authConfig from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -10,9 +14,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
-        const { prisma } = await import("./prisma");
-        const bcrypt = await import("bcryptjs");
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
@@ -36,30 +37,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.userId = user.id;
-        token.role = (user as any).role;
-        token.branchId = (user as any).branchId;
-        token.branchName = (user as any).branchName;
-        token.branchSlug = (user as any).branchSlug;
-        token.activeBranchId = (user as any).branchId;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      session.user.id = token.userId as string;
-      session.user.role = token.role as string;
-      session.user.branchId = token.branchId as string | null;
-      session.user.branchName = token.branchName as string | null;
-      session.user.branchSlug = token.branchSlug as string | null;
-      session.user.activeBranchId = token.activeBranchId as string | null;
-      return session;
-    },
-  },
 });
