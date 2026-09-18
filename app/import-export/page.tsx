@@ -53,6 +53,7 @@ export default function ImportExportPage() {
         body: JSON.stringify({ filePath: filePath.trim(), action: "import" }),
       });
       const data = await res.json();
+      if (!res.ok || data.error) { alert(data.error || "Import failed"); return; }
       setResult(data);
       setPreview(null);
     } catch (err) {

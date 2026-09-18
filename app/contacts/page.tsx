@@ -10,6 +10,7 @@ interface Contact {
   email: string | null;
   mobile: string | null;
   landline: string | null;
+  notes: string | null;
   status: string;
   company: { id: string; name: string };
 }
@@ -20,38 +21,49 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" });
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const fetchContacts = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
-    if (search) params.set("search", search);
-    const res = await fetch(`/api/contacts?${params}`);
-    const data = await res.json();
-    setContacts(data.data || []);
-    setTotal(data.pagination?.total || 0);
-  }, [page, search]);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      const res = await fetch(`/api/contacts?${params}`);
+      const data = await res.json();
+      setContacts(data.data || []);
+      setTotal(data.pagination?.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch contacts:", error);
+    }
+  }, [page, debouncedSearch]);
 
   useEffect(() => {
     fetchContacts();
-    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name }))));
+    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name })))).catch(console.error);
   }, [fetchContacts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const url = editingId ? `/api/contacts/${editingId}` : "/api/contacts";
     const method = editingId ? "PUT" : "POST";
-    await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    if (!res.ok) { alert("Failed to save contact"); return; }
     setShowForm(false);
     setEditingId(null);
     fetchContacts();
   };
 
   const handleEdit = (c: Contact) => {
-    setForm({ companyId: c.company.id, firstName: c.firstName, lastName: c.lastName || "", position: c.position || "", email: c.email || "", mobile: c.mobile || "", landline: c.landline || "", notes: "" });
+    setForm({ companyId: c.company.id, firstName: c.firstName, lastName: c.lastName || "", position: c.position || "", email: c.email || "", mobile: c.mobile || "", landline: c.landline || "", notes: c.notes || "" });
     setEditingId(c.id);
     setShowForm(true);
   };
@@ -86,6 +98,7 @@ export default function ContactsPage() {
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Email</label><input type="email" style={{ width: "100%" }} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Mobile</label><input style={{ width: "100%" }} value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} placeholder="0917-123-4567" /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Landline</label><input style={{ width: "100%" }} value={form.landline} onChange={(e) => setForm({ ...form, landline: e.target.value })} placeholder="(032) 123-4567" /></div>
+            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>

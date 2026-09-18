@@ -26,50 +26,54 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ companyId: "", source: "", industry: "", priority: "Medium", estimatedValue: "", notes: "" });
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const fetchLeads = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
-    if (search) params.set("search", search);
-    if (statusFilter) params.set("status", statusFilter);
-    const res = await fetch(`/api/leads?${params}`);
-    const data = await res.json();
-    setLeads(data.data || []);
-    setTotal(data.pagination?.total || 0);
-  }, [page, search, statusFilter]);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter) params.set("status", statusFilter);
+      const res = await fetch(`/api/leads?${params}`);
+      const data = await res.json();
+      setLeads(data.data || []);
+      setTotal(data.pagination?.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch leads:", error);
+    }
+  }, [page, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchLeads();
-    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name }))));
+    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name })))).catch(console.error);
   }, [fetchLeads]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    if (!res.ok) { alert("Failed to create lead"); return; }
     setShowForm(false);
     fetchLeads();
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    await fetch(`/api/leads/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
-    fetchLeads();
+    const res = await fetch(`/api/leads/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    if (res.ok) fetchLeads();
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this lead?")) return;
     await fetch(`/api/leads/${id}`, { method: "DELETE" });
     fetchLeads();
-  };
-
-  const getBadge = (status: string) => {
-    if (["Approved", "Completed"].includes(status)) return "badge-green";
-    if (["Cancelled", "Declined", "No Answer", "Unattended / Not in Service"].includes(status)) return "badge-red";
-    if (["Quotation", "New"].includes(status)) return "badge-blue";
-    return "badge-yellow";
   };
 
   return (
@@ -92,6 +96,7 @@ export default function LeadsPage() {
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Source</label><input style={{ width: "100%" }} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Industry</label><input style={{ width: "100%" }} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Priority</label><select style={{ width: "100%" }} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Estimated Value</label><input type="number" style={{ width: "100%" }} value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0.00" /></div>
             <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 8 }}>

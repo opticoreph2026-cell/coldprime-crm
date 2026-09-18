@@ -11,13 +11,18 @@ interface Company {
   address: string | null;
   website: string | null;
   status: string;
+  notes: string | null;
+  source: string | null;
   createdAt: string;
-  _count: { contacts: number; projects: number; activities: number; leads: number };
+  contacts: { id: string }[];
+  projects: { id: string; status: string }[];
+  _count: { activities: number; leads: number };
 }
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -25,15 +30,24 @@ export default function CompaniesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", industry: "Other", email: "", phone: "", address: "", website: "", status: "Active", notes: "", source: "" });
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const fetchCompanies = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
-    if (search) params.set("search", search);
-    if (statusFilter) params.set("status", statusFilter);
-    const res = await fetch(`/api/companies?${params}`);
-    const data = await res.json();
-    setCompanies(data.data || []);
-    setTotal(data.pagination?.total || 0);
-  }, [page, search, statusFilter]);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter) params.set("status", statusFilter);
+      const res = await fetch(`/api/companies?${params}`);
+      const data = await res.json();
+      setCompanies(data.data || []);
+      setTotal(data.pagination?.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch companies:", error);
+    }
+  }, [page, debouncedSearch, statusFilter]);
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
@@ -51,7 +65,7 @@ export default function CompaniesPage() {
   };
 
   const handleEdit = (c: Company) => {
-    setForm({ name: c.name, industry: c.industry, email: c.email || "", phone: c.phone || "", address: c.address || "", website: c.website || "", status: c.status, notes: "", source: "" });
+    setForm({ name: c.name, industry: c.industry, email: c.email || "", phone: c.phone || "", address: c.address || "", website: c.website || "", status: c.status, notes: c.notes || "", source: c.source || "" });
     setEditingId(c.id);
     setShowForm(true);
   };
@@ -88,6 +102,7 @@ export default function CompaniesPage() {
             <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Address</label><input style={{ width: "100%" }} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Website</label><input style={{ width: "100%" }} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label><select style={{ width: "100%" }} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Source</label><input style={{ width: "100%" }} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
             <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
@@ -127,8 +142,8 @@ export default function CompaniesPage() {
                 <td>{c.email || "-"}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{c.phone || "-"}</td>
                 <td><span className={`badge badge-${c.status === "Active" ? "green" : c.status === "Inactive" ? "gray" : "blue"}`}>{c.status}</span></td>
-                <td>{c._count.contacts}</td>
-                <td>{c._count.projects}</td>
+                <td>{c.contacts.length}</td>
+                <td>{c.projects.length}</td>
                 <td>
                   <button className="btn btn-ghost" onClick={() => handleEdit(c)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
                   <button className="btn btn-ghost" onClick={() => handleDelete(c.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>

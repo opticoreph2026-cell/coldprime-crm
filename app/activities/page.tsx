@@ -26,35 +26,48 @@ export default function ActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState("");
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [form, setForm] = useState({ companyId: "", projectId: "", type: "Phone Call", date: new Date().toISOString().split("T")[0], time: "", performedBy: "", contactPerson: "", description: "", result: "", nextAction: "", nextFollowUp: "", notes: "" });
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const fetchActivities = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
-    if (search) params.set("search", search);
-    if (typeFilter) params.set("type", typeFilter);
-    const res = await fetch(`/api/activities?${params}`);
-    const data = await res.json();
-    setActivities(data.data || []);
-    setTotal(data.pagination?.total || 0);
-  }, [page, search, typeFilter]);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (typeFilter) params.set("type", typeFilter);
+      const res = await fetch(`/api/activities?${params}`);
+      const data = await res.json();
+      setActivities(data.data || []);
+      setTotal(data.pagination?.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch activities:", error);
+    }
+  }, [page, debouncedSearch, typeFilter]);
 
   useEffect(() => {
     fetchActivities();
-    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name }))));
+    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name })))).catch(console.error);
   }, [fetchActivities]);
 
   const handleCompanyChange = async (companyId: string) => {
     setForm({ ...form, companyId, projectId: "" });
     if (companyId) {
-      const res = await fetch(`/api/projects?companyId=${companyId}&limit=999`);
-      const data = await res.json();
-      setProjects((data.data || []).map((p: ProjectOption) => ({ id: p.id, projectName: p.projectName })));
+      try {
+        const res = await fetch(`/api/projects?companyId=${companyId}&limit=999`);
+        const data = await res.json();
+        setProjects((data.data || []).map((p: ProjectOption) => ({ id: p.id, projectName: p.projectName })));
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      }
     } else {
       setProjects([]);
     }
@@ -62,7 +75,9 @@ export default function ActivitiesPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/activities", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const body = { ...form, nextFollowUp: form.nextFollowUp || null };
+    const res = await fetch("/api/activities", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!res.ok) { alert("Failed to log activity"); return; }
     setShowForm(false);
     fetchActivities();
   };
@@ -74,7 +89,7 @@ export default function ActivitiesPage() {
   };
 
   const getTypeIcon = (type: string) => {
-    const icons: Record<string, string> = { "Phone Call": "📞", "Email": "📧", "SMS": "💬", "Meeting": "🤝", "Site Visit": "🏢", "Follow-Up": "🔄", "Quotation Sent": "📄", "Other": "📋" };
+    const icons: Record<string, string> = { "Phone Call": "📞", "Email": "📧", "SMS": "💬", "Meeting": "🤝", "Site Visit": "🏢", "Follow-Up": "🔄", "Quotation Sent": "📄", "Quotation Follow-Up": "📋", "Accreditation Follow-Up": "📋", "Data Gathering": "📋", "Other": "📋" };
     return icons[type] || "📋";
   };
 
@@ -104,6 +119,8 @@ export default function ActivitiesPage() {
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Result</label><input style={{ width: "100%" }} value={form.result} onChange={(e) => setForm({ ...form, result: e.target.value })} placeholder="Completed, No Answer, Scheduled..." /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Next Action</label><input style={{ width: "100%" }} value={form.nextAction} onChange={(e) => setForm({ ...form, nextAction: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Next Follow-Up</label><input type="date" style={{ width: "100%" }} value={form.nextFollowUp} onChange={(e) => setForm({ ...form, nextFollowUp: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Performed By</label><input style={{ width: "100%" }} value={form.performedBy} onChange={(e) => setForm({ ...form, performedBy: e.target.value })} /></div>
+            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
             <button type="submit" className="btn btn-primary">Log Activity</button>

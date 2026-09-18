@@ -26,51 +26,55 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ companyId: "", projectName: "", projectLocation: "", projectType: "", status: "Quotation", startDate: "", targetCompletion: "", installationStatus: "", testingStatus: "", commissioningStatus: "", remarks: "" });
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const fetchProjects = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
-    if (search) params.set("search", search);
-    if (statusFilter) params.set("status", statusFilter);
-    const res = await fetch(`/api/projects?${params}`);
-    const data = await res.json();
-    setProjects(data.data || []);
-    setTotal(data.pagination?.total || 0);
-  }, [page, search, statusFilter]);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter) params.set("status", statusFilter);
+      const res = await fetch(`/api/projects?${params}`);
+      const data = await res.json();
+      setProjects(data.data || []);
+      setTotal(data.pagination?.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+    }
+  }, [page, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchProjects();
-    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name }))));
+    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name })))).catch(console.error);
   }, [fetchProjects]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const body = { ...form, startDate: form.startDate || null, targetCompletion: form.targetCompletion || null };
+    const res = await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!res.ok) { alert("Failed to create project"); return; }
     setShowForm(false);
     fetchProjects();
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    await fetch(`/api/projects/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
-    fetchProjects();
+    const res = await fetch(`/api/projects/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    if (res.ok) fetchProjects();
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this project?")) return;
     await fetch(`/api/projects/${id}`, { method: "DELETE" });
     fetchProjects();
-  };
-
-  const getBadge = (status: string) => {
-    if (["Completed"].includes(status)) return "badge-green";
-    if (["Cancelled"].includes(status)) return "badge-red";
-    if (["Quotation"].includes(status)) return "badge-blue";
-    if (["On Hold"].includes(status)) return "badge-gray";
-    return "badge-yellow";
   };
 
   return (

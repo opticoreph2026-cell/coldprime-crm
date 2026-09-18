@@ -21,7 +21,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch("/api/dashboard")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load dashboard");
+        return r.json();
+      })
       .then(setStats)
       .catch(console.error);
   }, []);
@@ -63,7 +66,7 @@ export default function DashboardPage() {
               {card.label}
             </div>
             <div style={{ fontSize: "2rem", fontWeight: 700, color: card.color, marginTop: 4 }}>
-              {card.value.toLocaleString()}
+              {card.value != null ? card.value.toLocaleString() : "-"}
             </div>
           </div>
         ))}
