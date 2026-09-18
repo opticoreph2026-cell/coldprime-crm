@@ -29,7 +29,12 @@ export async function GET(request: Request) {
           company: c.name,
           industry: c.industry,
           email: c.email || undefined,
-          phone: c.phone || undefined,
+          mobile1: c.mobile1 || undefined,
+          mobile2: c.mobile2 || undefined,
+          mobile3: c.mobile3 || undefined,
+          landline1: c.landline1 || undefined,
+          landline2: c.landline2 || undefined,
+          landline3: c.landline3 || undefined,
           address: c.address || undefined,
           website: c.website || undefined,
           contactPerson: c.contacts[0]

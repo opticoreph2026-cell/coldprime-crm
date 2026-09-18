@@ -42,7 +42,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, industry, address, website, email, phone, status, notes, source } = body;
+    const { name, industry, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
 
     const existing = await prisma.company.findFirst({ where: { id, ...branchFilter } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -55,7 +55,12 @@ export async function PUT(
         ...(address !== undefined && { address: address?.trim() || null }),
         ...(website !== undefined && { website: website?.trim() || null }),
         ...(email !== undefined && { email: email?.trim() || null }),
-        ...(phone !== undefined && { phone: phone?.trim() || null }),
+        ...(mobile1 !== undefined && { mobile1: mobile1?.trim() || null }),
+        ...(mobile2 !== undefined && { mobile2: mobile2?.trim() || null }),
+        ...(mobile3 !== undefined && { mobile3: mobile3?.trim() || null }),
+        ...(landline1 !== undefined && { landline1: landline1?.trim() || null }),
+        ...(landline2 !== undefined && { landline2: landline2?.trim() || null }),
+        ...(landline3 !== undefined && { landline3: landline3?.trim() || null }),
         ...(status !== undefined && { status }),
         ...(notes !== undefined && { notes: notes?.trim() || null }),
         ...(source !== undefined && { source: source?.trim() || null }),

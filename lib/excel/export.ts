@@ -5,7 +5,12 @@ export interface ExportCompany {
   company: string;
   industry?: string;
   email?: string;
-  phone?: string;
+  mobile1?: string;
+  mobile2?: string;
+  mobile3?: string;
+  landline1?: string;
+  landline2?: string;
+  landline3?: string;
   address?: string;
   website?: string;
   contactPerson?: string;
@@ -95,14 +100,14 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
   });
 
   // Title row
-  ws.mergeCells("A1:M1");
+  ws.mergeCells("A1:R1");
   const titleCell = ws.getCell("A1");
   titleCell.value = "COLDPRIME ENTERPRISES CORPORATION — Customer Database";
   titleCell.font = { name: "Calibri", bold: true, size: 14, color: { argb: "FF1F3864" } };
   titleCell.alignment = { horizontal: "center", vertical: "middle" };
 
   // Subtitle
-  ws.mergeCells("A2:M2");
+  ws.mergeCells("A2:R2");
   const subtitleCell = ws.getCell("A2");
   subtitleCell.value = `Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })} | Cebu Region`;
   subtitleCell.font = { name: "Calibri", italic: true, size: 10, color: { argb: "FF666666" } };
@@ -114,7 +119,12 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
     "Customer",
     "Industry",
     "Email",
-    "Contact Number",
+    "Mobile 1",
+    "Mobile 2",
+    "Mobile 3",
+    "Landline 1",
+    "Landline 2",
+    "Landline 3",
     "Address",
     "Website",
     "Contact Person",
@@ -147,7 +157,12 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
       c.company,
       c.industry,
       c.email,
-      c.phone,
+      c.mobile1,
+      c.mobile2,
+      c.mobile3,
+      c.landline1,
+      c.landline2,
+      c.landline3,
       c.address,
       c.website,
       c.contactPerson,
@@ -164,8 +179,13 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
     });
 
     formatDate(ws, idx + 4, 1, c.date ?? null);
-    formatDate(ws, idx + 4, 11, c.lastContactDate ?? null);
-    setPhoneAsText(ws, idx + 4, 5, c.phone);
+    formatDate(ws, idx + 4, 16, c.lastContactDate ?? null);
+    setPhoneAsText(ws, idx + 4, 5, c.mobile1);
+    setPhoneAsText(ws, idx + 4, 6, c.mobile2);
+    setPhoneAsText(ws, idx + 4, 7, c.mobile3);
+    setPhoneAsText(ws, idx + 4, 8, c.landline1);
+    setPhoneAsText(ws, idx + 4, 9, c.landline2);
+    setPhoneAsText(ws, idx + 4, 10, c.landline3);
   });
 
   // Column widths
@@ -174,7 +194,12 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
     { width: 35 },   // Customer
     { width: 22 },   // Industry
     { width: 32 },   // Email
-    { width: 24 },   // Contact Number
+    { width: 20 },   // Mobile 1
+    { width: 20 },   // Mobile 2
+    { width: 20 },   // Mobile 3
+    { width: 20 },   // Landline 1
+    { width: 20 },   // Landline 2
+    { width: 20 },   // Landline 3
     { width: 40 },   // Address
     { width: 30 },   // Website
     { width: 22 },   // Contact Person
@@ -187,7 +212,7 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
   // Auto filter
   ws.autoFilter = {
     from: { row: 3, column: 1 },
-    to: { row: 3 + companies.length, column: 12 },
+    to: { row: 3 + companies.length, column: 17 },
   };
 
   // Print setup

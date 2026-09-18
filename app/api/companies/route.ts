@@ -22,7 +22,12 @@ export async function GET(request: Request) {
       where.OR = [
         { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
         { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
-        { phone: { contains: search } },
+        { mobile1: { contains: search } },
+        { mobile2: { contains: search } },
+        { mobile3: { contains: search } },
+        { landline1: { contains: search } },
+        { landline2: { contains: search } },
+        { landline3: { contains: search } },
         { address: { contains: search, mode: Prisma.QueryMode.insensitive } },
       ];
     }
@@ -66,18 +71,23 @@ export async function POST(request: Request) {
     const branchId = await requireBranchId();
 
     const body = await request.json();
-    const { name, industry, address, website, email, phone, status, notes, source } = body;
+    const { name, industry, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Company name is required" }, { status: 400 });
     }
+
+    const allPhones = [mobile1, mobile2, mobile3, landline1, landline2, landline3].filter(Boolean).map((p: string) => p.trim());
 
     const existing = await prisma.company.findFirst({
       where: {
         OR: [
           { name: { equals: name.trim(), mode: Prisma.QueryMode.insensitive } },
           ...(email ? [{ email: { equals: email.trim(), mode: Prisma.QueryMode.insensitive } }] : []),
-          ...(phone ? [{ phone: phone.trim() }] : []),
+          ...(allPhones.length > 0 ? allPhones.map((p: string) => ({ OR: [
+            { mobile1: p }, { mobile2: p }, { mobile3: p },
+            { landline1: p }, { landline2: p }, { landline3: p },
+          ]})) : []),
         ],
         branchId,
       },
@@ -90,7 +100,8 @@ export async function POST(request: Request) {
           id: existing.id,
           name: existing.name,
           email: existing.email,
-          phone: existing.phone,
+          mobile1: existing.mobile1,
+          landline1: existing.landline1,
         },
       }, { status: 409 });
     }
@@ -103,7 +114,12 @@ export async function POST(request: Request) {
         address: address?.trim() || null,
         website: website?.trim() || null,
         email: email?.trim() || null,
-        phone: phone?.trim() || null,
+        mobile1: mobile1?.trim() || null,
+        mobile2: mobile2?.trim() || null,
+        mobile3: mobile3?.trim() || null,
+        landline1: landline1?.trim() || null,
+        landline2: landline2?.trim() || null,
+        landline3: landline3?.trim() || null,
         status: status || "Active",
         notes: notes?.trim() || null,
         source: source?.trim() || null,

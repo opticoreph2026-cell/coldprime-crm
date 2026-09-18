@@ -6,7 +6,8 @@ export interface ImportRow {
   company?: string;
   industry?: string;
   email?: string;
-  phone?: string;
+  mobile1?: string;
+  landline1?: string;
   address?: string;
   website?: string;
   contactPerson?: string;
@@ -92,7 +93,8 @@ function mapCustomerSheet(
       company: String(company).trim(),
       industry: String(get("C") || "").trim() || undefined,
       email: String(get("D") || "").trim() || undefined,
-      phone: normalizePhone(get("E")),
+      mobile1: normalizePhone(get("E")),
+      landline1: normalizePhone(get("J")),
       address: String(get("F") || "").trim() || undefined,
       website: String(get("G") || "").trim() || undefined,
       contactPerson: String(get("H") || "").trim() || undefined,
@@ -133,7 +135,7 @@ function mapXedesSheet(
       company: String(company).trim(),
       industry: String(get("C") || "").trim() || undefined,
       email: String(get("D") || "").trim() || undefined,
-      phone: normalizePhone(get("E")),
+      mobile1: normalizePhone(get("E")),
       address: String(get("F") || "").trim() || undefined,
       contactPerson: String(get("G") || "").trim() || undefined,
       position: String(get("H") || "").trim() || undefined,
@@ -171,7 +173,7 @@ function mapRaizaSheet(
       sheetName,
       company: String(company).trim(),
       email: String(get("B") || "").trim() || undefined,
-      phone: normalizePhone(get("C")),
+      mobile1: normalizePhone(get("C")),
       status: normalizeStatus(get("D")),
       remarks: String(get("E") || "").trim() || undefined,
       date: parseDate(get("F")),
@@ -208,7 +210,7 @@ function mapEllaineSheet(
       company: String(company).trim(),
       industry: String(get("C") || "").trim() || undefined,
       email: String(get("D") || "").trim() || undefined,
-      phone: normalizePhone(get("E")),
+      mobile1: normalizePhone(get("E")),
       address: String(get("F") || "").trim() || undefined,
       website: String(get("G") || "").trim() || undefined,
       status: normalizeStatus(get("H")),
@@ -244,7 +246,7 @@ function mapSheet6(
       sheetName,
       company: String(company).trim(),
       industry: String(get("B") || "").trim() || undefined,
-      phone: normalizePhone(get("C")),
+      mobile1: normalizePhone(get("C")),
       rawData: {},
     });
   }
@@ -333,7 +335,8 @@ export function mergeImportData(preview: ImportPreview): ImportRow[] {
         if (!existing.contactPerson && row.contactPerson) existing.contactPerson = row.contactPerson;
         if (!existing.position && row.position) existing.position = row.position;
         if (!existing.email && row.email) existing.email = row.email;
-        if (!existing.phone && row.phone) existing.phone = row.phone;
+        if (!existing.mobile1 && row.mobile1) existing.mobile1 = row.mobile1;
+        if (!existing.landline1 && row.landline1) existing.landline1 = row.landline1;
         if (!existing.address && row.address) existing.address = row.address;
         if (!existing.website && row.website) existing.website = row.website;
         if (!existing.industry && row.industry) existing.industry = row.industry;

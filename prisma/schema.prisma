@@ -61,7 +61,12 @@ model Company {
   address   String?
   website   String?
   email     String?
-  phone     String?
+  mobile1   String?
+  mobile2   String?
+  mobile3   String?
+  landline1 String?
+  landline2 String?
+  landline3 String?
   status    String   @default("Active")
   notes     String?
   source    String?
@@ -75,7 +80,6 @@ model Company {
   @@index([branchId])
   @@index([branchId, name])
   @@index([branchId, status])
-  @@index([phone])
   @@map("companies")
 }
 

@@ -7,7 +7,12 @@ interface Company {
   name: string;
   industry: string;
   email: string | null;
-  phone: string | null;
+  mobile1: string | null;
+  mobile2: string | null;
+  mobile3: string | null;
+  landline1: string | null;
+  landline2: string | null;
+  landline3: string | null;
   address: string | null;
   website: string | null;
   status: string;
@@ -19,6 +24,16 @@ interface Company {
   _count: { activities: number; leads: number };
 }
 
+const emptyForm = {
+  name: "", industry: "Other", email: "",
+  mobile1: "", mobile2: "", mobile3: "",
+  landline1: "", landline2: "", landline3: "",
+  address: "", website: "", status: "Active", notes: "", source: "",
+};
+
+const industries = ["General Contractor", "Architectural", "Construction", "Business Process Outsourcing (BPO)", "Security Systems", "Hotel", "Hospital", "Restaurant", "Retail", "Government", "Manufacturing", "Real Estate", "Education", "IT / Technology", "Healthcare", "Other"];
+const statuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
+
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [search, setSearch] = useState("");
@@ -28,7 +43,10 @@ export default function CompaniesPage() {
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", industry: "Other", email: "", phone: "", address: "", website: "", status: "Active", notes: "", source: "" });
+  const [form, setForm] = useState(emptyForm);
+
+  const [mobiles, setMobiles] = useState([""]);
+  const [landlines, setLandlines] = useState([""]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -51,6 +69,22 @@ export default function CompaniesPage() {
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
+  const syncPhoneFields = (mobs: string[], lins: string[]) => {
+    setForm((prev) => ({
+      ...prev,
+      mobile1: mobs[0] || "", mobile2: mobs[1] || "", mobile3: mobs[2] || "",
+      landline1: lins[0] || "", landline2: lins[1] || "", landline3: lins[2] || "",
+    }));
+  };
+
+  const addMobile = () => { const next = [...mobiles, ""]; setMobiles(next); syncPhoneFields(next, landlines); };
+  const removeMobile = (i: number) => { const next = mobiles.filter((_, idx) => idx !== i); setMobiles(next); syncPhoneFields(next, landlines); };
+  const updateMobile = (i: number, val: string) => { const next = [...mobiles]; next[i] = val; setMobiles(next); syncPhoneFields(next, landlines); };
+
+  const addLandline = () => { const next = [...landlines, ""]; setLandlines(next); syncPhoneFields(mobiles, next); };
+  const removeLandline = (i: number) => { const next = landlines.filter((_, idx) => idx !== i); setLandlines(next); syncPhoneFields(mobiles, next); };
+  const updateLandline = (i: number, val: string) => { const next = [...landlines]; next[i] = val; setLandlines(next); syncPhoneFields(mobiles, next); };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const url = editingId ? `/api/companies/${editingId}` : "/api/companies";
@@ -59,13 +93,24 @@ export default function CompaniesPage() {
     if (res.ok) {
       setShowForm(false);
       setEditingId(null);
-      setForm({ name: "", industry: "Other", email: "", phone: "", address: "", website: "", status: "Active", notes: "", source: "" });
+      setForm(emptyForm);
+      setMobiles([""]);
+      setLandlines([""]);
       fetchCompanies();
     }
   };
 
   const handleEdit = (c: Company) => {
-    setForm({ name: c.name, industry: c.industry, email: c.email || "", phone: c.phone || "", address: c.address || "", website: c.website || "", status: c.status, notes: c.notes || "", source: c.source || "" });
+    setForm({
+      name: c.name, industry: c.industry, email: c.email || "",
+      mobile1: c.mobile1 || "", mobile2: c.mobile2 || "", mobile3: c.mobile3 || "",
+      landline1: c.landline1 || "", landline2: c.landline2 || "", landline3: c.landline3 || "",
+      address: c.address || "", website: c.website || "", status: c.status, notes: c.notes || "", source: c.source || "",
+    });
+    const mobs = [c.mobile1, c.mobile2, c.mobile3].filter(Boolean);
+    const lins = [c.landline1, c.landline2, c.landline3].filter(Boolean);
+    setMobiles(mobs.length > 0 ? mobs : [""]);
+    setLandlines(lins.length > 0 ? lins : [""]);
     setEditingId(c.id);
     setShowForm(true);
   };
@@ -76,8 +121,20 @@ export default function CompaniesPage() {
     fetchCompanies();
   };
 
-  const industries = ["General Contractor", "Architectural", "Construction", "Business Process Outsourcing (BPO)", "Security Systems", "Hotel", "Hospital", "Restaurant", "Retail", "Government", "Manufacturing", "Real Estate", "Education", "IT / Technology", "Healthcare", "Other"];
-  const statuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
+  const phoneLabel = (c: Company) => {
+    const phones = [c.mobile1, c.mobile2, c.mobile3].filter(Boolean);
+    if (phones.length === 0) return "-";
+    return phones[0] + (phones.length > 1 ? ` +${phones.length - 1}` : "");
+  };
+
+  const landlineLabel = (c: Company) => {
+    const lines = [c.landline1, c.landline2, c.landline3].filter(Boolean);
+    if (lines.length === 0) return "-";
+    return lines[0] + (lines.length > 1 ? ` +${lines.length - 1}` : "");
+  };
+
+  const inputStyle = { width: "100%" };
+  const labelStyle = { fontSize: "0.75rem", fontWeight: 500 as const, display: "block" as const, marginBottom: 4 };
 
   return (
     <div style={{ padding: 24 }}>
@@ -86,7 +143,7 @@ export default function CompaniesPage() {
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Companies</h1>
           <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} companies total</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", industry: "Other", email: "", phone: "", address: "", website: "", status: "Active", notes: "", source: "" }); }}>
+        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
           {showForm ? "Cancel" : "+ Add Company"}
         </button>
       </div>
@@ -95,15 +152,47 @@ export default function CompaniesPage() {
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit Company" : "New Company"}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company Name *</label><input required style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Industry</label><select style={{ width: "100%" }} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{industries.map((i) => <option key={i}>{i}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Email</label><input type="email" style={{ width: "100%" }} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Phone</label><input style={{ width: "100%" }} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="0917-123-4567" /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Address</label><input style={{ width: "100%" }} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Website</label><input style={{ width: "100%" }} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label><select style={{ width: "100%" }} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Source</label><input style={{ width: "100%" }} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div><label style={labelStyle}>Company Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><label style={labelStyle}>Industry</label><select style={inputStyle} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{industries.map((i) => <option key={i}>{i}</option>)}</select></div>
+            <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div><label style={labelStyle}>Website</label><input style={inputStyle} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+            <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+
+            {/* Mobile Numbers */}
+            <div style={{ gridColumn: "span 2" }}>
+              <label style={{ ...labelStyle, marginBottom: 8, display: "block" }}>Mobile Numbers</label>
+              {mobiles.map((val, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                  <input style={{ flex: 1 }} value={val} onChange={(e) => updateMobile(i, e.target.value)} placeholder="0917-123-4567" />
+                  {mobiles.length > 1 && (
+                    <button type="button" onClick={() => removeMobile(i)} style={{ padding: "0.25rem 0.5rem", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 4, cursor: "pointer", fontSize: "0.875rem" }}>✕</button>
+                  )}
+                </div>
+              ))}
+              {mobiles.length < 3 && (
+                <button type="button" onClick={addMobile} style={{ padding: "0.25rem 0.75rem", background: "#eff6ff", color: "#1e40af", border: "1px dashed #93c5fd", borderRadius: 4, cursor: "pointer", fontSize: "0.75rem" }}>+ Add Mobile</button>
+              )}
+            </div>
+
+            {/* Landline Numbers */}
+            <div style={{ gridColumn: "span 2" }}>
+              <label style={{ ...labelStyle, marginBottom: 8, display: "block" }}>Landline Numbers</label>
+              {landlines.map((val, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                  <input style={{ flex: 1 }} value={val} onChange={(e) => updateLandline(i, e.target.value)} placeholder="(032) 123-4567" />
+                  {landlines.length > 1 && (
+                    <button type="button" onClick={() => removeLandline(i)} style={{ padding: "0.25rem 0.5rem", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 4, cursor: "pointer", fontSize: "0.875rem" }}>✕</button>
+                  )}
+                </div>
+              ))}
+              {landlines.length < 3 && (
+                <button type="button" onClick={addLandline} style={{ padding: "0.25rem 0.75rem", background: "#eff6ff", color: "#1e40af", border: "1px dashed #93c5fd", borderRadius: 4, cursor: "pointer", fontSize: "0.75rem" }}>+ Add Landline</button>
+              )}
+            </div>
+
+            <div><label style={labelStyle}>Status</label><select style={inputStyle} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label style={labelStyle}>Source</label><input style={inputStyle} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
+            <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Notes</label><textarea rows={2} style={inputStyle} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>
@@ -127,7 +216,8 @@ export default function CompaniesPage() {
               <th>Company</th>
               <th>Industry</th>
               <th>Email</th>
-              <th>Phone</th>
+              <th>Mobile</th>
+              <th>Landline</th>
               <th>Status</th>
               <th>Contacts</th>
               <th>Projects</th>
@@ -140,7 +230,8 @@ export default function CompaniesPage() {
                 <td style={{ fontWeight: 500 }}>{c.name}</td>
                 <td>{c.industry}</td>
                 <td>{c.email || "-"}</td>
-                <td style={{ whiteSpace: "nowrap" }}>{c.phone || "-"}</td>
+                <td style={{ whiteSpace: "nowrap" }}>{phoneLabel(c)}</td>
+                <td style={{ whiteSpace: "nowrap" }}>{landlineLabel(c)}</td>
                 <td><span className={`badge badge-${c.status === "Active" ? "green" : c.status === "Inactive" ? "gray" : "blue"}`}>{c.status}</span></td>
                 <td>{c.contacts.length}</td>
                 <td>{c.projects.length}</td>
@@ -151,7 +242,7 @@ export default function CompaniesPage() {
               </tr>
             ))}
             {companies.length === 0 && (
-              <tr><td colSpan={8} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
             )}
           </tbody>
         </table>
