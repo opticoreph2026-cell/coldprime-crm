@@ -39,7 +39,7 @@ async function main() {
   // Seed users
   const passwordHash = await bcrypt.hash("Coldprime2026!", 10);
 
-  const cebuAdmin = await prisma.user.upsert({
+  const headAdmin = await prisma.user.upsert({
     where: { email: "admin@coldprime.ph" },
     update: {},
     create: {
@@ -51,18 +51,30 @@ async function main() {
     },
   });
 
-  const manilaAdmin = await prisma.user.upsert({
-    where: { email: "manila@coldprime.ph" },
+  const cebuStaff = await prisma.user.upsert({
+    where: { email: "cebu-staff@coldprime.ph" },
     update: {},
     create: {
-      email: "manila@coldprime.ph",
-      name: "Manila Administrator",
+      email: "cebu-staff@coldprime.ph",
+      name: "Cebu Staff",
       password: passwordHash,
-      role: "BRANCH_ADMIN",
+      role: "STAFF",
+      branchId: cebuBranch.id,
+    },
+  });
+
+  const manilaStaff = await prisma.user.upsert({
+    where: { email: "manila-staff@coldprime.ph" },
+    update: {},
+    create: {
+      email: "manila-staff@coldprime.ph",
+      name: "Manila Staff",
+      password: passwordHash,
+      role: "STAFF",
       branchId: manilaBranch.id,
     },
   });
-  console.log(`Users: ${cebuAdmin.email} (HEAD_ADMIN), ${manilaAdmin.email} (BRANCH_ADMIN)`);
+  console.log(`Users: ${headAdmin.email} (HEAD_ADMIN), ${cebuStaff.email} (STAFF), ${manilaStaff.email} (STAFF)`);
 
   // Seed status definitions for each branch
   const companyStatuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
@@ -74,7 +86,7 @@ async function main() {
     "Infrastructure Solutions",
   ];
   const activityTypes = [
-    "Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Follow-Up",
+    "Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Site Inspection", "Follow-Up",
     "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up",
     "Data Gathering", "Other",
   ];

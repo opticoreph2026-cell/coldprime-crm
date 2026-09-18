@@ -33,8 +33,6 @@ export async function GET(request: Request) {
 
     const users = [
       { email: "admin@coldprime.ph", name: "Head Administrator", role: "HEAD_ADMIN" as const, branchId: cebuBranch.id },
-      { email: "cebu-admin@coldprime.ph", name: "Cebu Administrator", role: "BRANCH_ADMIN" as const, branchId: cebuBranch.id },
-      { email: "manila-admin@coldprime.ph", name: "Manila Administrator", role: "BRANCH_ADMIN" as const, branchId: manilaBranch.id },
       { email: "cebu-staff@coldprime.ph", name: "Cebu Staff", role: "STAFF" as const, branchId: cebuBranch.id },
       { email: "manila-staff@coldprime.ph", name: "Manila Staff", role: "STAFF" as const, branchId: manilaBranch.id },
     ];
@@ -64,7 +62,7 @@ export async function GET(request: Request) {
       "Infrastructure Solutions",
     ];
     const activityTypes = [
-      "Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Follow-Up",
+      "Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Site Inspection", "Follow-Up",
       "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up",
       "Data Gathering", "Other",
     ];

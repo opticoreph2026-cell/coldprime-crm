@@ -20,7 +20,7 @@ interface Activity {
 interface CompanyOption { id: string; name: string }
 interface ProjectOption { id: string; projectName: string }
 
-const TYPES = ["Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Follow-Up", "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up", "Data Gathering", "Other"];
+  const TYPES = ["Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Site Inspection", "Follow-Up", "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up", "Data Gathering", "Other"];
 
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -89,7 +89,7 @@ export default function ActivitiesPage() {
   };
 
   const getTypeIcon = (type: string) => {
-    const icons: Record<string, string> = { "Phone Call": "📞", "Email": "📧", "SMS": "💬", "Meeting": "🤝", "Site Visit": "🏢", "Follow-Up": "🔄", "Quotation Sent": "📄", "Quotation Follow-Up": "📋", "Accreditation Follow-Up": "📋", "Data Gathering": "📋", "Other": "📋" };
+    const icons: Record<string, string> = { "Phone Call": "📞", "Email": "📧", "SMS": "💬", "Meeting": "🤝", "Site Visit": "🏢", "Site Inspection": "🔍", "Follow-Up": "🔄", "Quotation Sent": "📄", "Quotation Follow-Up": "📋", "Accreditation Follow-Up": "📋", "Data Gathering": "📋", "Other": "📋" };
     return icons[type] || "📋";
   };
 
