@@ -107,8 +107,8 @@ export default function CompaniesPage() {
       landline1: c.landline1 || "", landline2: c.landline2 || "", landline3: c.landline3 || "",
       address: c.address || "", website: c.website || "", status: c.status, notes: c.notes || "", source: c.source || "",
     });
-    const mobs = [c.mobile1, c.mobile2, c.mobile3].filter(Boolean);
-    const lins = [c.landline1, c.landline2, c.landline3].filter(Boolean);
+    const mobs = [c.mobile1, c.mobile2, c.mobile3].filter((p): p is string => Boolean(p));
+    const lins = [c.landline1, c.landline2, c.landline3].filter((p): p is string => Boolean(p));
     setMobiles(mobs.length > 0 ? mobs : [""]);
     setLandlines(lins.length > 0 ? lins : [""]);
     setEditingId(c.id);
