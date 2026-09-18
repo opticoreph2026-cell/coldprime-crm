@@ -1,5 +1,3 @@
-import type { NextAuthConfig } from "next-auth";
-
 export default {
   session: { strategy: "jwt" },
   pages: {
@@ -27,4 +25,4 @@ export default {
       return session;
     },
   },
-} satisfies NextAuthConfig;
+};
