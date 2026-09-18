@@ -1,27 +1,30 @@
+import type { JWT } from "next-auth";
+import type { Session } from "next-auth";
+
 export default {
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user: any }) {
       if (user) {
         token.userId = user.id;
-        token.role = (user as any).role;
-        token.branchId = (user as any).branchId;
-        token.branchName = (user as any).branchName;
-        token.branchSlug = (user as any).branchSlug;
-        token.activeBranchId = (user as any).branchId;
+        token.role = user.role;
+        token.branchId = user.branchId;
+        token.branchName = user.branchName;
+        token.branchSlug = user.branchSlug;
+        token.activeBranchId = user.branchId;
       }
       return token;
     },
-    async session({ session, token }) {
-      session.user.id = token.userId as string;
-      session.user.role = token.role as string;
-      session.user.branchId = token.branchId as string | null;
-      session.user.branchName = token.branchName as string | null;
-      session.user.branchSlug = token.branchSlug as string | null;
-      session.user.activeBranchId = token.activeBranchId as string | null;
+    async session({ session, token }: { session: Session; token: JWT }) {
+      (session.user as any).id = token.userId;
+      (session.user as any).role = token.role;
+      (session.user as any).branchId = token.branchId;
+      (session.user as any).branchName = token.branchName;
+      (session.user as any).branchSlug = token.branchSlug;
+      (session.user as any).activeBranchId = token.activeBranchId;
       return session;
     },
   },
