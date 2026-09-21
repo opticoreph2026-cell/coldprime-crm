@@ -48,6 +48,7 @@ model User {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   auditLogs AuditLog[]
+  emailLogs  EmailLog[]
 
   @@index([branchId])
   @@map("users")
@@ -254,4 +255,49 @@ model AuditLog {
   @@index([branchId, createdAt])
   @@index([entity, entityId])
   @@map("audit_logs")
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+  PENDING
+}
+
+model EmailTemplate {
+  id          String      @id @default(cuid())
+  branchId    String      @map("branch_id")
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  name        String
+  subject     String
+  body        String
+  category    String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([branchId])
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id         String     @id @default(cuid())
+  branchId   String     @map("branch_id")
+  branch     Branch     @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  templateId String?
+  template   EmailTemplate? @relation(fields: [templateId], references: [id])
+  fromUserId String
+  fromUser   User       @relation(fields: [fromUserId], references: [id])
+  toEmail    String
+  toName     String?
+  subject    String
+  status     EmailStatus  @default(PENDING)
+  sentAt     DateTime     @default(now())
+  errorCode  String?
+  metadata   Json?
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@index([branchId])
+  @@index([fromUserId])
+  @@index([status])
+  @@map("email_logs")
 }
