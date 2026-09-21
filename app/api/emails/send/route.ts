@@ -7,15 +7,19 @@ export async function POST(request: Request) {
   let toEmail = "";
   let toName: string | null = null;
   let subject = "";
+  let templateId: string | undefined;
   try {
     await requireAuth();
     const branchFilter = await getBranchFilter();
     const session = await requireAuth();
     const body = await request.json();
-    ({ toEmail, toName, templateId, subject, body: bodyContent, fromName, companyName } = body);
     toEmail = body.toEmail || "";
     toName = body.toName || null;
+    templateId = body.templateId;
     subject = body.subject || "";
+    const bodyContent = body.body || "";
+    const fromName = body.fromName;
+    const companyName = body.companyName;
 
     if (!toEmail) {
       return NextResponse.json({ error: "Recipient email is required" }, { status: 400 });
