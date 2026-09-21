@@ -30,6 +30,8 @@ model Branch {
   statusDefinitions StatusDefinition[]
   importBatches   ImportBatch[]
   auditLogs       AuditLog[]
+  emailTemplates  EmailTemplate[]
+  emailLogs       EmailLog[]
 
   @@map("branches")
 }
