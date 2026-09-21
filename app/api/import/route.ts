@@ -3,8 +3,22 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import * as path from "path";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\juliu\\AppData\\Local\\Temp\\opencode";
+
+function validateFilePath(filePath: string): string {
+  const resolved = path.resolve(filePath);
+  const uploadDir = path.resolve(UPLOAD_DIR);
+  if (!resolved.startsWith(uploadDir + path.sep) && resolved !== uploadDir) {
+    throw new Error("Invalid file path");
+  }
+  return resolved;
+}
+
+function sanitizeString(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_\s\-]/g, "").slice(0, 100);
+}
 
 export async function POST(request: Request) {
   try {
@@ -18,13 +32,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File path is required" }, { status: 400 });
     }
 
+    let safePath: string;
+    try {
+      safePath = validateFilePath(filePath);
+    } catch {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    }
+
     if (action === "preview") {
-      const preview = parseExcelFile(filePath);
+      const preview = parseExcelFile(safePath);
       return NextResponse.json(preview);
     }
 
     if (action === "import") {
-      const preview = parseExcelFile(filePath);
+      const preview = parseExcelFile(safePath);
       const merged = mergeImportData(preview);
 
       let imported = 0;
@@ -65,7 +86,7 @@ export async function POST(request: Request) {
               website: row.website || null,
               status: "Active",
               notes: row.remarks || null,
-              source: `Import: ${row.sheetName}`,
+              source: `Import: ${sanitizeString(row.sheetName || "Unknown")}`,
             },
           });
 
@@ -81,7 +102,7 @@ export async function POST(request: Request) {
       const batch = await prisma.importBatch.create({
         data: {
           branchId,
-          filename: filePath.split(/[/\\]/).pop() || filePath,
+          filename: sanitizeString(filePath.split(/[/\\]/).pop() || filePath),
           totalRows: merged.length,
           importedRows: imported,
           skippedRows: skipped,

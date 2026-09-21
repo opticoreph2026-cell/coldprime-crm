@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
 import bcrypt from "bcryptjs";
 
+const VALID_ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"] as const;
+type UserRole = (typeof VALID_ROLES)[number];
+
 export async function GET() {
   try {
     const session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]);
@@ -55,8 +58,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
     }
 
-    // BRANCH_ADMIN can only create STAFF users in their own branch
-    const userRole = session.user.role === "HEAD_ADMIN" ? (role || "STAFF") : "STAFF";
+    const userRole = session.user.role === "HEAD_ADMIN" && VALID_ROLES.includes((role || "STAFF") as UserRole)
+      ? (role as UserRole)
+      : "STAFF";
     const userBranchId = session.user.role === "HEAD_ADMIN"
       ? (branchId || session.user.branchId)
       : session.user.branchId;

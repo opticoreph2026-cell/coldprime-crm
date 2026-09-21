@@ -22,6 +22,11 @@ export async function POST(request: Request) {
       }
     }
 
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { activeBranchId: branchId || null },
+    });
+
     return NextResponse.json({
       success: true,
       activeBranchId: branchId || null,

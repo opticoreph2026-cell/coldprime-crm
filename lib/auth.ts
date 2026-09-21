@@ -52,12 +52,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
+      const user = await prisma.user.findUnique({
+        where: { id: token.userId as string },
+        select: { activeBranchId: true },
+      });
       session.user.id = token.userId as string;
       session.user.role = token.role as string;
       session.user.branchId = token.branchId as string | null;
       session.user.branchName = token.branchName as string | null;
       session.user.branchSlug = token.branchSlug as string | null;
-      session.user.activeBranchId = token.activeBranchId as string | null;
+      session.user.activeBranchId = (user?.activeBranchId || token.activeBranchId) as string | null;
       return session;
     },
   },
