@@ -4,12 +4,18 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { sendEmail, fillTemplate, logEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
+  let toEmail = "";
+  let toName: string | null = null;
+  let subject = "";
   try {
     await requireAuth();
     const branchFilter = await getBranchFilter();
     const session = await requireAuth();
     const body = await request.json();
-    const { toEmail, toName, templateId, subject, body: bodyContent, fromName, companyName } = body;
+    ({ toEmail, toName, templateId, subject, body: bodyContent, fromName, companyName } = body);
+    toEmail = body.toEmail || "";
+    toName = body.toName || null;
+    subject = body.subject || "";
 
     if (!toEmail) {
       return NextResponse.json({ error: "Recipient email is required" }, { status: 400 });
@@ -50,8 +56,8 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Error sending email:", error);
     try {
-      const session = await requireAuth();
-      await logEmail(prisma, (await getBranchFilter()).branchId, null, session.user.id, body.toEmail || "", body.toName || null, body.subject || "", "FAILED", error.message);
+      await requireAuth();
+      await logEmail(prisma, (await getBranchFilter()).branchId, null, (await requireAuth()).user.id, toEmail, toName, subject, "FAILED", error.message);
     } catch {}
     return NextResponse.json({ error: error.message || "Failed to send email" }, { status: 500 });
   }
