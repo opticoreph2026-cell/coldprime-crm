@@ -1,4 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+if (!RESEND_API_KEY) console.warn("RESEND_API_KEY not set");
 const RESEND_API = "https://api.resend.com";
 
 export interface EmailData {
