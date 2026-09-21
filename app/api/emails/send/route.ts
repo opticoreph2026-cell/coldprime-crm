@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       finalBody = fillTemplate(template.body, {
         companyName: companyName || "",
         contactName: toName || "",
-        branchName: branchFilter.branchId ? (await prisma.branch.findUnique({ where: { id: branchFilter.branchId }, select: { name: true } })).name || "All Branches" : "All Branches",
+        branchName: branchFilter.branchId ? ((await prisma.branch.findUnique({ where: { id: branchFilter.branchId }, select: { name: true } }))?.name || "All Branches") : "All Branches",
         senderName: fromName || session.user.name || "Coldprime CRM",
         branchLocation: "",
         targetDate: "",
