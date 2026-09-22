@@ -8,7 +8,7 @@ import { ReactNode, useState, useEffect, Suspense } from "react";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/companies", label: "Companies", icon: "🏢" },
-  { href: "/companies?source=Supplier", label: "Suppliers", icon: "🏭" },
+  { href: "/companies?source=Supplier", label: "HVAC Suppliers", icon: "🏭" },
   { href: "/contacts", label: "Contacts", icon: "👤" },
   { href: "/leads", label: "Leads", icon: "🎯" },
   { href: "/projects", label: "Projects", icon: "📋" },

@@ -32,7 +32,7 @@ const emptyForm = {
   address: "", website: "", status: "Active", notes: "", source: "",
 };
 
-const industries = ["General Contractor", "Architectural", "Construction", "Business Process Outsourcing (BPO)", "Security Systems", "Hotel", "Hospital", "Restaurant", "Retail", "Government", "Manufacturing", "Real Estate", "Education", "IT / Technology", "Healthcare", "Other"];
+const industries = ["HVAC Equipment", "HVAC Equipment & Services", "HVAC Installation", "HVAC Maintenance", "Electrical Supplies", "Plumbing Materials", "Construction Materials", "General Contractor", "Architectural", "Construction", "Business Process Outsourcing (BPO)", "Security Systems", "Hotel", "Hospital", "Restaurant", "Retail", "Government", "Manufacturing", "Real Estate", "Education", "IT / Technology", "Healthcare", "Other"];
 const statuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
 
 export default function CompaniesPage() {
@@ -171,7 +171,7 @@ function CompaniesContent() {
 <div style={{ padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{isSupplierView ? "Suppliers" : "Companies"}</h1>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{isSupplierView ? "HVAC Equipment & Materials Suppliers" : "Companies"}</h1>
             <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} {isSupplierView ? "suppliers" : "companies"} total</p>
           </div>
           <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(isSupplierView ? { ...emptyForm, source: "Supplier" } : emptyForm); setMobiles([""]); setLandlines([""]); }}>

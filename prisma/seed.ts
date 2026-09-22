@@ -123,7 +123,8 @@ async function main() {
     "Island General Plumbing",
     "Cebu Roofing Solutions",
   ];
-  const cebuCompanyIndustries = ["Construction", "Construction", "Construction", "Construction", "Construction"];
+  const cebuCompanyIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "Electrical Supplies", "Plumbing Materials", "Construction Materials"];
+  const cebuCompanySources = ["Supplier", "Supplier", "Supplier", "Supplier", "Supplier"];
   const cebuCompanyEmails = ["info@cebucharcon.com", "sales@mactanhvac.com", "contact@cebuelec.com", "sales@islandplumb.com", "info@ceburoofing.com"];
   const cebuCompanyMobiles = ["09171234501", "09171234502", "09171234503", "09171234504", "09171234505"];
   const cebuCompanyStatuses = ["Active", "Active", "Prospect", "Pending", "Active"];
@@ -140,6 +141,7 @@ async function main() {
         mobile1: cebuCompanyMobiles[i],
         status: cebuCompanyStatuses[i],
         address: cebuCompanyAddresses[i],
+        source: cebuCompanySources[i],
       },
     }).catch(() => null);
     if (company) cebuCompanyIds.push(company.id);
@@ -153,7 +155,8 @@ async function main() {
     "Metro Plumbing Services",
     "Tagaytay Cooling Systems",
   ];
-  const manilaCompanyIndustries = ["Construction", "Construction", "Construction", "Construction", "Construction"];
+  const manilaCompanyIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "Electrical Supplies", "Plumbing Materials", "Construction Materials"];
+  const manilaCompanySources = ["Supplier", "Supplier", "Supplier", "Supplier", "Supplier"];
   const manilaCompanyEmails = ["info@manilabuild.com", "sales@metrohvac.com", "contact@nationalelec.com", "sales@metroplumb.com", "info@tagcooling.com"];
   const manilaCompanyMobiles = ["09171234601", "09171234602", "09171234603", "09171234604", "09171234605"];
   const manilaCompanyStatuses = ["Active", "Active", "Prospect", "Active", "Pending"];
@@ -170,6 +173,7 @@ async function main() {
         mobile1: manilaCompanyMobiles[i],
         status: manilaCompanyStatuses[i],
         address: manilaCompanyAddresses[i],
+        source: manilaCompanySources[i],
       },
     }).catch(() => null);
     if (company) manilaCompanyIds.push(company.id);
