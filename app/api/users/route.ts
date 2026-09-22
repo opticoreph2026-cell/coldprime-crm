@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
-import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const VALID_ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"] as const;
@@ -17,7 +16,7 @@ export async function GET() {
       throw error;
     }
 
-    const where: Prisma.UserWhereInput = {};
+    const where: { branchId?: string } = {};
     if (session.user.role === "BRANCH_ADMIN") {
       where.branchId = session.user.branchId;
     }

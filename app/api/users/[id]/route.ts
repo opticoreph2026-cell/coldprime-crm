@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
-import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -69,7 +68,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Cannot assign Head Admin role" }, { status: 403 });
     }
 
-    const updateData: Prisma.UserUpdateInput = {};
+    const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name.trim();
     if (email) updateData.email = email.trim();
     if (role && session.user.role === "HEAD_ADMIN") updateData.role = role;
