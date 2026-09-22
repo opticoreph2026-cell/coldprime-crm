@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const VALID_ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"] as const;
@@ -8,9 +9,15 @@ type UserRole = (typeof VALID_ROLES)[number];
 
 export async function GET() {
   try {
-    const session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]);
+    let session;
+    try { session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]); } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      throw error;
+    }
 
-    const where: any = {};
+    const where: Prisma.UserWhereInput = {};
     if (session.user.role === "BRANCH_ADMIN") {
       where.branchId = session.user.branchId;
     }
@@ -32,13 +39,7 @@ export async function GET() {
     }));
 
     return NextResponse.json({ data: safe });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (error.message === "Forbidden") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  } catch (error: unknown) {
     console.error("Error fetching users:", error);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
@@ -46,7 +47,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]);
+    let session;
+    try { session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]); } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      throw error;
+    }
     const body = await request.json();
     const { email, name, password, role, branchId } = body;
 
@@ -95,13 +102,7 @@ export async function POST(request: Request) {
       branch: user.branch,
       createdAt: user.createdAt,
     }, { status: 201 });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (error.message === "Forbidden") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  } catch (error: unknown) {
     console.error("Error creating user:", error);
     return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
   }

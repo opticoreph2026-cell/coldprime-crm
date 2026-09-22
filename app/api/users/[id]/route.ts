@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]);
+    let session;
+    try { session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]); } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      throw error;
+    }
     const { id } = await params;
 
     const user = await prisma.user.findUnique({
@@ -17,7 +24,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // BRANCH_ADMIN can only view users in their branch
     if (session.user.role === "BRANCH_ADMIN" && user.branchId !== session.user.branchId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -31,13 +37,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       branch: user.branch,
       createdAt: user.createdAt,
     });
-  } catch (error: any) {
-    if (error.message === "Forbidden") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  } catch (error: unknown) {
     console.error("Error fetching user:", error);
     return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
   }
@@ -45,7 +45,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]);
+    let session;
+    try { session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]); } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      throw error;
+    }
     const { id } = await params;
     const body = await request.json();
     const { name, email, role, branchId, isActive, password } = body;
@@ -55,17 +61,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // BRANCH_ADMIN can only update users in their branch
     if (session.user.role === "BRANCH_ADMIN" && existing.branchId !== session.user.branchId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // BRANCH_ADMIN cannot assign HEAD_ADMIN role
     if (session.user.role === "BRANCH_ADMIN" && role === "HEAD_ADMIN") {
       return NextResponse.json({ error: "Cannot assign Head Admin role" }, { status: 403 });
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
     if (name) updateData.name = name.trim();
     if (email) updateData.email = email.trim();
     if (role && session.user.role === "HEAD_ADMIN") updateData.role = role;
@@ -92,13 +96,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       isActive: user.isActive,
       branch: user.branch,
     });
-  } catch (error: any) {
-    if (error.message === "Forbidden") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  } catch (error: unknown) {
     console.error("Error updating user:", error);
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
@@ -106,7 +104,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireRole(["HEAD_ADMIN"]);
+    let session;
+    try { session = await requireRole(["HEAD_ADMIN"]); } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      throw error;
+    }
     const { id } = await params;
 
     const existing = await prisma.user.findUnique({ where: { id } });
@@ -114,20 +118,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Cannot delete yourself
     if (existing.id === session.user.id) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
     }
 
     await prisma.user.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    if (error.message === "Forbidden") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  } catch (error: unknown) {
     console.error("Error deleting user:", error);
     return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
