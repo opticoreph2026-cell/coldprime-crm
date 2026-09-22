@@ -62,14 +62,14 @@ export async function POST(request: Request) {
       ccName: ccName || undefined,
     });
 
-    await logEmail(branchFilter.branchId, templateId || null, session.user.id, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
+    await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
 
     return NextResponse.json({ success: true, message: "Email sent", data: result });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to send email";
     console.error("Error sending email:", error);
     if (session && branchFilter) {
-      try { await logEmail(branchFilter.branchId, templateId || null, session.user.id, toEmail, toName, subject, "FAILED", msg); } catch {}
+      try { await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName, subject, "FAILED", msg); } catch {}
     }
     return NextResponse.json({ error: msg }, { status: 500 });
   }
