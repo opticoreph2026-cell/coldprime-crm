@@ -171,8 +171,8 @@ function CompaniesContent() {
 <div style={{ padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{isSupplierView ? "HVAC Equipment & Materials Suppliers" : "Companies"}</h1>
-            <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} {isSupplierView ? "suppliers" : "companies"} total</p>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{isSupplierView ? "HVAC Suppliers (Vendors)" : "Companies"}</h1>
+            <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{isSupplierView ? "Equipment & materials suppliers" : `${total} potential clients`}</p>
           </div>
           <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(isSupplierView ? { ...emptyForm, source: "Supplier" } : emptyForm); setMobiles([""]); setLandlines([""]); }}>
             {showForm ? "Cancel" : isSupplierView ? "+ Add Supplier" : "+ Add Company"}

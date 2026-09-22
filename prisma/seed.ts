@@ -115,19 +115,18 @@ async function main() {
     }
   }
 
-// Seed companies (suppliers) for Cebu
+// Seed companies (potential clients) for Cebu
   const cebuCompanyNames = [
-    "Cebu Construction Supply",
-    "Mactan HVAC Systems",
-    "Cebu Electrical Depot",
-    "Island General Plumbing",
-    "Cebu Roofing Solutions",
+    "Cebu Grand Hotel",
+    "Mactan Resort & Spa",
+    "Visayas Medical Center",
+    "Cebu Business Park Tower",
+    "Lapu-Lapu City Hall",
   ];
-  const cebuCompanyIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "Electrical Supplies", "Plumbing Materials", "Construction Materials"];
-  const cebuCompanySources = ["Supplier", "Supplier", "Supplier", "Supplier", "Supplier"];
-  const cebuCompanyEmails = ["info@cebucharcon.com", "sales@mactanhvac.com", "contact@cebuelec.com", "sales@islandplumb.com", "info@ceburoofing.com"];
+  const cebuCompanyIndustries = ["Hotel", "Hotel", "Hospital", "Real Estate", "Government"];
+  const cebuCompanyEmails = ["facilities@cebugrand.com", "admin@mactanspa.com", "ops@visayasmed.com", "info@cbptower.com", "supply@lapulapu.gov.ph"];
   const cebuCompanyMobiles = ["09171234501", "09171234502", "09171234503", "09171234504", "09171234505"];
-  const cebuCompanyStatuses = ["Active", "Active", "Prospect", "Pending", "Active"];
+  const cebuCompanyStatuses = ["Active", "Prospect", "Active", "Pending", "Prospect"];
   const cebuCompanyAddresses = ["123 Mango Ave, Cebu", "456 Basak Rd, Lapu-Lapu", "789 Colon St, Cebu", "321 Mango Ave, Cebu", "555 Gov Cuenco Ave, Cebu"];
 
   const cebuCompanyIds: string[] = [];
@@ -141,26 +140,53 @@ async function main() {
         mobile1: cebuCompanyMobiles[i],
         status: cebuCompanyStatuses[i],
         address: cebuCompanyAddresses[i],
-        source: cebuCompanySources[i],
       },
     }).catch(() => null);
     if (company) cebuCompanyIds.push(company.id);
   }
 
-  // Seed companies (suppliers) for Manila
-  const manilaCompanyNames = [
-    "Manila Builders Supply",
-    "Metro HVAC Manila",
-    "National Electrical Co",
-    "Metro Plumbing Services",
-    "Tagaytay Cooling Systems",
+  // Seed HVAC suppliers (vendors) for Cebu
+  const cebuSupplierNames = [
+    "Cebu HVAC Supply Co.",
+    "Mactan Aircon Parts",
+    "Cebu Refrigeration Corp.",
+    "Island Cool Systems",
+    "Cebu Mechanical Supplies",
   ];
-  const manilaCompanyIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "Electrical Supplies", "Plumbing Materials", "Construction Materials"];
-  const manilaCompanySources = ["Supplier", "Supplier", "Supplier", "Supplier", "Supplier"];
-  const manilaCompanyEmails = ["info@manilabuild.com", "sales@metrohvac.com", "contact@nationalelec.com", "sales@metroplumb.com", "info@tagcooling.com"];
+  const cebuSupplierIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "HVAC Maintenance", "HVAC Installation", "Construction Materials"];
+  const cebuSupplierEmails = ["sales@cebuhvac.com", "info@mactanaircon.com", "contact@ceburefrig.com", "sales@islandcool.com", "orders@cebumech.com"];
+  const cebuSupplierMobiles = ["09171234511", "09171234512", "09171234513", "09171234514", "09171234515"];
+  const cebuSupplierStatuses = ["Active", "Active", "Active", "Prospect", "Active"];
+  const cebuSupplierAddresses = ["100 AS Fortuna, Mandaue", "200 M.L. Quezon Ave, Cebu", "300 Ouano Ave, Mandaue", "400 Salinas Drive, Cebu", "500 Banilad Road, Cebu"];
+
+  for (let i = 0; i < 5; i++) {
+    await prisma.company.create({
+      data: {
+        branchId: cebuBranch.id,
+        name: cebuSupplierNames[i],
+        industry: cebuSupplierIndustries[i],
+        email: cebuSupplierEmails[i],
+        mobile1: cebuSupplierMobiles[i],
+        status: cebuSupplierStatuses[i],
+        address: cebuSupplierAddresses[i],
+        source: "Supplier",
+      },
+    }).catch(() => {});
+  }
+
+  // Seed companies (potential clients) for Manila
+  const manilaCompanyNames = [
+    "Makati Shangri-La Hotel",
+    "Manila Doctors Hospital",
+    "BGC High Street Tower",
+    " Ortigas Center Mall",
+    "Quezon City Government Complex",
+  ];
+  const manilaCompanyIndustries = ["Hotel", "Hospital", "Real Estate", "Retail", "Government"];
+  const manilaCompanyEmails = ["facilities@shangrila-makati.com", "admin@maniladoctors.ph", "info@bgchigh.com", "ops@ortigasmall.com", "supply@quezoncity.gov.ph"];
   const manilaCompanyMobiles = ["09171234601", "09171234602", "09171234603", "09171234604", "09171234605"];
-  const manilaCompanyStatuses = ["Active", "Active", "Prospect", "Active", "Pending"];
-  const manilaCompanyAddresses = ["100 EDSA, Mandaluyong", "200 Taft Ave, Manila", "300 Quezon Ave, QC", "400 Roxas Blvd, Manila", "500 Aguinaldo Hwy, Tagaytay"];
+  const manilaCompanyStatuses = ["Active", "Active", "Prospect", "Pending", "Prospect"];
+  const manilaCompanyAddresses = ["100 EDSA, Makati", "200 Quirino Ave, Manila", "300 5th Ave, BGC", "400 Julia Vargas, Ortigas", "500 Elliptical Rd, QC"];
 
   const manilaCompanyIds: string[] = [];
   for (let i = 0; i < 5; i++) {
@@ -173,16 +199,44 @@ async function main() {
         mobile1: manilaCompanyMobiles[i],
         status: manilaCompanyStatuses[i],
         address: manilaCompanyAddresses[i],
-        source: manilaCompanySources[i],
       },
     }).catch(() => null);
     if (company) manilaCompanyIds.push(company.id);
   }
 
-  // Seed contacts for Cebu companies
+  // Seed HVAC suppliers (vendors) for Manila
+  const manilaSupplierNames = [
+    "Metro HVAC Supply",
+    "Manila Aircon Warehouse",
+    "National Refrigeration Corp.",
+    "CoolTech Manila",
+    "Primex HVAC Materials",
+  ];
+  const manilaSupplierIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "HVAC Maintenance", "HVAC Installation", "Construction Materials"];
+  const manilaSupplierEmails = ["sales@metrohvac.com", "info@manilaaircon.com", "contact@nationalrefrig.com", "sales@cooltechmanila.com", "orders@primexhvac.com"];
+  const manilaSupplierMobiles = ["09171234611", "09171234612", "09171234613", "09171234614", "09171234615"];
+  const manilaSupplierStatuses = ["Active", "Active", "Active", "Prospect", "Active"];
+  const manilaSupplierAddresses = ["100 C5, Pasig", "200 Macapagal Blvd, Pasay", "300 Sgt. Esguerra, QC", "400 Chino Roces, Makati", "500 Shaw Blvd, Mandaluyong"];
+
+  for (let i = 0; i < 5; i++) {
+    await prisma.company.create({
+      data: {
+        branchId: manilaBranch.id,
+        name: manilaSupplierNames[i],
+        industry: manilaSupplierIndustries[i],
+        email: manilaSupplierEmails[i],
+        mobile1: manilaSupplierMobiles[i],
+        status: manilaSupplierStatuses[i],
+        address: manilaSupplierAddresses[i],
+        source: "Supplier",
+      },
+    }).catch(() => {});
+  }
+
+  // Seed contacts for Cebu client companies
   const cebuContactData = [
-    { companyIdx: 0, firstName: "Juan", lastName: "Dela Cruz", email: "juan@cebucharcon.com", mobile: "09170000001", position: "Manager" },
-    { companyIdx: 1, firstName: "Maria", lastName: "Santos", email: "maria@mactanhvac.com", mobile: "09170000002", position: "Sales Manager" },
+    { companyIdx: 0, firstName: "Juan", lastName: "Dela Cruz", email: "juan@cebugrand.com", mobile: "09170000001", position: "Facilities Manager" },
+    { companyIdx: 1, firstName: "Maria", lastName: "Santos", email: "maria@mactanspa.com", mobile: "09170000002", position: "Admin Manager" },
   ];
   for (const c of cebuContactData) {
     const companyId = cebuCompanyIds[c.companyIdx];
@@ -193,10 +247,10 @@ async function main() {
     }
   }
 
-  // Seed contacts for Manila companies
+  // Seed contacts for Manila client companies
   const manilaContactData = [
-    { companyIdx: 0, firstName: "Pedro", lastName: "Reyes", email: "pedro@manilabuild.com", mobile: "09170000003", position: "Manager" },
-    { companyIdx: 1, firstName: "Ana", lastName: "Garcia", email: "ana@metrohvac.com", mobile: "09170000004", position: "Director" },
+    { companyIdx: 0, firstName: "Pedro", lastName: "Reyes", email: "pedro@shangrila-makati.com", mobile: "09170000003", position: "Facilities Manager" },
+    { companyIdx: 1, firstName: "Ana", lastName: "Garcia", email: "ana@maniladoctors.ph", mobile: "09170000004", position: "Admin Director" },
   ];
   for (const c of manilaContactData) {
     const companyId = manilaCompanyIds[c.companyIdx];
