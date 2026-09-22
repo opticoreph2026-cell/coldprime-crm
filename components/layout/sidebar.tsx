@@ -122,7 +122,7 @@ export function Sidebar({ children }: { children: ReactNode }) {
 
         <nav style={{ padding: "0.5rem", flex: 1 }}>
           {navItems.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}

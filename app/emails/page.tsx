@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface Template {
   id: string;
@@ -11,6 +12,7 @@ interface Template {
 }
 
 interface Recipient {
+  id?: string;
   email: string;
   name: string | null;
   type: "contact" | "company";
@@ -28,13 +30,54 @@ interface EmailLog {
   errorCode: string | null;
 }
 
+const DEFAULT_SUBJECT = "Application for Accreditation as HVAC & IAQ Vendor – Coldprime Enterprises Corporation";
+
+const DEFAULT_BODY = `Good day,
+
+I hope this email finds you well. My name is [Your Name], Sales Engineer at Coldprime Enterprises Corporation, an HVAC and Indoor Air Quality contractor with our main office in Makati and a branch office in Cebu.
+
+I'm reaching out to inquire about the possibility of Coldprime being accredited as an HVAC/IAQ vendor or subcontractor for [Company Name]. We specialize in HVAC system design, supply, and installation, along with IAQ compliance solutions for commercial, industrial, and institutional developments.
+
+If you're not the right point of contact for vendor accreditation, I'd greatly appreciate it if you could forward this email to your procurement or purchasing department. Please let us know if there are specific requirements or forms we should complete, and we'll gladly send over our company profile and supporting documents.
+
+Would it also be alright if I gave you a call to briefly discuss this further? Please let me know a convenient time, or feel free to reach me directly at [Phone].
+
+Thank you for your time, and I look forward to hearing from you.
+
+Best regards,
+[Your Name]
+Sales Engineer, Coldprime Enterprises Corporation
+[Phone] | [Email]`;
+
+const BATCH_SIZE = 10;
+
 export default function EmailsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
-  const [activeTab, setActiveTab] = useState<"compose" | "sent">("compose");
+  const [activeTab, setActiveTab] = useState<"bulk" | "templates" | "sent">("bulk");
   const [loading, setLoading] = useState(true);
+
+  const [subject, setSubject] = useState(DEFAULT_SUBJECT);
+  const [body, setBody] = useState(DEFAULT_BODY);
+  const [senderName, setSenderName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
+  const [skipAlreadySent, setSkipAlreadySent] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [result, setResult] = useState<{ sent: number; failed: number; skipped: number } | null>(null);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (session?.user) {
+      setSenderName((prev) => prev || session.user.name || "");
+      setSenderEmail((prev) => prev || session.user.email || "");
+    }
+  }, [session]);
 
   useEffect(() => {
     Promise.all([
@@ -53,7 +96,8 @@ export default function EmailsPage() {
             type: "contact" as const,
             companyName: c.company?.name,
           })),
-          ...compData.map((c: { email: string; name: string; industry?: string }) => ({
+          ...compData.map((c: { id: string; email: string; name: string; industry?: string }) => ({
+            id: c.id,
             email: c.email,
             name: c.name,
             type: "company" as const,
@@ -67,6 +111,84 @@ export default function EmailsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const companyTargets = recipients.filter((r) => r.type === "company" && r.id);
+
+  const handleBulkSend = async () => {
+    if (!subject.trim() || !body.trim()) {
+      setError("Subject and body are required");
+      return;
+    }
+    if (companyTargets.length === 0) {
+      setError("No companies with email addresses found");
+      return;
+    }
+    if (!window.confirm(`Send this email to ${companyTargets.length} companies? This cannot be undone.`)) return;
+
+    setError("");
+    setNotice("");
+    setResult(null);
+    setSending(true);
+
+    const finalBody = body
+      .split("[Your Name]").join(senderName)
+      .split("[Phone]").join(phone)
+      .split("[Email]").join(senderEmail);
+
+    let sent = 0;
+    let failed = 0;
+    let skipped = 0;
+    const ids = companyTargets.map((t) => t.id!);
+
+    try {
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const chunk = ids.slice(i, i + BATCH_SIZE);
+        setProgress({ done: Math.min(i + BATCH_SIZE, ids.length), total: ids.length });
+        const res = await fetch("/api/emails/bulk-send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subject, body: finalBody, companyIds: chunk, skipAlreadySent }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Bulk send failed");
+          break;
+        }
+        sent += data.sent || 0;
+        failed += data.failed || 0;
+        skipped += data.skipped || 0;
+      }
+      setResult({ sent, failed, skipped });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Bulk send failed");
+    } finally {
+      setSending(false);
+      setProgress(null);
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    const name = window.prompt("Template name:", "Vendor Accreditation");
+    if (!name) return;
+    setNotice("");
+    setError("");
+    try {
+      const res = await fetch("/api/emails/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, subject, body, category: "HVAC" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotice(`Template "${name}" saved.`);
+        setTemplates((prev) => [{ id: data.id, name: data.name, subject: data.subject, category: data.category }, ...prev]);
+      } else {
+        setError(data.error || "Failed to save template");
+      }
+    } catch {
+      setError("Failed to save template");
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
@@ -75,53 +197,208 @@ export default function EmailsPage() {
     );
   }
 
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: "8px 16px",
+    background: active ? "#1e40af" : "#e2e8f0",
+    color: active ? "#fff" : "#0f172a",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: 14,
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "8px 12px",
+    border: "1px solid #e2e8f0",
+    borderRadius: 6,
+    fontSize: 14,
+    boxSizing: "border-box",
+  };
+
   return (
     <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 24 }}>
         ✉️ Email Outreach
       </h1>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         <button
-          onClick={() => setActiveTab("compose")}
+          onClick={() => router.push("/emails/compose")}
           style={{
-            padding: "8px 16px",
-            background: activeTab === "compose" ? "#1e40af" : "#e2e8f0",
-            color: activeTab === "compose" ? "#fff" : "#0f172a",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: 14,
+            ...tabStyle(true),
+            background: "#16a34a",
           }}
         >
-          Compose Email
+          ✏️ Compose Email
         </button>
-        <button
-          onClick={() => setActiveTab("sent")}
-          style={{
-            padding: "8px 16px",
-            background: activeTab === "sent" ? "#1e40af" : "#e2e8f0",
-            color: activeTab === "sent" ? "#fff" : "#0f172a",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: 14,
-          }}
-        >
-          Sent History ({logs.length})
+        <button onClick={() => setActiveTab("bulk")} style={tabStyle(activeTab === "bulk")}>
+          📦 Bulk Send
+        </button>
+        <button onClick={() => setActiveTab("templates")} style={tabStyle(activeTab === "templates")}>
+          🗂 Templates ({templates.length})
+        </button>
+        <button onClick={() => setActiveTab("sent")} style={tabStyle(activeTab === "sent")}>
+          📨 Sent History ({logs.length})
         </button>
       </div>
 
-      {activeTab === "compose" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Select Template</h2>
-            {templates.map((tpl) => (
+      {error && (
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div style={{ background: "#dcfce7", color: "#166534", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+          {notice}
+        </div>
+      )}
+
+      {activeTab === "bulk" && (
+        <div>
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+              📦 Send to all companies ({companyTargets.length} with email addresses)
+            </div>
+            <div style={{ fontSize: 12, color: "#64748b" }}>
+              <code>[Company Name]</code> is replaced from the database for each recipient. Edit{" "}
+              <code>[Your Name]</code>, <code>[Phone]</code>, and <code>[Email]</code> in the fields below or directly in the body.
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Your Name</label>
+              <input
+                type="text"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="Juan Dela Cruz"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Phone</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+63 917 000 0000"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Email</label>
+              <input
+                type="email"
+                value={senderEmail}
+                onChange={(e) => setSenderEmail(e.target.value)}
+                placeholder="you@coldprime.ph"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Subject</label>
+            <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} style={inputStyle} />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Body</label>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={18}
+              style={{ ...inputStyle, fontFamily: "monospace", lineHeight: 1.5 }}
+            />
+          </div>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 16, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={skipAlreadySent}
+              onChange={(e) => setSkipAlreadySent(e.target.checked)}
+              disabled={sending}
+            />
+            Skip companies that already received an email with this subject
+          </label>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              onClick={handleBulkSend}
+              disabled={sending || companyTargets.length === 0}
+              style={{
+                padding: "10px 24px",
+                background: sending ? "#94a3b8" : "#1e40af",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                cursor: sending ? "not-allowed" : "pointer",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              {sending && progress
+                ? `Sending ${progress.done}/${progress.total}…`
+                : `Send to ${companyTargets.length} Companies`}
+            </button>
+            <button
+              onClick={handleSaveTemplate}
+              disabled={sending}
+              style={{
+                padding: "10px 16px",
+                background: "#fff",
+                color: "#1e40af",
+                border: "1px solid #1e40af",
+                borderRadius: 6,
+                cursor: sending ? "not-allowed" : "pointer",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              Save as Template
+            </button>
+          </div>
+
+          {result && (
+            <div
+              style={{
+                marginTop: 16,
+                padding: 16,
+                borderRadius: 8,
+                background: result.failed > 0 ? "#fffbeb" : "#dcfce7",
+                color: result.failed > 0 ? "#92400e" : "#166534",
+                fontSize: 14,
+              }}
+            >
+              Done — {result.sent} sent, {result.failed} failed, {result.skipped} skipped.
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "templates" && (
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Templates</h2>
+          <button
+            onClick={() => router.push("/emails/compose")}
+            style={{
+              ...tabStyle(true),
+              background: "#16a34a",
+              marginBottom: 16,
+            }}
+          >
+            ✏️ Compose New Email
+          </button>
+          {templates.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>No templates yet. Save one from the Bulk Send tab.</p>
+          ) : (
+            templates.map((tpl) => (
               <div
                 key={tpl.id}
-                onClick={() => router.push(`/emails/compose?template=${tpl.id}`)}
+                onClick={() => router.push(`/emails/compose?template=${encodeURIComponent(tpl.id)}`)}
                 style={{
                   padding: 12,
                   border: "1px solid #e2e8f0",
@@ -148,32 +425,39 @@ export default function EmailsPage() {
                   {tpl.category}
                 </span>
               </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "templates" && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Recipients</h2>
+          <div style={{ maxHeight: 400, overflow: "auto" }}>
+            {recipients.map((r, i) => (
+              <div
+                key={i}
+                onClick={() =>
+                  router.push(
+                    `/emails/compose?to=${encodeURIComponent(r.email)}&toName=${encodeURIComponent(r.name || "")}`
+                  )
+                }
+                style={{
+                  padding: 10,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 8,
+                  marginBottom: 6,
+                  cursor: "pointer",
+                  background: "#fff",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+              >
+                <div style={{ fontWeight: 500, fontSize: 13 }}>{r.name || r.email}</div>
+                <div style={{ fontSize: 11, color: "#64748b" }}>{r.email}</div>
+                {r.industry && <div style={{ fontSize: 10, color: "#94a3b8" }}>{r.industry}</div>}
+              </div>
             ))}
-          </div>
-          <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Recipients</h2>
-            <div style={{ maxHeight: 400, overflow: "auto" }}>
-              {recipients.map((r, i) => (
-                <div
-                  key={i}
-                  onClick={() => router.push(`/emails/compose?to=${r.email}&toName=${r.name || ""}`)}
-                  style={{
-                    padding: 10,
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 8,
-                    marginBottom: 6,
-                    cursor: "pointer",
-                    background: "#fff",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
-                >
-                  <div style={{ fontWeight: 500, fontSize: 13 }}>{r.name || r.email}</div>
-                  <div style={{ fontSize: 11, color: "#64748b" }}>{r.email}</div>
-                  {r.industry && <div style={{ fontSize: 10, color: "#94a3b8" }}>{r.industry}</div>}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -182,7 +466,7 @@ export default function EmailsPage() {
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Sent Emails ({logs.length})</h2>
           {logs.length === 0 ? (
-            <p style={{ color: "#94a3b8", fontSize: 14 }}>No emails sent yet. Select a template or recipient to compose one.</p>
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>No emails sent yet. Compose one to get started.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {logs.map((log) => (
