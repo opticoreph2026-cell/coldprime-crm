@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useEffect, useState, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Template {
   id: string;
@@ -15,7 +13,7 @@ interface Template {
 
 export default function ComposePage() {
   const router = useRouter();
-  const params = useParams();
+  const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [toEmail, setToEmail] = useState("");
@@ -27,6 +25,7 @@ export default function ComposePage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [paramsApplied, setParamsApplied] = useState(false);
 
   useEffect(() => {
     fetch("/api/emails/templates")
@@ -36,12 +35,13 @@ export default function ComposePage() {
   }, []);
 
   useEffect(() => {
-    const templateId = params.template as string | undefined;
-    const to = params.to as string | undefined;
-    const name = params.toName as string | undefined;
+    if (paramsApplied) return;
+    const templateId = searchParams.get("template");
+    const to = searchParams.get("to");
+    const name = searchParams.get("toName");
     if (to) setToEmail(to);
     if (name) setToName(name);
-    if (templateId) {
+    if (templateId && templates.length > 0) {
       const tpl = templates.find((t) => t.id === templateId);
       if (tpl) {
         setSelectedTemplate(tpl);
@@ -49,7 +49,8 @@ export default function ComposePage() {
         setBody(tpl.body);
       }
     }
-  }, [params, templates]);
+    if (templateId || to || name) setParamsApplied(true);
+  }, [searchParams, templates, paramsApplied]);
 
   const handleSend = useCallback(async () => {
     if (!toEmail || !body) {
