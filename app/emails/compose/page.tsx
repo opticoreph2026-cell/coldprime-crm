@@ -86,8 +86,8 @@ function ComposeContent() {
       } else {
         setError(data.error || "Failed to send");
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to send");
     } finally {
       setSending(false);
     }

@@ -47,13 +47,13 @@ export default function EmailsPage() {
         const recData = recRes.contacts || [];
         const compData = recRes.companies || [];
         const allRecipients: Recipient[] = [
-          ...recData.map((c: any) => ({
+          ...recData.map((c: { email: string; firstName: string; lastName?: string; company?: { name: string } }) => ({
             email: c.email,
             name: `${c.firstName} ${c.lastName || ""}`.trim(),
             type: "contact" as const,
             companyName: c.company?.name,
           })),
-          ...compData.map((c: any) => ({
+          ...compData.map((c: { email: string; name: string; industry?: string }) => ({
             email: c.email,
             name: c.name,
             type: "company" as const,

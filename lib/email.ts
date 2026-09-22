@@ -54,8 +54,9 @@ export async function sendEmail({
       throw new Error(errorMsg);
     }
     parsed = await response.json();
-  } catch (error: any) {
-    if (error.message === "Failed to fetch" || error.message === "Network error") {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "";
+    if (msg === "Failed to fetch" || msg === "Network error") {
       throw new Error("Network error: Unable to reach email service");
     }
     throw error;
