@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/lib/prisma/client/client";
 import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\Coldprime Sales\\AppData\\Local\\Temp\\opencode";
+const ALLOWED_EXTENSIONS = [".xlsx", ".xls"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-function validateFilePath(filePath: string): string {
-  const resolved = filePath.replace(/\\/g, "/");
-  const uploadDir = UPLOAD_DIR.replace(/\\/g, "/");
-  const sep = "/";
-  if (!resolved.startsWith(uploadDir + sep) && resolved !== uploadDir) {
-    throw new Error("Invalid file path");
-  }
-  return filePath;
+function validateFile(buffer: Buffer): { valid: boolean; error?: string } {
+  if (buffer.length === 0) return { valid: false, error: "Empty file" };
+  if (buffer.length > MAX_FILE_SIZE) return { valid: false, error: "File too large (max 10MB)" };
+  return { valid: true };
 }
 
 function sanitizeString(value: string): string {
@@ -25,32 +21,40 @@ export async function POST(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
-    const body = await request.json();
-    const { filePath, action } = body;
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+    const action = formData.get("action") as string || "preview";
 
-    if (!filePath) {
-      return NextResponse.json({ error: "File path is required" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
-    let safePath: string;
-    try {
-      safePath = validateFilePath(filePath);
-    } catch {
-      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return NextResponse.json({ error: "Only .xlsx and .xls files are allowed" }, { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const validation = validateFile(buffer);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     if (action === "preview") {
-      const preview = parseExcelFile(safePath);
+      const preview = parseExcelFile(buffer, file.name);
       return NextResponse.json(preview);
     }
 
     if (action === "import") {
-      const preview = parseExcelFile(safePath);
+      const preview = parseExcelFile(buffer, file.name);
       const merged = mergeImportData(preview);
 
       let imported = 0;
       let skipped = 0;
       const errors: { company: string; reason: string }[] = [];
+
+      const seenCompaniesGlobal = new Set<string>();
 
       for (const row of merged) {
         try {
@@ -58,6 +62,13 @@ export async function POST(request: Request) {
             skipped++;
             continue;
           }
+
+          const normalized = row.company.toLowerCase().trim();
+          if (seenCompaniesGlobal.has(normalized)) {
+            skipped++;
+            continue;
+          }
+          seenCompaniesGlobal.add(normalized);
 
           const existing = await prisma.company.findFirst({
             where: {
@@ -99,21 +110,7 @@ export async function POST(request: Request) {
         }
       }
 
-      const batch = await prisma.importBatch.create({
-        data: {
-          branchId,
-          filename: sanitizeString(filePath.split(/[/\\]/).pop() || filePath),
-          totalRows: merged.length,
-          importedRows: imported,
-          skippedRows: skipped,
-          errorRows: errors.length,
-          status: "completed",
-          errors: errors.length > 0 ? JSON.stringify(errors) : null,
-        },
-      });
-
       return NextResponse.json({
-        batchId: batch.id,
         imported,
         skipped,
         errors,

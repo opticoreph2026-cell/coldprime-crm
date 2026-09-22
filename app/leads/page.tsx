@@ -19,7 +19,7 @@ interface Lead {
 
 interface CompanyOption { id: string; name: string }
 
-const STATUSES = ["New", "Email Sent", "Email Sent, for Contact", "Executed Emails Sent", "No Answer", "Unattended / Not in Service", "Call Again", "Emailed", "Ongoing", "Quotation", "Approved", "Completed", "Cancelled", "Declined"];
+const STATUSES = ["New", "Email Sent", "Email Sent, for Contact", "Executed Emails Sent", "No Answer", "Unattended / Not in Service", "Call Again", "Emailed", "Ongoing", "Quotation", "Approved", "Completed", "On Hold", "Cancelled", "Declined", "Infrastructure Solutions"];
 const PRIORITIES = ["Low", "Medium", "High"];
 
 export default function LeadsPage() {

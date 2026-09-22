@@ -1,4 +1,5 @@
 import { auth } from "./auth";
+import { prisma } from "./prisma";
 
 export async function getBranchFilter() {
   const session = await auth();
@@ -6,13 +7,20 @@ export async function getBranchFilter() {
     throw new Error("Unauthorized");
   }
 
-  const user = session.user;
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id as string },
+    select: { activeBranchId: true, branchId: true, role: true },
+  });
 
-  // HEAD_ADMIN must always have an active branch selected
-  const branchId = user.activeBranchId || user.branchId;
-  if (!branchId) {
-    throw new Error("No branch assigned");
+  if (!user) throw new Error("Unauthorized");
+
+  // HEAD_ADMIN can see all branches if no activeBranchId selected
+  if (user.role === "HEAD_ADMIN" && !user.activeBranchId) {
+    return {};
   }
+
+  const branchId = user.activeBranchId || user.branchId;
+  if (!branchId) throw new Error("No branch assigned");
 
   return { branchId };
 }
@@ -23,7 +31,14 @@ export async function requireBranchId() {
     throw new Error("Unauthorized");
   }
 
-  const user = session.user;
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id as string },
+    select: { activeBranchId: true, branchId: true, role: true },
+  });
+
+  if (!user) throw new Error("Unauthorized");
+
+  // HEAD_ADMIN must select a branch
   const branchId = user.activeBranchId || user.branchId;
   if (!branchId) {
     throw new Error("No branch assigned — please select a branch first");

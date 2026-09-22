@@ -253,8 +253,8 @@ function mapSheet6(
   return rows;
 }
 
-export function parseExcelFile(filePath: string): ImportPreview {
-  const workbook = XLSX.readFile(filePath);
+export function parseExcelFile(buffer: Buffer, filename: string): ImportPreview {
+  const workbook = XLSX.read(buffer, { type: "buffer" });
 
   const sheetHandlers: Record<string, (sheet: XLSX.WorkSheet, name: string) => ImportRow[]> = {
     "Customer": mapCustomerSheet,
@@ -265,6 +265,8 @@ export function parseExcelFile(filePath: string): ImportPreview {
   };
 
   const sheets: SheetPreview[] = [];
+  const globalSeenCompanies = new Set<string>();
+  const globalDuplicates: { sheetName: string; row: number }[] = [];
   let totalRows = 0;
 
   for (const sheetName of workbook.SheetNames) {
@@ -274,16 +276,32 @@ export function parseExcelFile(filePath: string): ImportPreview {
     const handler = sheetHandlers[sheetName] || mapCustomerSheet;
     const rows = handler(sheet, sheetName);
 
-    const seenCompanies = new Set<string>();
+    const sheetSeenCompanies = new Set<string>();
     const duplicates: number[] = [];
     const errors: { row: number; reason: string }[] = [];
 
     for (const row of rows) {
+      row.rawData = {
+        company: row.company || "",
+        industry: row.industry || "",
+        email: row.email || "",
+        mobile1: row.mobile1 || "",
+        landline1: row.landline1 || "",
+        address: row.address || "",
+        website: row.website || "",
+        contactPerson: row.contactPerson || "",
+        position: row.position || "",
+        status: row.status || "",
+        remarks: row.remarks || "",
+      };
+
       const normalized = row.company?.toLowerCase().trim();
-      if (normalized && seenCompanies.has(normalized)) {
+      if (normalized && globalSeenCompanies.has(normalized)) {
         duplicates.push(row.rowIndex);
+        globalDuplicates.push({ sheetName, row: row.rowIndex });
       } else if (normalized) {
-        seenCompanies.add(normalized);
+        sheetSeenCompanies.add(normalized);
+        globalSeenCompanies.add(normalized);
       }
 
       if (!row.company) {
@@ -303,11 +321,11 @@ export function parseExcelFile(filePath: string): ImportPreview {
     totalRows += rows.length;
   }
 
-  const duplicateCount = sheets.reduce((sum, s) => sum + s.duplicates.length, 0);
+  const duplicateCount = globalDuplicates.length;
   const errorCount = sheets.reduce((sum, s) => sum + s.errors.length, 0);
 
   return {
-    filename: filePath.split(/[/\\]/).pop() || filePath,
+    filename,
     sheets,
     totalRows,
     validRows: totalRows - duplicateCount - errorCount,

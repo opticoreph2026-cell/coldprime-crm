@@ -145,36 +145,7 @@ async function main() {
     if (company) cebuCompanyIds.push(company.id);
   }
 
-  // Seed HVAC suppliers (vendors) for Cebu
-  const cebuSupplierNames = [
-    "Cebu HVAC Supply Co.",
-    "Mactan Aircon Parts",
-    "Cebu Refrigeration Corp.",
-    "Island Cool Systems",
-    "Cebu Mechanical Supplies",
-  ];
-  const cebuSupplierIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "HVAC Maintenance", "HVAC Installation", "Construction Materials"];
-  const cebuSupplierEmails = ["sales@cebuhvac.com", "info@mactanaircon.com", "contact@ceburefrig.com", "sales@islandcool.com", "orders@cebumech.com"];
-  const cebuSupplierMobiles = ["09171234511", "09171234512", "09171234513", "09171234514", "09171234515"];
-  const cebuSupplierStatuses = ["Active", "Active", "Active", "Prospect", "Active"];
-  const cebuSupplierAddresses = ["100 AS Fortuna, Mandaue", "200 M.L. Quezon Ave, Cebu", "300 Ouano Ave, Mandaue", "400 Salinas Drive, Cebu", "500 Banilad Road, Cebu"];
-
-  for (let i = 0; i < 5; i++) {
-    await prisma.company.create({
-      data: {
-        branchId: cebuBranch.id,
-        name: cebuSupplierNames[i],
-        industry: cebuSupplierIndustries[i],
-        email: cebuSupplierEmails[i],
-        mobile1: cebuSupplierMobiles[i],
-        status: cebuSupplierStatuses[i],
-        address: cebuSupplierAddresses[i],
-        source: "Supplier",
-      },
-    }).catch(() => {});
-  }
-
-  // Seed companies (potential clients) for Manila
+  // Seed companies (clients) for Cebu
   const manilaCompanyNames = [
     "Makati Shangri-La Hotel",
     "Manila Doctors Hospital",
@@ -202,35 +173,6 @@ async function main() {
       },
     }).catch(() => null);
     if (company) manilaCompanyIds.push(company.id);
-  }
-
-  // Seed HVAC suppliers (vendors) for Manila
-  const manilaSupplierNames = [
-    "Metro HVAC Supply",
-    "Manila Aircon Warehouse",
-    "National Refrigeration Corp.",
-    "CoolTech Manila",
-    "Primex HVAC Materials",
-  ];
-  const manilaSupplierIndustries = ["HVAC Equipment", "HVAC Equipment & Services", "HVAC Maintenance", "HVAC Installation", "Construction Materials"];
-  const manilaSupplierEmails = ["sales@metrohvac.com", "info@manilaaircon.com", "contact@nationalrefrig.com", "sales@cooltechmanila.com", "orders@primexhvac.com"];
-  const manilaSupplierMobiles = ["09171234611", "09171234612", "09171234613", "09171234614", "09171234615"];
-  const manilaSupplierStatuses = ["Active", "Active", "Active", "Prospect", "Active"];
-  const manilaSupplierAddresses = ["100 C5, Pasig", "200 Macapagal Blvd, Pasay", "300 Sgt. Esguerra, QC", "400 Chino Roces, Makati", "500 Shaw Blvd, Mandaluyong"];
-
-  for (let i = 0; i < 5; i++) {
-    await prisma.company.create({
-      data: {
-        branchId: manilaBranch.id,
-        name: manilaSupplierNames[i],
-        industry: manilaSupplierIndustries[i],
-        email: manilaSupplierEmails[i],
-        mobile1: manilaSupplierMobiles[i],
-        status: manilaSupplierStatuses[i],
-        address: manilaSupplierAddresses[i],
-        source: "Supplier",
-      },
-    }).catch(() => {});
   }
 
   // Seed contacts for Cebu client companies

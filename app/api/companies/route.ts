@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
@@ -127,6 +128,8 @@ export async function POST(request: Request) {
         source: source?.trim() || null,
       },
     });
+
+    await logAudit({ branchId, action: "CREATE", entity: "Company", entityId: company.id, details: { name: name.trim(), industry } });
 
     return NextResponse.json(company, { status: 201 });
   } catch (error) {

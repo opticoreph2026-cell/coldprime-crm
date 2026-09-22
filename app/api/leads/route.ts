@@ -56,6 +56,28 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { companyId, contactId, source, industry, priority, estimatedValue, assignedTo, notes } = body;
 
+    // Verify company belongs to same branch
+    if (companyId) {
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { branchId: true },
+      });
+      if (!company || company.branchId !== branchId) {
+        return NextResponse.json({ error: "Company not found in your branch" }, { status: 400 });
+      }
+    }
+
+    // Verify contact belongs to same branch
+    if (contactId) {
+      const contact = await prisma.contact.findUnique({
+        where: { id: contactId },
+        select: { branchId: true },
+      });
+      if (!contact || contact.branchId !== branchId) {
+        return NextResponse.json({ error: "Contact not found in your branch" }, { status: 400 });
+      }
+    }
+
     const lead = await prisma.lead.create({
       data: {
         branchId,

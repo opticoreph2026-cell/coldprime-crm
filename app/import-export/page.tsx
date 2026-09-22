@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface ImportPreview {
   filename: string;
@@ -18,21 +18,32 @@ interface ImportPreview {
 }
 
 export default function ImportExportPage() {
-  const [filePath, setFilePath] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number; errors: { company: string; reason: string }[] } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setFileName(file.name);
+      setPreview(null);
+      setResult(null);
+    }
+  };
+
   const handlePreview = async () => {
-    if (!filePath.trim()) return alert("Enter the file path to CRM 2026.xlsx");
+    if (!selectedFile) return alert("Please select an Excel file first");
     setLoading(true);
     try {
-      const res = await fetch("/api/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filePath: filePath.trim(), action: "preview" }),
-      });
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("action", "preview");
+      const res = await fetch("/api/import", { method: "POST", body: formData });
       const data = await res.json();
       if (data.error) { alert(data.error); return; }
       setPreview(data);
@@ -44,18 +55,20 @@ export default function ImportExportPage() {
   };
 
   const handleImport = async () => {
-    if (!filePath.trim()) return;
+    if (!selectedFile) return;
     setImporting(true);
     try {
-      const res = await fetch("/api/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filePath: filePath.trim(), action: "import" }),
-      });
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("action", "import");
+      const res = await fetch("/api/import", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok || data.error) { alert(data.error || "Import failed"); return; }
       setResult(data);
       setPreview(null);
+      setSelectedFile(null);
+      setFileName("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       alert("Failed to import");
     } finally {
@@ -71,16 +84,17 @@ export default function ImportExportPage() {
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
         <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>Import from Excel</h2>
         <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: 12 }}>
-          Import the existing CRM 2026.xlsx workbook. The system will parse all relevant sheets, merge duplicates, and create company records.
+          Select an Excel workbook (.xlsx/.xls) to import. The system will parse all relevant sheets, merge duplicates, and create company records.
         </p>
         <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
           <input
-            placeholder="Full file path to CRM 2026.xlsx"
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
             style={{ flex: 1 }}
-            value={filePath}
-            onChange={(e) => setFilePath(e.target.value)}
+            onChange={handleFileChange}
           />
-          <button className="btn btn-secondary" onClick={handlePreview} disabled={loading}>
+          <button className="btn btn-secondary" onClick={handlePreview} disabled={loading || !selectedFile}>
             {loading ? "Loading..." : "Preview"}
           </button>
         </div>
