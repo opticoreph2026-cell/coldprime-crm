@@ -18,6 +18,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -26,10 +27,21 @@ export default function DashboardPage() {
         return r.json();
       })
       .then(setStats)
-      .catch(console.error);
+      .catch((e) => setError(e.message || "Failed to load dashboard"));
   }, []);
 
-  if (!stats) return <div style={{ padding: 24 }}>Loading...</div>;
+  if (error) return (
+    <div style={{ padding: 24 }}>
+      <div style={{ background: "#fef2f2", color: "#dc2626", padding: 16, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+        {error}
+      </div>
+      <button onClick={() => { setError(""); setStats(null); window.location.reload(); }} style={{ padding: "8px 16px", background: "#1e40af", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
+        Retry
+      </button>
+    </div>
+  );
+
+  if (!stats) return <div style={{ padding: 24, color: "#64748b" }}>Loading dashboard...</div>;
 
   const cards = [
     { label: "Total Companies", value: stats.totalCompanies, color: "#1e40af" },

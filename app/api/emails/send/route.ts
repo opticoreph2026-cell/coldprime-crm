@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       ccName: ccName || undefined,
     });
 
-    await logEmail(prisma, branchFilter.branchId, templateId || null, session.user.id, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
+    await logEmail(branchFilter.branchId, templateId || null, session.user.id, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
 
     return NextResponse.json({ success: true, message: "Email sent", data: result });
   } catch (error: any) {
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     try {
       const session = await requireAuth();
       const branchFilter = await getBranchFilter();
-      await logEmail(prisma, branchFilter.branchId, null, session.user.id, toEmail, toName, subject, "FAILED", error.message);
+      await logEmail(branchFilter.branchId, null, session.user.id, toEmail, toName, subject, "FAILED", error.message);
     } catch {}
     return NextResponse.json({ error: error.message || "Failed to send email" }, { status: 500 });
   }

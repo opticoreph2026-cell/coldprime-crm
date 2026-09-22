@@ -65,7 +65,6 @@ export async function sendEmail({
 }
 
 export async function logEmail(
-  prisma: any,
   branchId: string,
   templateId: string | null,
   fromUserId: string,
@@ -74,8 +73,10 @@ export async function logEmail(
   subject: string,
   status: string,
   errorCode: string | null = null,
-  metadata: any = null,
+  metadata: Record<string, unknown> | null = null,
 ) {
+  const { PrismaClient } = await import("@prisma/client");
+  const prisma = new PrismaClient();
   await prisma.emailLog.create({
     data: {
       branchId,
@@ -84,9 +85,10 @@ export async function logEmail(
       toEmail,
       toName,
       subject,
-      status: status as any,
+      status: status as "SENT" | "FAILED" | "PENDING",
       errorCode,
-      metadata: metadata ? JSON.stringify(metadata) : null,
+      metadata: metadata ? JSON.stringify(metadata) : undefined,
     },
   });
+  await prisma.$disconnect();
 }

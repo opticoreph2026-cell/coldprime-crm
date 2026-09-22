@@ -15,11 +15,11 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    userId: string;
-    role: string;
-    branchId: string | null;
-    branchName: string | null;
-    branchSlug: string | null;
-    activeBranchId: string | null;
+    userId?: string;
+    role?: string;
+    branchId?: string | null;
+    branchName?: string | null;
+    branchSlug?: string | null;
+    activeBranchId?: string | null;
   }
 }

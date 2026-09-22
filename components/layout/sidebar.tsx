@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
@@ -25,11 +25,24 @@ export function Sidebar({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { data: session } = useSession();
   const [switching, setSwitching] = useState(false);
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
 
   const user = session?.user;
   const isHeadAdmin = user?.role === "HEAD_ADMIN";
   const isBranchAdmin = user?.role === "BRANCH_ADMIN";
   const canManageUsers = isHeadAdmin || isBranchAdmin;
+
+  useEffect(() => {
+    if (isHeadAdmin) {
+      fetch("/api/branches")
+        .then((r) => r.json())
+        .then((res) => setBranches(res.data || []))
+        .catch(() => setBranches([
+          { id: "branch_cebu", name: "Cebu Office" },
+          { id: "branch_manila", name: "Manila Office" },
+        ]));
+    }
+  }, [isHeadAdmin]);
 
   const handleBranchSwitch = async (branchId: string) => {
     setSwitching(true);
@@ -99,8 +112,9 @@ export function Sidebar({ children }: { children: ReactNode }) {
               }}
             >
               <option value="">All Branches</option>
-              <option value="branch_cebu">Cebu Office</option>
-              <option value="branch_manila">Manila Office</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
             </select>
           </div>
         )}

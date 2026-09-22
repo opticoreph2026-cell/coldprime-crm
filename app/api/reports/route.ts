@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const to = searchParams.get("to");
 
     const now = new Date();
-    const weekStart = from ? new Date(from) : new Date(now.setDate(now.getDate() - now.getDay() + 1));
+    const weekStart = from ? new Date(from) : new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1);
     const weekEnd = to ? new Date(to) : new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
     const [activities, leads, projects] = await Promise.all([

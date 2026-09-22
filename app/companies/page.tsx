@@ -95,16 +95,26 @@ export default function CompaniesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError("");
     const url = editingId ? `/api/companies/${editingId}` : "/api/companies";
     const method = editingId ? "PUT" : "POST";
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    if (res.ok) {
-      setShowForm(false);
-      setEditingId(null);
-      setForm(emptyForm);
-      setMobiles([""]);
-      setLandlines([""]);
-      fetchCompanies();
+    try {
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const data = await res.json();
+      if (res.ok) {
+        setShowForm(false);
+        setEditingId(null);
+        setForm(emptyForm);
+        setMobiles([""]);
+        setLandlines([""]);
+        fetchCompanies();
+      } else if (res.status === 409 && data.duplicate) {
+        setApiError(`Possible duplicate: "${data.duplicate.name}" (email: ${data.duplicate.email || "none"}, phone: ${data.duplicate.mobile1 || "none"})`);
+      } else {
+        setApiError(data.error || "Failed to save");
+      }
+    } catch {
+      setApiError("Network error");
     }
   };
 
