@@ -75,8 +75,7 @@ export async function logEmail(
   errorCode: string | null = null,
   metadata: Record<string, unknown> | null = null,
 ) {
-  const { PrismaClient } = await import("@prisma/client");
-  const prisma = new PrismaClient();
+  const { prisma } = await import("./prisma");
   await prisma.emailLog.create({
     data: {
       branchId,
@@ -90,5 +89,4 @@ export async function logEmail(
       metadata: metadata ? JSON.stringify(metadata) : undefined,
     },
   });
-  await prisma.$disconnect();
 }
