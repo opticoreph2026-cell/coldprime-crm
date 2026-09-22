@@ -90,7 +90,7 @@ function setPhoneAsText(ws: ExcelJS.Worksheet, row: number, col: number, value: 
   cell.numFmt = "@";
 }
 
-export async function exportCustomerDatabase(companies: ExportCompany[]): Promise<Buffer> {
+export async function exportCustomerDatabase(companies: ExportCompany[], branchName?: string): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "Coldprime CRM";
   wb.created = new Date();
@@ -109,7 +109,7 @@ export async function exportCustomerDatabase(companies: ExportCompany[]): Promis
   // Subtitle
   ws.mergeCells("A2:R2");
   const subtitleCell = ws.getCell("A2");
-  subtitleCell.value = `Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })} | Cebu Region`;
+  subtitleCell.value = `Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })} | ${branchName || "All Branches"}`;
   subtitleCell.font = { name: "Calibri", italic: true, size: 10, color: { argb: "FF666666" } };
   subtitleCell.alignment = { horizontal: "center" };
 

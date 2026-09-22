@@ -8,6 +8,12 @@ export async function GET(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
+    let branchName = "All Branches";
+    if (branchFilter.branchId) {
+      const branch = await prisma.branch.findUnique({ where: { id: branchFilter.branchId }, select: { name: true } });
+      if (branch) branchName = branch.name;
+    }
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "customers";
 
@@ -45,7 +51,7 @@ export async function GET(request: Request) {
           remarks: c.notes || undefined,
         }));
 
-        buffer = await exportCustomerDatabase(exportData);
+        buffer = await exportCustomerDatabase(exportData, branchName);
         break;
       }
 

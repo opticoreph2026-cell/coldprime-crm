@@ -31,6 +31,7 @@ export default function ProjectsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ companyId: "", projectName: "", projectLocation: "", projectType: "", status: "Quotation", startDate: "", targetCompletion: "", installationStatus: "", testingStatus: "", commissioningStatus: "", remarks: "" });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function ProjectsPage() {
 
   const fetchProjects = useCallback(async () => {
     try {
+      setError("");
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
@@ -48,6 +50,7 @@ export default function ProjectsPage() {
       setProjects(data.data || []);
       setTotal(data.pagination?.total || 0);
     } catch (error) {
+      setError("Failed to load projects");
       console.error("Failed to fetch projects:", error);
     }
   }, [page, debouncedSearch, statusFilter]);
@@ -88,6 +91,12 @@ export default function ProjectsPage() {
           {showForm ? "Cancel" : "+ New Project"}
         </button>
       </div>
+
+      {error && (
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>

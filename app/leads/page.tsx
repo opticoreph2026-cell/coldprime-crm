@@ -31,6 +31,7 @@ export default function LeadsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ companyId: "", source: "", industry: "", priority: "Medium", estimatedValue: "", notes: "" });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function LeadsPage() {
 
   const fetchLeads = useCallback(async () => {
     try {
+      setError("");
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
@@ -48,6 +50,7 @@ export default function LeadsPage() {
       setLeads(data.data || []);
       setTotal(data.pagination?.total || 0);
     } catch (error) {
+      setError("Failed to load leads");
       console.error("Failed to fetch leads:", error);
     }
   }, [page, debouncedSearch, statusFilter]);
@@ -87,6 +90,12 @@ export default function LeadsPage() {
           {showForm ? "Cancel" : "+ New Lead"}
         </button>
       </div>
+
+      {error && (
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>

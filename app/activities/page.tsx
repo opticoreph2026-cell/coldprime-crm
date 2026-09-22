@@ -31,6 +31,7 @@ export default function ActivitiesPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [form, setForm] = useState({ companyId: "", projectId: "", type: "Phone Call", date: new Date().toISOString().split("T")[0], time: "", performedBy: "", contactPerson: "", description: "", result: "", nextAction: "", nextFollowUp: "", notes: "" });
 
@@ -41,6 +42,7 @@ export default function ActivitiesPage() {
 
   const fetchActivities = useCallback(async () => {
     try {
+      setError("");
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (typeFilter) params.set("type", typeFilter);
@@ -49,6 +51,7 @@ export default function ActivitiesPage() {
       setActivities(data.data || []);
       setTotal(data.pagination?.total || 0);
     } catch (error) {
+      setError("Failed to load activities");
       console.error("Failed to fetch activities:", error);
     }
   }, [page, debouncedSearch, typeFilter]);
@@ -104,6 +107,12 @@ export default function ActivitiesPage() {
           {showForm ? "Cancel" : "+ Log Activity"}
         </button>
       </div>
+
+      {error && (
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>

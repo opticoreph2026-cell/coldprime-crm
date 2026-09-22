@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface DashboardStats {
   totalCompanies: number;
@@ -17,8 +18,10 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState("");
+  const branchName = session?.user?.branchName || "All Branches";
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -59,7 +62,7 @@ export default function DashboardPage() {
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Dashboard</h1>
         <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-          Coldprime Enterprises Corporation — Cebu Region
+          Coldprime Enterprises Corporation — {branchName}
         </p>
       </div>
 

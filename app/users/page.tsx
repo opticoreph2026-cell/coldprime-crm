@@ -34,28 +34,22 @@ export default function UsersPage() {
 
   const fetchUsers = useCallback(async () => {
     try {
+      setError("");
       const res = await fetch("/api/users");
       const data = await res.json();
       setUsers(data.data || []);
     } catch {
-      console.error("Failed to fetch users");
+      setError("Failed to load users");
     }
   }, []);
 
   const fetchBranches = useCallback(async () => {
     try {
-      const res = await fetch("/api/status-definitions");
+      const res = await fetch("/api/branches");
       const data = await res.json();
-      // Branches come from a separate source, use hardcoded for now
-      setBranches([
-        { id: "branch_cebu", name: "Cebu Office", slug: "cebu" },
-        { id: "branch_manila", name: "Manila Office", slug: "manila" },
-      ]);
+      setBranches(data.data || []);
     } catch {
-      setBranches([
-        { id: "branch_cebu", name: "Cebu Office", slug: "cebu" },
-        { id: "branch_manila", name: "Manila Office", slug: "manila" },
-      ]);
+      setBranches([]);
     }
   }, []);
 
@@ -70,7 +64,7 @@ export default function UsersPage() {
     try {
       const url = editingId ? `/api/users/${editingId}` : "/api/users";
       const method = editingId ? "PUT" : "POST";
-      const body: Record<string, any> = { ...form };
+      const body: Record<string, string | boolean | undefined> = { ...form };
       if (editingId && !body.password) delete body.password;
 
       const res = await fetch(url, {

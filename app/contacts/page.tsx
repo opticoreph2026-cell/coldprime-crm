@@ -26,6 +26,7 @@ export default function ContactsPage() {
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" });
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function ContactsPage() {
 
   const fetchContacts = useCallback(async () => {
     try {
+      setError("");
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       const res = await fetch(`/api/contacts?${params}`);
@@ -42,6 +44,7 @@ export default function ContactsPage() {
       setContacts(data.data || []);
       setTotal(data.pagination?.total || 0);
     } catch (error) {
+      setError("Failed to load contacts");
       console.error("Failed to fetch contacts:", error);
     }
   }, [page, debouncedSearch]);
@@ -85,6 +88,12 @@ export default function ContactsPage() {
           {showForm ? "Cancel" : "+ Add Contact"}
         </button>
       </div>
+
+      {error && (
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
