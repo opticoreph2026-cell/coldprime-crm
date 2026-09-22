@@ -28,6 +28,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     const body = await request.json();
+    const { name, subject, body: bodyContent, category } = body;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     await prisma.emailTemplate.updateMany({
