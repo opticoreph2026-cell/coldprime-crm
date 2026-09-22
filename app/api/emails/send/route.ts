@@ -9,9 +9,8 @@ export async function POST(request: Request) {
   let subject = "";
   let templateId: string | undefined;
   try {
-    await requireAuth();
-    const branchFilter = await getBranchFilter();
     const session = await requireAuth();
+    const branchFilter = await getBranchFilter();
     const body = await request.json();
     toEmail = body.toEmail || "";
     toName = body.toName || null;
@@ -60,8 +59,9 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Error sending email:", error);
     try {
-      await requireAuth();
-      await logEmail(prisma, (await getBranchFilter()).branchId, null, (await requireAuth()).user.id, toEmail, toName, subject, "FAILED", error.message);
+      const session = await requireAuth();
+      const branchFilter = await getBranchFilter();
+      await logEmail(prisma, branchFilter.branchId, null, session.user.id, toEmail, toName, subject, "FAILED", error.message);
     } catch {}
     return NextResponse.json({ error: error.message || "Failed to send email" }, { status: 500 });
   }

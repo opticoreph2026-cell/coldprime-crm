@@ -5,7 +5,7 @@ import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import * as path from "path";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\juliu\\AppData\\Local\\Temp\\opencode";
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\Coldprime Sales\\AppData\\Local\\Temp\\opencode";
 
 function validateFilePath(filePath: string): string {
   const resolved = path.resolve(filePath);

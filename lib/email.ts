@@ -1,6 +1,7 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 if (!RESEND_API_KEY) console.warn("RESEND_API_KEY not set");
 const RESEND_API = "https://api.resend.com";
+const DEFAULT_FROM = "Coldprime CRM <admin@coldprime.ph>";
 
 export interface EmailData {
   to: string;
@@ -18,24 +19,36 @@ export function fillTemplate(body: string, data: Record<string, string>): string
 export async function sendEmail({
   to, toName, subject, body, fromName, fromEmail,
 }: EmailData) {
-  const from = `${fromName || "Coldprime CRM"} <${fromEmail || "no-reply@coldprime-crm.vercel.app"}>`;
+  const from = fromEmail
+    ? `${fromName || fromEmail} <${fromEmail}>`
+    : DEFAULT_FROM;
   const toStr = toName ? `${toName} <${to}>` : to;
 
-  const response = await fetch(`${RESEND_API}/emails`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({ from, to: toStr, subject, html: body }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: "Unknown error" }));
-    throw new Error(error.message || "Failed to send email");
+  let parsed;
+  try {
+    const response = await fetch(`${RESEND_API}/emails`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({ from, to: toStr, subject, html: body }),
+    });
+    if (!response.ok) {
+      let errorMsg = "Unknown error";
+      try { parsed = await response.json(); } catch {}
+      errorMsg = parsed?.message || errorMsg;
+      throw new Error(errorMsg);
+    }
+    parsed = await response.json();
+  } catch (error: any) {
+    if (error.message === "Failed to fetch" || error.message === "Network error") {
+      throw new Error("Network error: Unable to reach email service");
+    }
+    throw error;
   }
 
-  return response.json();
+  return parsed;
 }
 
 export async function logEmail(
