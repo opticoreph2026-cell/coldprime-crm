@@ -71,6 +71,9 @@ export default function EmailsPage() {
   const [result, setResult] = useState<{ sent: number; failed: number; skipped: number } | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [templateName, setTemplateName] = useState("Vendor Accreditation");
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -167,10 +170,14 @@ export default function EmailsPage() {
   };
 
   const handleSaveTemplate = async () => {
-    const name = window.prompt("Template name:", "Vendor Accreditation");
-    if (!name) return;
+    const name = templateName.trim();
+    if (!name) {
+      setError("Enter a template name");
+      return;
+    }
     setNotice("");
     setError("");
+    setSavingTemplate(true);
     try {
       const res = await fetch("/api/emails/templates", {
         method: "POST",
@@ -181,11 +188,14 @@ export default function EmailsPage() {
       if (res.ok) {
         setNotice(`Template "${name}" saved.`);
         setTemplates((prev) => [{ id: data.id, name: data.name, subject: data.subject, category: data.category }, ...prev]);
+        setShowSaveForm(false);
       } else {
         setError(data.error || "Failed to save template");
       }
     } catch {
       setError("Failed to save template");
+    } finally {
+      setSavingTemplate(false);
     }
   };
 
@@ -345,7 +355,7 @@ export default function EmailsPage() {
                 : `Send to ${companyTargets.length} Companies`}
             </button>
             <button
-              onClick={handleSaveTemplate}
+              onClick={() => { setShowSaveForm((v) => !v); setError(""); setNotice(""); }}
               disabled={sending}
               style={{
                 padding: "10px 16px",
@@ -358,9 +368,52 @@ export default function EmailsPage() {
                 fontWeight: 600,
               }}
             >
-              Save as Template
+              {showSaveForm ? "Close" : "Save as Template"}
             </button>
           </div>
+
+          {showSaveForm && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: 16,
+                border: "1px solid #bfdbfe",
+                background: "#eff6ff",
+                borderRadius: 8,
+              }}
+            >
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+                Template name
+              </label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveTemplate(); }}
+                  placeholder="Vendor Accreditation"
+                  style={{ ...inputStyle, flex: 1 }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveTemplate}
+                  disabled={savingTemplate}
+                  style={{
+                    padding: "8px 16px",
+                    background: savingTemplate ? "#94a3b8" : "#16a34a",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: savingTemplate ? "not-allowed" : "pointer",
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  {savingTemplate ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {result && (
             <div
