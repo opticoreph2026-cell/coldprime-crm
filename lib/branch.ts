@@ -1,7 +1,7 @@
 import { auth } from "./auth";
 import { prisma } from "./prisma";
 
-export async function getBranchFilter(): Promise<{ branchId: string }> {
+export async function getBranchFilter(): Promise<{ branchId?: string }> {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Unauthorized");
@@ -19,7 +19,7 @@ export async function getBranchFilter(): Promise<{ branchId: string }> {
     return {};
   }
 
-  const branchId = (user.activeBranchId || user.branchId)!;
+  const branchId = user.activeBranchId || user.branchId;
   if (!branchId) throw new Error("No branch assigned");
 
   return { branchId };
@@ -39,7 +39,7 @@ export async function requireBranchId(): Promise<string> {
   if (!user) throw new Error("Unauthorized");
 
   // HEAD_ADMIN must select a branch
-  const branchId = (user.activeBranchId || user.branchId)!;
+  const branchId = user.activeBranchId || user.branchId;
   if (!branchId) {
     throw new Error("No branch assigned — please select a branch first");
   }
