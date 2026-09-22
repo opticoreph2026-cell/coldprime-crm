@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, Suspense } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/companies", label: "Companies", icon: "🏢" },
+  { href: "/companies?source=Supplier", label: "Suppliers", icon: "🏭" },
   { href: "/contacts", label: "Contacts", icon: "👤" },
   { href: "/leads", label: "Leads", icon: "🎯" },
   { href: "/projects", label: "Projects", icon: "📋" },
@@ -121,7 +122,10 @@ export function Sidebar({ children }: { children: ReactNode }) {
 
         <nav style={{ padding: "0.5rem", flex: 1 }}>
           {navItems.map((item) => {
-            const active = pathname.startsWith(item.href);
+            const itemPath = item.href.split("?")[0];
+            const itemQuery = item.href.includes("?") ? item.href.split("?")[1] : "";
+            const currentQuery = typeof window !== "undefined" ? window.location.search.replace("?", "") : "";
+            const active = itemPath === pathname && itemQuery === currentQuery;
             return (
               <Link
                 key={item.href}

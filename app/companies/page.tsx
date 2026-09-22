@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface Company {
   id: string;
@@ -35,6 +36,17 @@ const industries = ["General Contractor", "Architectural", "Construction", "Busi
 const statuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
 
 export default function CompaniesPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24, color: "#64748b" }}>Loading...</div>}>
+      <CompaniesContent />
+    </Suspense>
+  );
+}
+
+function CompaniesContent() {
+  const searchParams = useSearchParams();
+  const sourceFilter = searchParams.get("source") || "";
+  const isSupplierView = sourceFilter === "Supplier";
   const [companies, setCompanies] = useState<Company[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -60,6 +72,7 @@ export default function CompaniesPage() {
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
+      if (sourceFilter) params.set("source", sourceFilter);
       const res = await fetch(`/api/companies?${params}`);
       const data = await res.json();
       if (data.error) {
@@ -73,7 +86,7 @@ export default function CompaniesPage() {
       console.error("Failed to fetch companies:", error);
       setApiError("Failed to load companies");
     }
-  }, [page, debouncedSearch, statusFilter]);
+  }, [page, debouncedSearch, statusFilter, sourceFilter]);
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
@@ -158,11 +171,11 @@ export default function CompaniesPage() {
 <div style={{ padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Companies</h1>
-            <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} companies total</p>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{isSupplierView ? "Suppliers" : "Companies"}</h1>
+            <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} {isSupplierView ? "suppliers" : "companies"} total</p>
           </div>
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
-            {showForm ? "Cancel" : "+ Add Company"}
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(isSupplierView ? { ...emptyForm, source: "Supplier" } : emptyForm); setMobiles([""]); setLandlines([""]); }}>
+            {showForm ? "Cancel" : isSupplierView ? "+ Add Supplier" : "+ Add Company"}
           </button>
         </div>
 

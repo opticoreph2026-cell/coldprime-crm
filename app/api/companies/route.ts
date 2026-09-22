@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
     const industry = searchParams.get("industry") || "";
+    const source = searchParams.get("source") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
 
     if (status) where.status = status;
     if (industry) where.industry = industry;
+    if (source) where.source = source;
 
     const [companies, total] = await Promise.all([
       prisma.company.findMany({
