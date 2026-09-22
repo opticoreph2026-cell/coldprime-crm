@@ -16,7 +16,7 @@ export async function GET() {
       throw error;
     }
 
-    const where: { branchId?: string } = {};
+    const where: { branchId?: string | null } = {};
     if (session.user.role === "BRANCH_ADMIN") {
       where.branchId = session.user.branchId;
     }
