@@ -10,6 +10,8 @@ export interface EmailData {
   body: string;
   fromName?: string;
   fromEmail?: string;
+  cc?: string;
+  ccName?: string;
 }
 
 export function fillTemplate(body: string, data: Record<string, string>): string {
@@ -17,12 +19,23 @@ export function fillTemplate(body: string, data: Record<string, string>): string
 }
 
 export async function sendEmail({
-  to, toName, subject, body, fromName, fromEmail,
+  to, toName, subject, body, fromName, fromEmail, cc, ccName,
 }: EmailData) {
   const from = fromEmail
     ? `${fromName || fromEmail} <${fromEmail}>`
     : DEFAULT_FROM;
   const toStr = toName ? `${toName} <${to}>` : to;
+
+  const emailData: Record<string, unknown> = {
+    from,
+    to: toStr,
+    subject,
+    html: body,
+  };
+
+  if (cc) {
+    emailData.cc = ccName ? `${ccName} <${cc}>` : cc;
+  }
 
   let parsed;
   try {
@@ -32,7 +45,7 @@ export async function sendEmail({
         "Content-Type": "application/json",
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
-      body: JSON.stringify({ from, to: toStr, subject, html: body }),
+      body: JSON.stringify(emailData),
     });
     if (!response.ok) {
       let errorMsg = "Unknown error";

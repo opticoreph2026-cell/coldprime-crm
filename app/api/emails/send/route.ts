@@ -8,6 +8,8 @@ export async function POST(request: Request) {
   let toName: string | null = null;
   let subject = "";
   let templateId: string | undefined;
+  let cc = "";
+  let ccName = "";
   try {
     const session = await requireAuth();
     const branchFilter = await getBranchFilter();
@@ -19,6 +21,8 @@ export async function POST(request: Request) {
     const bodyContent = body.body || "";
     const fromName = body.fromName;
     const companyName = body.companyName;
+    cc = body.cc || "";
+    ccName = body.ccName || "";
 
     if (!toEmail) {
       return NextResponse.json({ error: "Recipient email is required" }, { status: 400 });
@@ -51,9 +55,11 @@ export async function POST(request: Request) {
       subject: finalSubject,
       body: finalBody,
       fromName: fromName,
+      cc: cc || undefined,
+      ccName: ccName || undefined,
     });
 
-    await logEmail(prisma, branchFilter.branchId, templateId || null, session.user.id, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id });
+    await logEmail(prisma, branchFilter.branchId, templateId || null, session.user.id, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
 
     return NextResponse.json({ success: true, message: "Email sent", data: result });
   } catch (error: any) {

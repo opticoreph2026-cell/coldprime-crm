@@ -44,6 +44,7 @@ export default function CompaniesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [apiError, setApiError] = useState("");
 
   const [mobiles, setMobiles] = useState([""]);
   const [landlines, setLandlines] = useState([""]);
@@ -55,15 +56,22 @@ export default function CompaniesPage() {
 
   const fetchCompanies = useCallback(async () => {
     try {
+      setApiError("");
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
       const res = await fetch(`/api/companies?${params}`);
       const data = await res.json();
-      setCompanies(data.data || []);
-      setTotal(data.pagination?.total || 0);
+      if (data.error) {
+        setApiError(data.error);
+        setCompanies([]);
+      } else {
+        setCompanies(data.data || []);
+        setTotal(data.pagination?.total || 0);
+      }
     } catch (error) {
       console.error("Failed to fetch companies:", error);
+      setApiError("Failed to load companies");
     }
   }, [page, debouncedSearch, statusFilter]);
 
@@ -137,18 +145,24 @@ export default function CompaniesPage() {
   const labelStyle = { fontSize: "0.75rem", fontWeight: 500 as const, display: "block" as const, marginBottom: 4 };
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Companies</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} companies total</p>
+<div style={{ padding: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Companies</h1>
+            <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} companies total</p>
+          </div>
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
+            {showForm ? "Cancel" : "+ Add Company"}
+          </button>
         </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
-          {showForm ? "Cancel" : "+ Add Company"}
-        </button>
-      </div>
 
-      {showForm && (
+        {apiError && (
+          <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+            ⚠️ {apiError} — Please ensure you have a branch selected in the sidebar.
+          </div>
+        )}
+
+        {showForm && (
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit Company" : "New Company"}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -207,9 +221,14 @@ export default function CompaniesPage() {
           <option value="">All Statuses</option>
           {statuses.map((s) => <option key={s}>{s}</option>)}
         </select>
+        {apiError && <button className="btn btn-secondary" onClick={fetchCompanies}>Retry</button>}
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+      {apiError ? (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
+          Unable to load companies. Check that a branch is selected and try again.
+        </div>
+      ) : (
         <table>
           <thead>
             <tr>

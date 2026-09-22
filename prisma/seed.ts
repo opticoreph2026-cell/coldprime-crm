@@ -115,7 +115,95 @@ async function main() {
     }
   }
 
-  console.log(`Seeded ${allStatuses.length * 2} status definitions (both branches)`);
+// Seed companies (suppliers) for Cebu
+  const cebuCompanyNames = [
+    "Cebu Construction Supply",
+    "Mactan HVAC Systems",
+    "Cebu Electrical Depot",
+    "Island General Plumbing",
+    "Cebu Roofing Solutions",
+  ];
+  const cebuCompanyIndustries = ["Construction", "Construction", "Construction", "Construction", "Construction"];
+  const cebuCompanyEmails = ["info@cebucharcon.com", "sales@mactanhvac.com", "contact@cebuelec.com", "sales@islandplumb.com", "info@ceburoofing.com"];
+  const cebuCompanyMobiles = ["09171234501", "09171234502", "09171234503", "09171234504", "09171234505"];
+  const cebuCompanyStatuses = ["Active", "Active", "Prospect", "Pending", "Active"];
+  const cebuCompanyAddresses = ["123 Mango Ave, Cebu", "456 Basak Rd, Lapu-Lapu", "789 Colon St, Cebu", "321 Mango Ave, Cebu", "555 Gov Cuenco Ave, Cebu"];
+
+  const cebuCompanyIds: string[] = [];
+  for (let i = 0; i < 5; i++) {
+    const company = await prisma.company.create({
+      data: {
+        branchId: cebuBranch.id,
+        name: cebuCompanyNames[i],
+        industry: cebuCompanyIndustries[i],
+        email: cebuCompanyEmails[i],
+        mobile1: cebuCompanyMobiles[i],
+        status: cebuCompanyStatuses[i],
+        address: cebuCompanyAddresses[i],
+      },
+    }).catch(() => null);
+    if (company) cebuCompanyIds.push(company.id);
+  }
+
+  // Seed companies (suppliers) for Manila
+  const manilaCompanyNames = [
+    "Manila Builders Supply",
+    "Metro HVAC Manila",
+    "National Electrical Co",
+    "Metro Plumbing Services",
+    "Tagaytay Cooling Systems",
+  ];
+  const manilaCompanyIndustries = ["Construction", "Construction", "Construction", "Construction", "Construction"];
+  const manilaCompanyEmails = ["info@manilabuild.com", "sales@metrohvac.com", "contact@nationalelec.com", "sales@metroplumb.com", "info@tagcooling.com"];
+  const manilaCompanyMobiles = ["09171234601", "09171234602", "09171234603", "09171234604", "09171234605"];
+  const manilaCompanyStatuses = ["Active", "Active", "Prospect", "Active", "Pending"];
+  const manilaCompanyAddresses = ["100 EDSA, Mandaluyong", "200 Taft Ave, Manila", "300 Quezon Ave, QC", "400 Roxas Blvd, Manila", "500 Aguinaldo Hwy, Tagaytay"];
+
+  const manilaCompanyIds: string[] = [];
+  for (let i = 0; i < 5; i++) {
+    const company = await prisma.company.create({
+      data: {
+        branchId: manilaBranch.id,
+        name: manilaCompanyNames[i],
+        industry: manilaCompanyIndustries[i],
+        email: manilaCompanyEmails[i],
+        mobile1: manilaCompanyMobiles[i],
+        status: manilaCompanyStatuses[i],
+        address: manilaCompanyAddresses[i],
+      },
+    }).catch(() => null);
+    if (company) manilaCompanyIds.push(company.id);
+  }
+
+  // Seed contacts for Cebu companies
+  const cebuContactData = [
+    { companyIdx: 0, firstName: "Juan", lastName: "Dela Cruz", email: "juan@cebucharcon.com", mobile: "09170000001", position: "Manager" },
+    { companyIdx: 1, firstName: "Maria", lastName: "Santos", email: "maria@mactanhvac.com", mobile: "09170000002", position: "Sales Manager" },
+  ];
+  for (const c of cebuContactData) {
+    const companyId = cebuCompanyIds[c.companyIdx];
+    if (companyId) {
+      await prisma.contact.create({
+        data: { branchId: cebuBranch.id, companyId, firstName: c.firstName, lastName: c.lastName, email: c.email, mobile: c.mobile, position: c.position },
+      }).catch(() => {});
+    }
+  }
+
+  // Seed contacts for Manila companies
+  const manilaContactData = [
+    { companyIdx: 0, firstName: "Pedro", lastName: "Reyes", email: "pedro@manilabuild.com", mobile: "09170000003", position: "Manager" },
+    { companyIdx: 1, firstName: "Ana", lastName: "Garcia", email: "ana@metrohvac.com", mobile: "09170000004", position: "Director" },
+  ];
+  for (const c of manilaContactData) {
+    const companyId = manilaCompanyIds[c.companyIdx];
+    if (companyId) {
+      await prisma.contact.create({
+        data: { branchId: manilaBranch.id, companyId, firstName: c.firstName, lastName: c.lastName, email: c.email, mobile: c.mobile, position: c.position },
+      }).catch(() => {});
+    }
+  }
+
+  console.log(`Seeded companies and contacts for both branches`);
   console.log("Seeding complete!");
 }
 

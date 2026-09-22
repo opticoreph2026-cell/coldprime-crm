@@ -20,6 +20,8 @@ export default function ComposePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [toEmail, setToEmail] = useState("");
   const [toName, setToName] = useState("");
+  const [cc, setCc] = useState("");
+  const [ccName, setCcName] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -66,12 +68,17 @@ export default function ComposePage() {
           subject,
           body,
           templateId: selectedTemplate?.id,
+          cc: cc || undefined,
+          ccName: ccName || undefined,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         setSent(true);
         setToEmail("");
+        setToName("");
+        setCc("");
+        setCcName("");
         setSubject("");
         setBody("");
         setSelectedTemplate(null);
@@ -83,7 +90,7 @@ export default function ComposePage() {
     } finally {
       setSending(false);
     }
-  }, [toEmail, toName, subject, body, selectedTemplate]);
+  }, [toEmail, toName, cc, ccName, subject, body, selectedTemplate]);
 
   if (sent) {
     return (
@@ -139,6 +146,31 @@ export default function ComposePage() {
           }}
         />
         {toName && <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{toName}</div>}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>CC</label>
+        <input
+          type="email"
+          value={cc}
+          onChange={(e) => setCc(e.target.value)}
+          placeholder="cc@example.com"
+          style={{
+            width: "100%",
+            padding: "8px 12px",
+            border: "1px solid #e2e8f0",
+            borderRadius: 6,
+            fontSize: 14,
+            boxSizing: "border-box",
+          }}
+        />
+        {cc && (
+          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            {ccName && <span>{ccName} &lt;</span>}
+            {cc}
+            {ccName && <span>&gt;</span>}
+          </div>
+        )}
       </div>
 
       <div style={{ marginBottom: 16 }}>
