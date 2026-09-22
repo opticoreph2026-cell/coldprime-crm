@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     const template = await prisma.emailTemplate.create({
       data: {
-        branchId: branchFilter.branchId,
+        branchId: branchFilter.branchId!,
         name,
         subject,
         body: bodyContent,
