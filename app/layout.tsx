@@ -1,4 +1,3 @@
-"use client";
 import { Metadata } from "next";
 import { Providers } from "@/components/providers";
 import { Sidebar } from "@/components/layout/sidebar";
