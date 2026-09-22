@@ -144,6 +144,7 @@ async function main() {
     }).catch(() => null);
     if (company) cebuCompanyIds.push(company.id);
   }
+  console.log(`Cebu companies seeded: ${cebuCompanyIds.length}`);
 
   // Seed companies (clients) for Cebu
   const manilaCompanyNames = [
