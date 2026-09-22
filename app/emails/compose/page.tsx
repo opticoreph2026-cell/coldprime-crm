@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface Template {
@@ -11,7 +11,7 @@ interface Template {
   category: string | null;
 }
 
-export default function ComposePage() {
+function ComposeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -258,5 +258,13 @@ export default function ComposePage() {
         {sending ? "Sending..." : "Send Email"}
       </button>
     </div>
+  );
+}
+
+export default function ComposePage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading...</div>}>
+      <ComposeContent />
+    </Suspense>
   );
 }
