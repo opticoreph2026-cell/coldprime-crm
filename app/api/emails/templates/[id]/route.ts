@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAuth();
     const branchFilter = await getBranchFilter();
-    const id = params.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     const template = await prisma.emailTemplate.findFirst({
@@ -22,13 +22,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAuth();
     const branchFilter = await getBranchFilter();
-    const id = params.id;
+    const { id } = await params;
     const body = await request.json();
-    const { name, subject, body: bodyContent, category } = body;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     await prisma.emailTemplate.updateMany({
@@ -44,11 +43,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAuth();
     const branchFilter = await getBranchFilter();
-    const id = params.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     await prisma.emailTemplate.updateMany({

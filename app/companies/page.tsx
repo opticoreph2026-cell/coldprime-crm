@@ -265,8 +265,7 @@ export default function CompaniesPage() {
             )}
           </tbody>
         </table>
-      </div>
-
+      )}
       {total > 50 && (
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
           <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>

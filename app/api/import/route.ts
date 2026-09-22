@@ -3,17 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
-import * as path from "path";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "C:\\Users\\Coldprime Sales\\AppData\\Local\\Temp\\opencode";
 
 function validateFilePath(filePath: string): string {
-  const resolved = path.resolve(filePath);
-  const uploadDir = path.resolve(UPLOAD_DIR);
-  if (!resolved.startsWith(uploadDir + path.sep) && resolved !== uploadDir) {
+  const resolved = filePath.replace(/\\/g, "/");
+  const uploadDir = UPLOAD_DIR.replace(/\\/g, "/");
+  const sep = "/";
+  if (!resolved.startsWith(uploadDir + sep) && resolved !== uploadDir) {
     throw new Error("Invalid file path");
   }
-  return resolved;
+  return filePath;
 }
 
 function sanitizeString(value: string): string {
