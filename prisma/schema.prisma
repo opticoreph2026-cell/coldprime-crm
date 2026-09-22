@@ -274,7 +274,7 @@ model EmailTemplate {
   subject     String
   body        String
   category    String?
-  isActive    Boolean     @default(true)
+  isActive    Boolean     @default(true) @map("is_active")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
   emailLogs   EmailLog[]
@@ -287,23 +287,23 @@ model EmailLog {
   id         String     @id @default(cuid())
   branchId   String     @map("branch_id")
   branch     Branch     @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  templateId String?
+  templateId String?    @map("template_id")
   template   EmailTemplate? @relation(fields: [templateId], references: [id])
-  fromUserId String
+  fromUserId String     @map("from_user_id")
   fromUser   User       @relation(fields: [fromUserId], references: [id])
-  toEmail    String
-  toName     String?
+  toEmail    String     @map("to_email")
+  toName     String?    @map("to_name")
   subject    String
   status     EmailStatus  @default(PENDING)
-  sentAt     DateTime     @default(now())
-  errorCode  String?
-   metadata   Json?
-   createdAt  DateTime     @default(now()) @map("created_at")
+  sentAt     DateTime     @default(now()) @map("sent_at")
+  errorCode  String?    @map("error_code")
+  metadata   Json?
+  createdAt  DateTime     @default(now()) @map("created_at")
 
-   @@index([branchId])
-   @@index([fromUserId])
-   @@index([status])
-   @@map("email_logs")
+  @@index([branchId])
+  @@index([fromUserId])
+  @@index([status])
+  @@map("email_logs")
 }
 
 model Vendor {
