@@ -4,7 +4,8 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAuth();
+    let session;
+    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
@@ -14,9 +15,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
     if (!template) return NextResponse.json({ error: "Template not found" }, { status: 404 });
     return NextResponse.json(template);
-  } catch (error: any) {
-    if (error.message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (error.message === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    if (msg === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
     console.error("Error fetching template:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
@@ -24,7 +25,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAuth();
+    let session;
+    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     const body = await request.json();
@@ -36,9 +38,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       data: { name, subject, body: bodyContent, category, updatedAt: new Date() },
     });
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (error.message === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    if (msg === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
     console.error("Error updating template:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
@@ -46,7 +48,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAuth();
+    let session;
+    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
@@ -56,9 +59,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       data: { isActive: false },
     });
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (error.message === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    if (msg === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
     console.error("Error deleting template:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }

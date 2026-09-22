@@ -10,9 +10,12 @@ export async function POST(request: Request) {
   let templateId: string | undefined;
   let cc = "";
   let ccName = "";
+
+  let session;
+  let branchFilter;
   try {
-    const session = await requireAuth();
-    const branchFilter = await getBranchFilter();
+    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    branchFilter = await getBranchFilter();
     const body = await request.json();
     toEmail = body.toEmail || "";
     toName = body.toName || null;
@@ -62,13 +65,12 @@ export async function POST(request: Request) {
     await logEmail(branchFilter.branchId, templateId || null, session.user.id, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
 
     return NextResponse.json({ success: true, message: "Email sent", data: result });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Failed to send email";
     console.error("Error sending email:", error);
-    try {
-      const session = await requireAuth();
-      const branchFilter = await getBranchFilter();
-      await logEmail(branchFilter.branchId, null, session.user.id, toEmail, toName, subject, "FAILED", error.message);
-    } catch {}
-    return NextResponse.json({ error: error.message || "Failed to send email" }, { status: 500 });
+    if (session && branchFilter) {
+      try { await logEmail(branchFilter.branchId, templateId || null, session.user.id, toEmail, toName, subject, "FAILED", msg); } catch {}
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

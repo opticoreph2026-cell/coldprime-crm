@@ -4,13 +4,14 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request) {
   try {
-    await requireAuth();
+    let session;
+    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId") || "";
     const search = searchParams.get("search") || "";
 
-    const where: any = { ...branchFilter };
+    const where: Record<string, unknown> = { ...branchFilter };
     if (companyId) where.companyId = companyId;
     if (search) {
       where.OR = [
@@ -32,9 +33,9 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({ contacts, companies });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (error.message === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    if (msg === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
     console.error("Error fetching recipients:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
