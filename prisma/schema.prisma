@@ -75,6 +75,9 @@ model Company {
   landline2 String?
   landline3 String?
   status    String   @default("Active")
+  outreachStatus String?   @map("outreach_status")
+  lastEmailedAt  DateTime? @map("last_emailed_at")
+  lastRepliedAt  DateTime? @map("last_replied_at")
   notes     String?
   source    String?
   createdAt DateTime @default(now()) @map("created_at")
@@ -87,6 +90,7 @@ model Company {
   @@index([branchId])
   @@index([branchId, name])
   @@index([branchId, status])
+  @@index([branchId, outreachStatus])
   @@map("companies")
 }
 

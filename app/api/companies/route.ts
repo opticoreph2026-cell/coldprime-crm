@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const outreach = searchParams.get("outreach") || "";
     const industry = searchParams.get("industry") || "";
     const source = searchParams.get("source") || "";
     const page = parseInt(searchParams.get("page") || "1");
@@ -35,6 +36,8 @@ export async function GET(request: Request) {
     }
 
     if (status) where.status = status;
+    if (outreach === "NONE") where.outreachStatus = null;
+    else if (outreach) where.outreachStatus = outreach;
     if (industry) where.industry = industry;
     if (source) where.source = source;
 

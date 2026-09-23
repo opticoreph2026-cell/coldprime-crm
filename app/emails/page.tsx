@@ -66,6 +66,8 @@ export default function EmailsPage() {
   const [senderName, setSenderName] = useState("");
   const [phone, setPhone] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
+  const [cc, setCc] = useState("");
+  const [ccName, setCcName] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [skipAlreadySent, setSkipAlreadySent] = useState(true);
   const [sending, setSending] = useState(false);
@@ -80,6 +82,7 @@ export default function EmailsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [recipSearch, setRecipSearch] = useState("");
   const [sendLimit, setSendLimit] = useState("");
+  const [checkingReplies, setCheckingReplies] = useState(false);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -158,6 +161,27 @@ export default function EmailsPage() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  const handleCheckReplies = async () => {
+    setCheckingReplies(true);
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch("/api/emails/check-replies", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setNotice(
+          `Checked ${data.checked} inbox messages — ${data.repliesFound} replies matched${data.companies?.length ? `: ${data.companies.join(", ")}` : ""}. Companies updated to REPLIED.`
+        );
+      } else {
+        setError(data.error || "Reply check failed");
+      }
+    } catch {
+      setError("Reply check failed");
+    } finally {
+      setCheckingReplies(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     setError("");
@@ -190,7 +214,8 @@ export default function EmailsPage() {
       setError("Select at least one company to send to");
       return;
     }
-    if (!window.confirm(`Send this email to ${finalTargets.length} companies? This cannot be undone.`)) return;
+    const ccNote = cc.trim() ? ` The CC address (${cc}) will receive a copy of EVERY email sent (${finalTargets.length} copies).` : "";
+    if (!window.confirm(`Send this email to ${finalTargets.length} companies?${ccNote} This cannot be undone.`)) return;
 
     setError("");
     setNotice("");
@@ -214,7 +239,7 @@ export default function EmailsPage() {
         const res = await fetch("/api/emails/bulk-send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject, body: finalBody, companyIds: chunk, skipAlreadySent, senderName }),
+          body: JSON.stringify({ subject, body: finalBody, companyIds: chunk, skipAlreadySent, senderName, cc: cc.trim() || undefined, ccName: ccName.trim() || undefined }),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -406,6 +431,9 @@ export default function EmailsPage() {
         <button onClick={() => setActiveTab("sent")} style={tabStyle(activeTab === "sent")}>
           📨 Sent History ({logs.length})
         </button>
+        <button onClick={handleCheckReplies} disabled={checkingReplies} style={tabStyle(false)}>
+          {checkingReplies ? "Checking…" : "🔄 Check replies"}
+        </button>
       </div>
 
       {error && (
@@ -459,6 +487,30 @@ export default function EmailsPage() {
                 value={senderEmail}
                 onChange={(e) => setSenderEmail(e.target.value)}
                 placeholder="you@coldprime.ph"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 8 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+                CC <span style={{ fontWeight: 400, color: "#94a3b8", fontSize: 11 }}>(optional — gets a copy of every send)</span>
+              </label>
+              <input
+                type="email"
+                value={cc}
+                onChange={(e) => setCc(e.target.value)}
+                placeholder="archived@coldprime.ph"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>CC Name</label>
+              <input
+                type="text"
+                value={ccName}
+                onChange={(e) => setCcName(e.target.value)}
+                placeholder="Coldprime Archive"
                 style={inputStyle}
               />
             </div>

@@ -16,6 +16,9 @@ interface Company {
   address: string | null;
   website: string | null;
   status: string;
+  outreachStatus: string | null;
+  lastEmailedAt: string | null;
+  lastRepliedAt: string | null;
   notes: string | null;
   source: string | null;
   createdAt: string;
@@ -39,6 +42,7 @@ export default function CompaniesPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [outreachFilter, setOutreachFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
@@ -48,6 +52,8 @@ export default function CompaniesPage() {
 
   const [mobiles, setMobiles] = useState([""]);
   const [landlines, setLandlines] = useState([""]);
+  const [checkingReplies, setCheckingReplies] = useState(false);
+  const [replyMsg, setReplyMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -60,6 +66,7 @@ export default function CompaniesPage() {
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
+      if (outreachFilter) params.set("outreach", outreachFilter);
       const res = await fetch(`/api/companies?${params}`);
       const data = await res.json();
       if (data.error) {
@@ -73,7 +80,7 @@ export default function CompaniesPage() {
       console.error("Failed to fetch companies:", error);
       setApiError("Failed to load companies");
     }
-  }, [page, debouncedSearch, statusFilter]);
+  }, [page, debouncedSearch, statusFilter, outreachFilter]);
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
@@ -139,6 +146,28 @@ export default function CompaniesPage() {
     fetchCompanies();
   };
 
+  const handleCheckReplies = async () => {
+    setCheckingReplies(true);
+    setReplyMsg(null);
+    try {
+      const res = await fetch("/api/emails/check-replies", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setReplyMsg({
+          ok: true,
+          text: `Checked ${data.checked} inbox messages — ${data.repliesFound} replies matched${data.companies?.length ? `: ${data.companies.join(", ")}` : ""}.`,
+        });
+        fetchCompanies();
+      } else {
+        setReplyMsg({ ok: false, text: data.error || "Reply check failed" });
+      }
+    } catch {
+      setReplyMsg({ ok: false, text: "Reply check failed" });
+    } finally {
+      setCheckingReplies(false);
+    }
+  };
+
   const phoneLabel = (c: Company) => {
     const phones = [c.mobile1, c.mobile2, c.mobile3].filter(Boolean);
     if (phones.length === 0) return "-";
@@ -161,10 +190,21 @@ export default function CompaniesPage() {
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Companies</h1>
             <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} potential clients total</p>
           </div>
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
-            {showForm ? "Cancel" : "+ Add Company"}
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-secondary" onClick={handleCheckReplies} disabled={checkingReplies}>
+              {checkingReplies ? "Checking…" : "🔄 Check replies"}
+            </button>
+            <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
+              {showForm ? "Cancel" : "+ Add Company"}
+            </button>
+          </div>
         </div>
+
+        {replyMsg && (
+          <div style={{ background: replyMsg.ok ? "#dcfce7" : "#fef2f2", color: replyMsg.ok ? "#166534" : "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: `1px solid ${replyMsg.ok ? "#bbf7d0" : "#fecaca"}` }}>
+            {replyMsg.text}
+          </div>
+        )}
 
         {apiError && (
           <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
@@ -231,6 +271,12 @@ export default function CompaniesPage() {
           <option value="">All Statuses</option>
           {statuses.map((s) => <option key={s}>{s}</option>)}
         </select>
+        <select value={outreachFilter} onChange={(e) => { setOutreachFilter(e.target.value); setPage(1); }}>
+          <option value="">All Outreach</option>
+          <option value="NONE">Not emailed</option>
+          <option value="EMAILED">Emailed</option>
+          <option value="REPLIED">Replied</option>
+        </select>
         {apiError && <button className="btn btn-secondary" onClick={fetchCompanies}>Retry</button>}
       </div>
 
@@ -248,6 +294,7 @@ export default function CompaniesPage() {
               <th>Mobile</th>
               <th>Landline</th>
               <th>Status</th>
+              <th>Outreach</th>
               <th>Contacts</th>
               <th>Projects</th>
               <th>Actions</th>
@@ -262,6 +309,18 @@ export default function CompaniesPage() {
                 <td style={{ whiteSpace: "nowrap" }}>{phoneLabel(c)}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{landlineLabel(c)}</td>
                 <td><span className={`badge badge-${c.status === "Active" ? "green" : c.status === "Inactive" ? "gray" : "blue"}`}>{c.status}</span></td>
+                <td>
+                  {c.outreachStatus ? (
+                    <span
+                      className={`badge badge-${c.outreachStatus === "REPLIED" ? "green" : "blue"}`}
+                      title={c.outreachStatus === "REPLIED" && c.lastRepliedAt ? `Replied: ${new Date(c.lastRepliedAt).toLocaleString()}` : c.lastEmailedAt ? `Emailed: ${new Date(c.lastEmailedAt).toLocaleString()}` : ""}
+                    >
+                      {c.outreachStatus}
+                    </span>
+                  ) : (
+                    <span style={{ color: "#cbd5e1" }}>—</span>
+                  )}
+                </td>
                 <td>{c.contacts.length}</td>
                 <td>{c.projects.length}</td>
                 <td>
@@ -271,7 +330,7 @@ export default function CompaniesPage() {
               </tr>
             ))}
             {companies.length === 0 && (
-              <tr><td colSpan={9} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
+              <tr><td colSpan={10} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
             )}
           </tbody>
         </table>

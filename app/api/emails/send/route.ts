@@ -68,6 +68,27 @@ export async function POST(request: Request) {
       console.error("Email sent but logging failed:", logErr);
     }
 
+    try {
+      const matched = await prisma.company.findMany({
+        where: {
+          ...branchFilter,
+          OR: [{ email: toEmail }, { contacts: { some: { email: toEmail } } }],
+        },
+        select: { id: true, outreachStatus: true },
+      });
+      for (const c of matched) {
+        await prisma.company.update({
+          where: { id: c.id },
+          data: {
+            lastEmailedAt: new Date(),
+            ...(c.outreachStatus !== "REPLIED" && { outreachStatus: "EMAILED" }),
+          },
+        });
+      }
+    } catch (updErr) {
+      console.error("Failed to update outreach status:", updErr);
+    }
+
     return NextResponse.json({ success: true, message: "Email sent", data: result });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to send email";

@@ -28,6 +28,8 @@ export async function POST(request: Request) {
     const companyIds: string[] = Array.isArray(body.companyIds) ? body.companyIds : [];
     const skipAlreadySent: boolean = Boolean(body.skipAlreadySent);
     const senderName: string = typeof body.senderName === "string" ? body.senderName.trim() : "";
+    const cc: string | undefined = typeof body.cc === "string" && body.cc.trim() ? body.cc.trim() : undefined;
+    const ccName: string | undefined = typeof body.ccName === "string" && body.ccName.trim() ? body.ccName.trim() : undefined;
 
     if (!subject.trim() || !bodyContent.trim()) {
       return NextResponse.json({ error: "Subject and body are required" }, { status: 400 });
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
 
     const companies = await prisma.company.findMany({
       where: { id: { in: companyIds }, ...branchFilter, email: { not: null } },
-      select: { id: true, name: true, email: true, branchId: true },
+      select: { id: true, name: true, email: true, branchId: true, outreachStatus: true },
     });
 
     if (companies.length === 0) {
@@ -71,8 +73,21 @@ export async function POST(request: Request) {
           subject,
           body: personalized,
           fromName: senderName || undefined,
+          cc,
+          ccName,
         });
         sent++;
+        try {
+          await prisma.company.update({
+            where: { id: company.id },
+            data: {
+              lastEmailedAt: new Date(),
+              ...(company.outreachStatus !== "REPLIED" && { outreachStatus: "EMAILED" }),
+            },
+          });
+        } catch (updErr) {
+          console.error("Failed to update outreach status:", updErr);
+        }
         try {
           await logEmail(
             company.branchId,
@@ -83,7 +98,7 @@ export async function POST(request: Request) {
             subject,
             "SENT",
             null,
-            { messageId: result.id, bulk: true }
+            { messageId: result.id, bulk: true, cc }
           );
         } catch (logErr) {
           console.error("Email sent but logging failed:", logErr);
@@ -105,7 +120,7 @@ export async function POST(request: Request) {
         branchId: auditBranchId,
         action: "BULK_SEND",
         entity: "Email",
-        details: { subject, sent, failed, skipped, requested: companyIds.length },
+        details: { subject, sent, failed, skipped, requested: companyIds.length, cc },
       });
     }
 
