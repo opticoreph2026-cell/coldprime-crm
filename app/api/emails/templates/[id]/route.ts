@@ -40,6 +40,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
+    if ((error as { code?: string })?.code === "P2002" || msg.includes("Unique constraint")) {
+      return NextResponse.json(
+        { error: "A template with this name already exists in this branch — choose a different name." },
+        { status: 409 }
+      );
+    }
     if (msg === "No branch assigned") return NextResponse.json({ error: "No branch assigned" }, { status: 400 });
     console.error("Error updating template:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

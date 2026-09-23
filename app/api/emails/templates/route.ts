@@ -54,6 +54,12 @@ export async function POST(request: Request) {
     return NextResponse.json(template, { status: 201 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to save template";
+    if ((error as { code?: string })?.code === "P2002" || msg.includes("Unique constraint")) {
+      return NextResponse.json(
+        { error: "A template with this name already exists in this branch — choose a different name." },
+        { status: 409 }
+      );
+    }
     console.error("Error creating template:", error);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
