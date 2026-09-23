@@ -214,7 +214,7 @@ export default function EmailsPage() {
         const res = await fetch("/api/emails/bulk-send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject, body: finalBody, companyIds: chunk, skipAlreadySent }),
+          body: JSON.stringify({ subject, body: finalBody, companyIds: chunk, skipAlreadySent, senderName }),
         });
         const data = await res.json();
         if (!res.ok) {

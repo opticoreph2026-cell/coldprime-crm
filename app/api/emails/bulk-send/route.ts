@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     const bodyContent: string = body.body || "";
     const companyIds: string[] = Array.isArray(body.companyIds) ? body.companyIds : [];
     const skipAlreadySent: boolean = Boolean(body.skipAlreadySent);
+    const senderName: string = typeof body.senderName === "string" ? body.senderName.trim() : "";
 
     if (!subject.trim() || !bodyContent.trim()) {
       return NextResponse.json({ error: "Subject and body are required" }, { status: 400 });
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
           to: company.email!,
           subject,
           body: html,
+          fromName: senderName || undefined,
         });
         await logEmail(
           company.branchId,

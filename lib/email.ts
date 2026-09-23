@@ -1,7 +1,12 @@
+import nodemailer from "nodemailer";
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-if (!RESEND_API_KEY) console.warn("RESEND_API_KEY not set");
 const RESEND_API = "https://api.resend.com";
 const DEFAULT_FROM = "Coldprime CRM <admin@coldprime.ph>";
+
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const FROM_DISPLAY_NAME = process.env.EMAIL_FROM_NAME || "Coldprime CRM";
 
 export interface EmailData {
   to: string;
@@ -18,9 +23,39 @@ export function fillTemplate(body: string, data: Record<string, string>): string
   return body.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
 }
 
-export async function sendEmail({
+async function sendViaGmail({
+  to, toName, subject, body, fromName, cc, ccName,
+}: EmailData): Promise<{ id: string }> {
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: GMAIL_USER!,
+      pass: GMAIL_APP_PASSWORD!,
+    },
+  });
+
+  const info = await transporter.sendMail({
+    from: `"${fromName || FROM_DISPLAY_NAME}" <${GMAIL_USER}>`,
+    to: toName ? `${toName} <${to}>` : to,
+    cc: cc ? (ccName ? `${ccName} <${cc}>` : cc) : undefined,
+    subject,
+    html: body,
+  });
+
+  return { id: info.messageId || `gmail-${Date.now()}` };
+}
+
+async function sendViaResend({
   to, toName, subject, body, fromName, fromEmail, cc, ccName,
-}: EmailData) {
+}: EmailData): Promise<{ id: string }> {
+  if (!RESEND_API_KEY) {
+    throw new Error(
+      "Email is not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD in environment variables."
+    );
+  }
+
   const from = fromEmail
     ? `${fromName || fromEmail} <${fromEmail}>`
     : DEFAULT_FROM;
@@ -63,6 +98,13 @@ export async function sendEmail({
   }
 
   return parsed;
+}
+
+export async function sendEmail(data: EmailData): Promise<{ id: string }> {
+  if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+    return sendViaGmail(data);
+  }
+  return sendViaResend(data);
 }
 
 export async function logEmail(
