@@ -31,6 +31,29 @@ interface EmailLog {
   errorCode: string | null;
 }
 
+interface MailSummary {
+  uid: number;
+  subject: string;
+  from: string;
+  to: string;
+  date: string | null;
+  matched: boolean;
+  company: { id: string; name: string } | null;
+}
+
+interface MailDetail extends MailSummary {
+  html: string | null;
+  text: string | null;
+  cc: string;
+}
+
+interface MailViewState {
+  key: string;
+  loading: boolean;
+  data: MailDetail | null;
+  error: string;
+}
+
 const DEFAULT_SUBJECT = "Application for Accreditation as HVAC & IAQ Vendor – Coldprime Enterprises Corporation";
 
 const DEFAULT_BODY = `Good day,
@@ -58,7 +81,7 @@ export default function EmailsPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
-  const [activeTab, setActiveTab] = useState<"bulk" | "templates" | "sent">("bulk");
+  const [activeTab, setActiveTab] = useState<"bulk" | "templates" | "sent" | "mailbox">("bulk");
   const [loading, setLoading] = useState(true);
 
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
@@ -83,6 +106,13 @@ export default function EmailsPage() {
   const [recipSearch, setRecipSearch] = useState("");
   const [sendLimit, setSendLimit] = useState("");
   const [checkingReplies, setCheckingReplies] = useState(false);
+  const [mailboxFolder, setMailboxFolder] = useState<"inbox" | "sent">("inbox");
+  const [mailList, setMailList] = useState<MailSummary[] | null>(null);
+  const [mailListLoading, setMailListLoading] = useState(false);
+  const [mailListError, setMailListError] = useState("");
+  const [mailFilter, setMailFilter] = useState<"all" | "replies">("all");
+  const [openMail, setOpenMail] = useState<MailViewState | null>(null);
+  const [viewLog, setViewLog] = useState<MailViewState | null>(null);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -161,6 +191,70 @@ export default function EmailsPage() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  const fetchMailList = async (folder: "inbox" | "sent") => {
+    setMailListLoading(true);
+    setMailListError("");
+    setOpenMail(null);
+    try {
+      const res = await fetch(`/api/emails/mailbox?folder=${folder}&days=30&limit=100`);
+      const data = await res.json();
+      if (res.ok) {
+        setMailList(data.data || []);
+      } else {
+        setMailList(null);
+        setMailListError(data.error || "Failed to load mailbox");
+      }
+    } catch {
+      setMailList(null);
+      setMailListError("Failed to load mailbox");
+    } finally {
+      setMailListLoading(false);
+    }
+  };
+
+  const openMailboxTab = () => {
+    setActiveTab("mailbox");
+    fetchMailList(mailboxFolder);
+  };
+
+  const switchFolder = (folder: "inbox" | "sent") => {
+    setMailboxFolder(folder);
+    fetchMailList(folder);
+  };
+
+  const toggleMail = async (m: MailSummary) => {
+    const key = `${mailboxFolder}-${m.uid}`;
+    if (openMail?.key === key) {
+      setOpenMail(null);
+      return;
+    }
+    setOpenMail({ key, loading: true, data: null, error: "" });
+    try {
+      const res = await fetch(`/api/emails/mailbox?folder=${mailboxFolder}&uid=${m.uid}`);
+      const data = await res.json();
+      if (res.ok) setOpenMail({ key, loading: false, data: data.data, error: "" });
+      else setOpenMail({ key, loading: false, data: null, error: data.error || "Failed to load message" });
+    } catch {
+      setOpenMail({ key, loading: false, data: null, error: "Failed to load message" });
+    }
+  };
+
+  const viewSentLog = async (log: EmailLog) => {
+    if (viewLog?.key === log.id) {
+      setViewLog(null);
+      return;
+    }
+    setViewLog({ key: log.id, loading: true, data: null, error: "" });
+    try {
+      const res = await fetch(`/api/emails/mailbox?logId=${encodeURIComponent(log.id)}`);
+      const data = await res.json();
+      if (res.ok) setViewLog({ key: log.id, loading: false, data: data.data, error: "" });
+      else setViewLog({ key: log.id, loading: false, data: null, error: data.error || "Failed to load message" });
+    } catch {
+      setViewLog({ key: log.id, loading: false, data: null, error: "Failed to load message" });
+    }
+  };
+
   const handleCheckReplies = async () => {
     setCheckingReplies(true);
     setError("");
@@ -172,6 +266,7 @@ export default function EmailsPage() {
         setNotice(
           `Checked ${data.checked} inbox messages — ${data.repliesFound} replies matched${data.companies?.length ? `: ${data.companies.join(", ")}` : ""}. Companies updated to REPLIED.`
         );
+        if (activeTab === "mailbox") fetchMailList(mailboxFolder);
       } else {
         setError(data.error || "Reply check failed");
       }
@@ -427,6 +522,9 @@ export default function EmailsPage() {
         </button>
         <button onClick={() => setActiveTab("templates")} style={tabStyle(activeTab === "templates")}>
           🗂 Templates ({templates.length})
+        </button>
+        <button onClick={openMailboxTab} style={tabStyle(activeTab === "mailbox")}>
+          📬 Mailbox
         </button>
         <button onClick={() => setActiveTab("sent")} style={tabStyle(activeTab === "sent")}>
           📨 Sent History ({logs.length})
@@ -898,6 +996,132 @@ export default function EmailsPage() {
         </div>
       )}
 
+      {activeTab === "mailbox" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button
+                onClick={() => switchFolder("inbox")}
+                style={btnStyle(mailboxFolder === "inbox" ? "#1e40af" : "#f1f5f9", mailboxFolder === "inbox" ? "#fff" : "#0f172a", mailboxFolder === "inbox" ? undefined : "#e2e8f0")}
+              >
+                📥 Inbox
+              </button>
+              <button
+                onClick={() => switchFolder("sent")}
+                style={btnStyle(mailboxFolder === "sent" ? "#1e40af" : "#f1f5f9", mailboxFolder === "sent" ? "#fff" : "#0f172a", mailboxFolder === "sent" ? undefined : "#e2e8f0")}
+              >
+                📤 Sent
+              </button>
+              <select
+                value={mailFilter}
+                onChange={(e) => setMailFilter(e.target.value as "all" | "replies")}
+                style={{ padding: "5px 8px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 12 }}
+              >
+                <option value="all">All messages</option>
+                <option value="replies">{mailboxFolder === "inbox" ? "Replies only" : "CRM sends only"}</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => fetchMailList(mailboxFolder)} disabled={mailListLoading} style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}>
+                {mailListLoading ? "Loading…" : "🔄 Refresh"}
+              </button>
+              <button onClick={handleCheckReplies} disabled={checkingReplies} style={btnStyle("#1e40af", "#fff")}>
+                {checkingReplies ? "Checking…" : "✅ Check replies (update statuses)"}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
+            Last 30 days — click a message to read it. Green = reply to your outreach; blue badge in Sent = sent by the CRM.
+          </div>
+
+          {mailListLoading && !mailList && (
+            <div style={{ padding: 32, textAlign: "center", color: "#94a3b8" }}>Loading mailbox…</div>
+          )}
+          {mailListError && (
+            <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 12 }}>
+              {mailListError}
+            </div>
+          )}
+          {mailList &&
+            (() => {
+              const shown = mailFilter === "replies" ? mailList.filter((m) => m.matched) : mailList;
+              if (shown.length === 0) {
+                return <p style={{ color: "#94a3b8", fontSize: 14 }}>No messages{mailFilter === "replies" ? " matched" : ""} in the last 30 days.</p>;
+              }
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {shown.map((m) => {
+                    const key = `${mailboxFolder}-${m.uid}`;
+                    const isOpen = openMail?.key === key;
+                    return (
+                      <div key={m.uid} style={{ border: "1px solid #e2e8f0", borderRadius: 8, background: m.matched ? "#f0fdf4" : "#fff", overflow: "hidden" }}>
+                        <div
+                          onClick={() => toggleMail(m)}
+                          style={{ padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.subject}</div>
+                            <div style={{ fontSize: 12, color: "#64748b" }}>
+                              {mailboxFolder === "inbox" ? `From: ${m.from}` : `To: ${m.to}`}
+                              {m.date ? ` • ${new Date(m.date).toLocaleString()}` : ""}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
+                            {m.matched && (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 8px",
+                                  borderRadius: 4,
+                                  background: mailboxFolder === "inbox" ? "#dcfce7" : "#dbeafe",
+                                  color: mailboxFolder === "inbox" ? "#166534" : "#1e40af",
+                                }}
+                              >
+                                {mailboxFolder === "inbox" ? "↩ Reply" : "CRM send"}
+                                {m.company ? ` • ${m.company.name}` : ""}
+                              </span>
+                            )}
+                            <span style={{ fontSize: 11, color: "#94a3b8" }}>{isOpen ? "▾" : "▸"}</span>
+                          </div>
+                        </div>
+                        {isOpen && (
+                          <div style={{ borderTop: "1px solid #e2e8f0", padding: 12 }}>
+                            {openMail?.loading ? (
+                              <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Loading message…</div>
+                            ) : openMail?.error ? (
+                              <div style={{ color: "#dc2626", fontSize: 13, padding: 8 }}>{openMail.error}</div>
+                            ) : openMail?.data ? (
+                              <div>
+                                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                                  From: {openMail.data.from} • To: {openMail.data.to}
+                                  {openMail.data.cc ? ` • CC: ${openMail.data.cc}` : ""}
+                                </div>
+                                {openMail.data.html ? (
+                                  <iframe
+                                    srcDoc={openMail.data.html}
+                                    sandbox=""
+                                    style={{ width: "100%", height: 480, border: "1px solid #e2e8f0", borderRadius: 6, background: "#fff" }}
+                                  />
+                                ) : (
+                                  <pre style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, background: "#f8fafc", padding: 12, borderRadius: 6 }}>
+                                    {openMail.data.text || "(empty)"}
+                                  </pre>
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+        </div>
+      )}
+
       {activeTab === "sent" && (
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Sent Emails ({logs.length})</h2>
@@ -922,21 +1146,49 @@ export default function EmailsPage() {
                         To: {log.toName || log.toEmail} &bull; {new Date(log.sentAt).toLocaleString()}
                       </div>
                     </div>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        padding: "2px 8px",
-                        borderRadius: 4,
-                        background: log.status === "SENT" ? "#dcfce7" : "#fef2f2",
-                        color: log.status === "SENT" ? "#166534" : "#dc2626",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {log.status}
-                    </span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          background: log.status === "SENT" ? "#dcfce7" : "#fef2f2",
+                          color: log.status === "SENT" ? "#166534" : "#dc2626",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {log.status}
+                      </span>
+                      {log.status === "SENT" && (
+                        <button onClick={() => viewSentLog(log)} style={btnStyle("#f1f5f9", "#1e40af", "#e2e8f0")}>
+                          {viewLog?.key === log.id && viewLog.loading ? "Loading…" : viewLog?.key === log.id && viewLog.data ? "Hide" : "👁 View"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {log.errorCode && (
                     <div style={{ fontSize: 12, color: "#dc2626", marginTop: 8 }}>Error: {log.errorCode}</div>
+                  )}
+                  {viewLog?.key === log.id && (
+                    <div style={{ marginTop: 10 }}>
+                      {viewLog.loading ? (
+                        <div style={{ padding: 16, textAlign: "center", color: "#94a3b8" }}>Loading message…</div>
+                      ) : viewLog.error ? (
+                        <div style={{ color: "#dc2626", fontSize: 13 }}>{viewLog.error}</div>
+                      ) : viewLog.data ? (
+                        viewLog.data.html ? (
+                          <iframe
+                            srcDoc={viewLog.data.html}
+                            sandbox=""
+                            style={{ width: "100%", height: 480, border: "1px solid #e2e8f0", borderRadius: 6, background: "#fff" }}
+                          />
+                        ) : (
+                          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, background: "#f8fafc", padding: 12, borderRadius: 6 }}>
+                            {viewLog.data.text || "(empty)"}
+                          </pre>
+                        )
+                      ) : null}
+                    </div>
                   )}
                 </div>
               ))}

@@ -2,15 +2,15 @@ import { ImapFlow } from "imapflow";
 
 const LOOKBACK_DAYS = 7;
 
-function normalizeId(id: string): string {
+export function normalizeId(id: string): string {
   return id.trim().toLowerCase().replace(/^<|>$/g, "");
 }
 
-function stripRePrefix(subject: string): string {
+export function stripRePrefix(subject: string): string {
   return subject.replace(/^\s*((re|fwd?|aw)\s*:\s*)+/gi, "").trim().toLowerCase();
 }
 
-function rawHeaderText(headers: unknown): string {
+export function rawHeaderText(headers: unknown): string {
   if (Buffer.isBuffer(headers)) return headers.toString("utf8");
   if (typeof headers === "string") return headers;
   if (headers instanceof Map) {
@@ -25,7 +25,7 @@ function rawHeaderText(headers: unknown): string {
   return "";
 }
 
-function extractRefs(headers: unknown): string[] {
+export function extractRefs(headers: unknown): string[] {
   const text = rawHeaderText(headers).replace(/\r?\n[ \t]+/g, " ");
   const refs: string[] = [];
   const ir = /in-reply-to:\s*([^\r\n]+)/i.exec(text);
@@ -33,6 +33,76 @@ function extractRefs(headers: unknown): string[] {
   if (ir) refs.push(...ir[1].trim().split(/\s+/).filter(Boolean));
   if (rf) refs.push(...rf[1].trim().split(/\s+/).filter(Boolean));
   return refs;
+}
+
+export interface LogEntry {
+  id: string;
+  toEmail: string;
+  subject: string;
+  metadata: unknown;
+}
+
+export interface LogIndex {
+  byMessageId: Map<string, LogEntry>;
+  bySubjectTo: Map<string, LogEntry>;
+}
+
+export interface EnvelopeLike {
+  subject?: string | null;
+  from?: Array<{ address?: string | null }> | null;
+  to?: Array<{ address?: string | null }> | null;
+}
+
+export function buildLogIndex(logs: LogEntry[]): LogIndex {
+  const byMessageId = new Map<string, LogEntry>();
+  const bySubjectTo = new Map<string, LogEntry>();
+  for (const log of logs) {
+    try {
+      const raw = typeof log.metadata === "string" ? JSON.parse(log.metadata) : log.metadata;
+      const mid = (raw as { messageId?: string } | null)?.messageId;
+      if (mid) byMessageId.set(normalizeId(mid), log);
+    } catch {}
+    bySubjectTo.set(`${stripRePrefix(log.subject)}||${log.toEmail.toLowerCase()}`, log);
+  }
+  return { byMessageId, bySubjectTo };
+}
+
+export function matchLog(index: LogIndex, headers: unknown, envelope?: EnvelopeLike | null): LogEntry | undefined {
+  for (const ref of extractRefs(headers)) {
+    const hit = index.byMessageId.get(normalizeId(ref));
+    if (hit) return hit;
+  }
+  if (envelope) {
+    const subject = envelope.subject || "";
+    const from = (envelope.from?.[0]?.address || "").toLowerCase();
+    if (subject && from) {
+      const hit = index.bySubjectTo.get(`${stripRePrefix(subject)}||${from}`);
+      if (hit) return hit;
+    }
+  }
+  return undefined;
+}
+
+export function matchSentLog(index: LogIndex, envelope?: EnvelopeLike | null): LogEntry | undefined {
+  const subject = envelope?.subject || "";
+  if (!subject) return undefined;
+  for (const a of envelope?.to || []) {
+    const addr = (a.address || "").toLowerCase();
+    if (!addr) continue;
+    const hit = index.bySubjectTo.get(`${stripRePrefix(subject)}||${addr}`);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+export async function loadSentLogs(): Promise<LogEntry[]> {
+  const { prisma } = await import("./prisma");
+  return prisma.emailLog.findMany({
+    where: { status: "SENT" },
+    orderBy: { sentAt: "desc" },
+    take: 1000,
+    select: { id: true, toEmail: true, subject: true, metadata: true },
+  });
 }
 
 export interface ReplyCheckResult {
@@ -50,23 +120,8 @@ export async function checkReplies(): Promise<ReplyCheckResult> {
 
   const { prisma } = await import("./prisma");
 
-  const logs = await prisma.emailLog.findMany({
-    where: { status: "SENT" },
-    orderBy: { sentAt: "desc" },
-    take: 1000,
-    select: { id: true, toEmail: true, subject: true, metadata: true },
-  });
-
-  const byMessageId = new Map<string, (typeof logs)[number]>();
-  const bySubjectTo = new Map<string, (typeof logs)[number]>();
-  for (const log of logs) {
-    try {
-      const raw = typeof log.metadata === "string" ? JSON.parse(log.metadata) : log.metadata;
-      const mid = (raw as { messageId?: string } | null)?.messageId;
-      if (mid) byMessageId.set(normalizeId(mid), log);
-    } catch {}
-    bySubjectTo.set(`${stripRePrefix(log.subject)}||${log.toEmail.toLowerCase()}`, log);
-  }
+  const logs = await loadSentLogs();
+  const index = buildLogIndex(logs);
 
   const client = new ImapFlow({
     host: "imap.gmail.com",
@@ -77,7 +132,7 @@ export async function checkReplies(): Promise<ReplyCheckResult> {
   });
 
   let checked = 0;
-  const matchedLogs = new Map<string, (typeof logs)[number]>();
+  const matchedLogs = new Map<string, LogEntry>();
 
   await client.connect();
   const lock = await client.getMailboxLock("INBOX");
@@ -85,19 +140,7 @@ export async function checkReplies(): Promise<ReplyCheckResult> {
     const since = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
     for await (const msg of client.fetch({ since }, { envelope: true, headers: true })) {
       checked++;
-      const refs = extractRefs(msg.headers);
-      let hit: (typeof logs)[number] | undefined;
-      for (const ref of refs) {
-        hit = byMessageId.get(normalizeId(ref));
-        if (hit) break;
-      }
-      if (!hit && msg.envelope) {
-        const subject = msg.envelope.subject || "";
-        const from = (msg.envelope.from?.[0]?.address || "").toLowerCase();
-        if (subject && from) {
-          hit = bySubjectTo.get(`${stripRePrefix(subject)}||${from}`);
-        }
-      }
+      const hit = matchLog(index, msg.headers, msg.envelope);
       if (hit) matchedLogs.set(hit.id, hit);
     }
   } finally {
