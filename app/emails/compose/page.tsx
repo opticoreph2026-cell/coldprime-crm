@@ -202,6 +202,8 @@ function ComposeContent() {
               setSelectedTemplate(tpl);
               setSubject(tpl.subject);
               setBody(tpl.body);
+            } else {
+              setSelectedTemplate(null);
             }
           }}
           style={{

@@ -8,6 +8,7 @@ interface Template {
   id: string;
   name: string;
   subject: string;
+  body: string;
   category: string | null;
 }
 
@@ -65,6 +66,7 @@ export default function EmailsPage() {
   const [senderName, setSenderName] = useState("");
   const [phone, setPhone] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
   const [skipAlreadySent, setSkipAlreadySent] = useState(true);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -75,12 +77,37 @@ export default function EmailsPage() {
   const [templateName, setTemplateName] = useState("Vendor Accreditation");
   const [savingTemplate, setSavingTemplate] = useState(false);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [recipSearch, setRecipSearch] = useState("");
+  const [sendLimit, setSendLimit] = useState("");
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
   useEffect(() => {
     if (session?.user) {
       setSenderName((prev) => prev || session.user.name || "");
       setSenderEmail((prev) => prev || session.user.email || "");
     }
   }, [session]);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => {
+        if (p && !p.error) {
+          setSenderName(p.name || "");
+          setPhone(p.phone || "");
+          setSenderEmail(p.signatureEmail || p.email || "");
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -108,6 +135,7 @@ export default function EmailsPage() {
           })),
         ];
         setRecipients(allRecipients);
+        setSelectedIds(compData.map((c: { id: string }) => c.id));
         setLogs(logRes.data || []);
       })
       .catch(console.error)
@@ -115,17 +143,54 @@ export default function EmailsPage() {
   }, []);
 
   const companyTargets = recipients.filter((r) => r.type === "company" && r.id);
+  const selectedSet = new Set(selectedIds);
+  let finalTargets = companyTargets.filter((c) => selectedSet.has(c.id!));
+  const limitNum = parseInt(sendLimit, 10);
+  if (limitNum > 0) finalTargets = finalTargets.slice(0, limitNum);
+
+  const filteredCompanies = companyTargets.filter((c) => {
+    if (!recipSearch.trim()) return true;
+    const q = recipSearch.toLowerCase();
+    return (c.name || "").toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+  });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: senderName, phone, signatureEmail: senderEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotice("Your details saved — they will be prefilled next time.");
+      } else {
+        setError(data.error || "Failed to save details");
+      }
+    } catch {
+      setError("Failed to save details");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleBulkSend = async () => {
     if (!subject.trim() || !body.trim()) {
       setError("Subject and body are required");
       return;
     }
-    if (companyTargets.length === 0) {
-      setError("No companies with email addresses found");
+    if (finalTargets.length === 0) {
+      setError("Select at least one company to send to");
       return;
     }
-    if (!window.confirm(`Send this email to ${companyTargets.length} companies? This cannot be undone.`)) return;
+    if (!window.confirm(`Send this email to ${finalTargets.length} companies? This cannot be undone.`)) return;
 
     setError("");
     setNotice("");
@@ -140,7 +205,7 @@ export default function EmailsPage() {
     let sent = 0;
     let failed = 0;
     let skipped = 0;
-    const ids = companyTargets.map((t) => t.id!);
+    const ids = finalTargets.map((t) => t.id!);
 
     try {
       for (let i = 0; i < ids.length; i += BATCH_SIZE) {
@@ -187,7 +252,10 @@ export default function EmailsPage() {
       const data = await res.json();
       if (res.ok) {
         setNotice(`Template "${name}" saved.`);
-        setTemplates((prev) => [{ id: data.id, name: data.name, subject: data.subject, category: data.category }, ...prev]);
+        setTemplates((prev) => [
+          { id: data.id, name: data.name, subject: data.subject, body: data.body, category: data.category },
+          ...prev,
+        ]);
         setShowSaveForm(false);
       } else {
         setError(data.error || "Failed to save template");
@@ -197,6 +265,81 @@ export default function EmailsPage() {
     } finally {
       setSavingTemplate(false);
     }
+  };
+
+  const startEdit = (tpl: Template) => {
+    setEditingId(tpl.id);
+    setExpandedId(tpl.id);
+    setEditName(tpl.name);
+    setEditSubject(tpl.subject);
+    setEditBody(tpl.body || "");
+    setEditCategory(tpl.category || "");
+    setError("");
+    setNotice("");
+  };
+
+  const handleUpdateTemplate = async () => {
+    if (!editingId) return;
+    const name = editName.trim();
+    if (!name || !editSubject.trim() || !editBody.trim()) {
+      setError("Name, subject, and body are required");
+      return;
+    }
+    setSavingEdit(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/emails/templates/${encodeURIComponent(editingId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, subject: editSubject, body: editBody, category: editCategory || null }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const updated = data.data || data;
+        setTemplates((prev) =>
+          prev.map((t) =>
+            t.id === editingId
+              ? { ...t, name: updated.name ?? name, subject: updated.subject ?? editSubject, body: updated.body ?? editBody, category: (updated.category ?? editCategory) || null }
+              : t
+          )
+        );
+        setEditingId(null);
+        setNotice("Template updated.");
+      } else {
+        setError(data.error || "Failed to update template");
+      }
+    } catch {
+      setError("Failed to update template");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (tpl: Template) => {
+    if (!window.confirm(`Delete template "${tpl.name}"? This cannot be undone.`)) return;
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch(`/api/emails/templates/${encodeURIComponent(tpl.id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setTemplates((prev) => prev.filter((t) => t.id !== tpl.id));
+        setNotice(`Template "${tpl.name}" deleted.`);
+        if (editingId === tpl.id) setEditingId(null);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to delete template");
+      }
+    } catch {
+      setError("Failed to delete template");
+    }
+  };
+
+  const loadIntoBulk = (tpl: Template) => {
+    setSubject(tpl.subject);
+    setBody(tpl.body || "");
+    setActiveTab("bulk");
+    setResult(null);
+    setNotice(`Template "${tpl.name}" loaded into Bulk Send.`);
   };
 
   if (loading) {
@@ -226,6 +369,17 @@ export default function EmailsPage() {
     fontSize: 14,
     boxSizing: "border-box",
   };
+
+  const btnStyle = (bg: string, fg: string, border?: string): React.CSSProperties => ({
+    padding: "6px 12px",
+    background: bg,
+    color: fg,
+    border: border ? `1px solid ${border}` : "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontSize: 12,
+    fontWeight: 600,
+  });
 
   return (
     <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
@@ -269,7 +423,7 @@ export default function EmailsPage() {
         <div>
           <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, marginBottom: 16 }}>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
-              📦 Send to all companies ({companyTargets.length} with email addresses)
+              📦 Bulk Send — {finalTargets.length} of {companyTargets.length} companies selected
             </div>
             <div style={{ fontSize: 12, color: "#64748b" }}>
               <code>[Company Name]</code> is replaced from the database for each recipient. Edit{" "}
@@ -277,7 +431,7 @@ export default function EmailsPage() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 8 }}>
             <div>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Your Name</label>
               <input
@@ -309,6 +463,18 @@ export default function EmailsPage() {
               />
             </div>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <button
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              style={btnStyle(savingProfile ? "#94a3b8" : "#fff", "#1e40af", "#1e40af")}
+            >
+              {savingProfile ? "Saving…" : "💾 Save details"}
+            </button>
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>
+              Saved once — prefilled automatically next time on any device.
+            </span>
+          </div>
 
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Subject</label>
@@ -325,6 +491,92 @@ export default function EmailsPage() {
             />
           </div>
 
+          <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, marginBottom: 16, background: "#fff" }}>
+            <div
+              style={{
+                padding: "10px 12px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600 }}>
+                Recipients — {finalTargets.length} will receive
+                {limitNum > 0 && selectedIds.length > finalTargets.length ? ` (limited to ${limitNum})` : ""}
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button
+                  onClick={() => setSelectedIds(filteredCompanies.map((c) => c.id!))}
+                  style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}
+                >
+                  Select all shown
+                </button>
+                <button onClick={() => setSelectedIds([])} style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}>
+                  Deselect all
+                </button>
+                <label style={{ fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 4 }}>
+                  Max sends:
+                  <input
+                    type="number"
+                    min={1}
+                    value={sendLimit}
+                    onChange={(e) => setSendLimit(e.target.value)}
+                    placeholder="∞"
+                    style={{
+                      width: 70,
+                      padding: "4px 8px",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 6,
+                      fontSize: 13,
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+            <div style={{ padding: "8px 12px" }}>
+              <input
+                type="text"
+                value={recipSearch}
+                onChange={(e) => setRecipSearch(e.target.value)}
+                placeholder="Search companies by name or email..."
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ maxHeight: 280, overflow: "auto", padding: "0 12px 12px" }}>
+              {filteredCompanies.length === 0 && (
+                <div style={{ fontSize: 13, color: "#94a3b8", padding: "8px 0" }}>
+                  No companies with email addresses found.
+                </div>
+              )}
+              {filteredCompanies.map((c) => (
+                <label
+                  key={c.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 4px",
+                    fontSize: 13,
+                    borderBottom: "1px solid #f1f5f9",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSet.has(c.id!)}
+                    onChange={() => toggleSelect(c.id!)}
+                    disabled={sending}
+                  />
+                  <span style={{ fontWeight: 500, minWidth: 180 }}>{c.name}</span>
+                  <span style={{ color: "#64748b", fontSize: 12 }}>{c.email}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 16, cursor: "pointer" }}>
             <input
               type="checkbox"
@@ -338,7 +590,7 @@ export default function EmailsPage() {
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button
               onClick={handleBulkSend}
-              disabled={sending || companyTargets.length === 0}
+              disabled={sending || finalTargets.length === 0}
               style={{
                 padding: "10px 24px",
                 background: sending ? "#94a3b8" : "#1e40af",
@@ -352,7 +604,7 @@ export default function EmailsPage() {
             >
               {sending && progress
                 ? `Sending ${progress.done}/${progress.total}…`
-                : `Send to ${companyTargets.length} Companies`}
+                : `Send to ${finalTargets.length} Companies`}
             </button>
             <button
               onClick={() => { setShowSaveForm((v) => !v); setError(""); setNotice(""); }}
@@ -434,83 +686,162 @@ export default function EmailsPage() {
 
       {activeTab === "templates" && (
         <div>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Templates</h2>
-          <button
-            onClick={() => router.push("/emails/compose")}
-            style={{
-              ...tabStyle(true),
-              background: "#16a34a",
-              marginBottom: 16,
-            }}
-          >
-            ✏️ Compose New Email
-          </button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600 }}>Templates ({templates.length})</h2>
+            <button
+              onClick={() => router.push("/emails/compose")}
+              style={{ ...tabStyle(true), background: "#16a34a" }}
+            >
+              ✏️ Compose New Email
+            </button>
+          </div>
           {templates.length === 0 ? (
             <p style={{ color: "#94a3b8", fontSize: 14 }}>No templates yet. Save one from the Bulk Send tab.</p>
           ) : (
             templates.map((tpl) => (
               <div
                 key={tpl.id}
-                onClick={() => router.push(`/emails/compose?template=${encodeURIComponent(tpl.id)}`)}
                 style={{
-                  padding: 12,
                   border: "1px solid #e2e8f0",
                   borderRadius: 8,
-                  marginBottom: 8,
-                  cursor: "pointer",
+                  marginBottom: 10,
                   background: "#fff",
+                  overflow: "hidden",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
               >
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{tpl.name}</div>
-                <div style={{ fontSize: 12, color: "#64748b" }}>{tpl.subject}</div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    background: tpl.category === "HVAC" ? "#dbeafe" : tpl.category === "IAQ" ? "#dcfce7" : "#fef3c7",
-                    padding: "2px 8px",
-                    borderRadius: 4,
-                    marginTop: 4,
-                    display: "inline-block",
-                  }}
-                >
-                  {tpl.category}
-                </span>
+                <div style={{ padding: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{tpl.name}</div>
+                      <div style={{ fontSize: 12, color: "#64748b" }}>{tpl.subject}</div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          background: tpl.category === "HVAC" ? "#dbeafe" : tpl.category === "IAQ" ? "#dcfce7" : "#fef3c7",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          marginTop: 4,
+                          display: "inline-block",
+                        }}
+                      >
+                        {tpl.category || "General"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+                    <button onClick={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)} style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}>
+                      {expandedId === tpl.id ? "Hide body" : "Preview"}
+                    </button>
+                    <button
+                      onClick={() => router.push(`/emails/compose?template=${encodeURIComponent(tpl.id)}`)}
+                      style={btnStyle("#16a34a", "#fff")}
+                    >
+                      Compose
+                    </button>
+                    <button onClick={() => loadIntoBulk(tpl)} style={btnStyle("#1e40af", "#fff")}>
+                      Use in Bulk Send
+                    </button>
+                    <button onClick={() => (editingId === tpl.id ? setEditingId(null) : startEdit(tpl))} style={btnStyle("#fff", "#1e40af", "#1e40af")}>
+                      {editingId === tpl.id ? "Cancel edit" : "Edit"}
+                    </button>
+                    <button onClick={() => handleDeleteTemplate(tpl)} style={btnStyle("#fef2f2", "#dc2626", "#fecaca")}>
+                      Delete
+                    </button>
+                  </div>
+
+                  {expandedId === tpl.id && (
+                    <pre
+                      style={{
+                        marginTop: 10,
+                        padding: 12,
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "monospace",
+                        maxHeight: 240,
+                        overflow: "auto",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {tpl.body || "(empty)"}
+                    </pre>
+                  )}
+                </div>
+
+                {editingId === tpl.id && (
+                  <div style={{ padding: 12, borderTop: "1px solid #e2e8f0", background: "#eff6ff" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px", gap: 8, marginBottom: 8 }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Name</label>
+                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Subject</label>
+                        <input type="text" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Category</label>
+                        <input type="text" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} style={inputStyle} />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Body</label>
+                      <textarea
+                        value={editBody}
+                        onChange={(e) => setEditBody(e.target.value)}
+                        rows={12}
+                        style={{ ...inputStyle, fontFamily: "monospace", lineHeight: 1.5 }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={handleUpdateTemplate}
+                        disabled={savingEdit}
+                        style={btnStyle(savingEdit ? "#94a3b8" : "#16a34a", "#fff")}
+                      >
+                        {savingEdit ? "Saving…" : "Save changes"}
+                      </button>
+                      <button onClick={() => setEditingId(null)} style={btnStyle("#fff", "#64748b", "#e2e8f0")}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}
-        </div>
-      )}
 
-      {activeTab === "templates" && (
-        <div style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Recipients</h2>
-          <div style={{ maxHeight: 400, overflow: "auto" }}>
-            {recipients.map((r, i) => (
-              <div
-                key={i}
-                onClick={() =>
-                  router.push(
-                    `/emails/compose?to=${encodeURIComponent(r.email)}&toName=${encodeURIComponent(r.name || "")}`
-                  )
-                }
-                style={{
-                  padding: 10,
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 8,
-                  marginBottom: 6,
-                  cursor: "pointer",
-                  background: "#fff",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
-              >
-                <div style={{ fontWeight: 500, fontSize: 13 }}>{r.name || r.email}</div>
-                <div style={{ fontSize: 11, color: "#64748b" }}>{r.email}</div>
-                {r.industry && <div style={{ fontSize: 10, color: "#94a3b8" }}>{r.industry}</div>}
-              </div>
-            ))}
+          <div style={{ marginTop: 24 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Single Recipients</h2>
+            <div style={{ maxHeight: 400, overflow: "auto" }}>
+              {recipients.map((r, i) => (
+                <div
+                  key={i}
+                  onClick={() =>
+                    router.push(
+                      `/emails/compose?to=${encodeURIComponent(r.email)}&toName=${encodeURIComponent(r.name || "")}`
+                    )
+                  }
+                  style={{
+                    padding: 10,
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 8,
+                    marginBottom: 6,
+                    cursor: "pointer",
+                    background: "#fff",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                >
+                  <div style={{ fontWeight: 500, fontSize: 13 }}>{r.name || r.email}</div>
+                  <div style={{ fontSize: 11, color: "#64748b" }}>{r.email}</div>
+                  {r.industry && <div style={{ fontSize: 10, color: "#94a3b8" }}>{r.industry}</div>}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
