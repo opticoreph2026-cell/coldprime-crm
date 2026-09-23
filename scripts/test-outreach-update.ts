@@ -32,8 +32,8 @@ async function main() {
       where: { id: c.id },
       data: { lastEmailedAt: new Date(), ...(cur?.outreachStatus !== "REPLIED" && { outreachStatus: "EMAILED" }) },
     });
-    r = await prisma.company.findUnique({ where: { id: c.id }, select: { outreachStatus: true } });
-    console.log(`REPLIED preserved after another send: ${r?.outreachStatus === "REPLIED"}`);
+    const after = await prisma.company.findUnique({ where: { id: c.id }, select: { outreachStatus: true } });
+    console.log(`REPLIED preserved after another send: ${after?.outreachStatus === "REPLIED"}`);
   } finally {
     await prisma.company.update({
       where: { id: c.id },
