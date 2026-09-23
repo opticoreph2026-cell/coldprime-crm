@@ -23,6 +23,20 @@ export function fillTemplate(body: string, data: Record<string, string>): string
   return body.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+export function toHtml(text: string): string {
+  if (/<(p|br|div|span|a|b|i|u|strong|em|ul|ol|li|h[1-6]|table|img|blockquote)\b/i.test(text)) {
+    return text;
+  }
+  return text
+    .split(/\n{2,}/)
+    .map((p) => `<p style="margin:0 0 16px;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
+
 async function sendViaGmail({
   to, toName, subject, body, fromName, cc, ccName,
 }: EmailData): Promise<{ id: string }> {
@@ -101,10 +115,11 @@ async function sendViaResend({
 }
 
 export async function sendEmail(data: EmailData): Promise<{ id: string }> {
+  const payload: EmailData = { ...data, body: toHtml(data.body) };
   if (GMAIL_USER && GMAIL_APP_PASSWORD) {
-    return sendViaGmail(data);
+    return sendViaGmail(payload);
   }
-  return sendViaResend(data);
+  return sendViaResend(payload);
 }
 
 export async function logEmail(

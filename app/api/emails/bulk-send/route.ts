@@ -9,17 +9,6 @@ export const maxDuration = 30;
 const MAX_PER_REQUEST = 10;
 const DELAY_MS = 300;
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function toHtml(text: string): string {
-  return text
-    .split(/\n{2,}/)
-    .map((p) => `<p style="margin:0 0 16px;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
-    .join("");
-}
-
 function personalize(text: string, companyName: string): string {
   return text
     .split("[Company Name]").join(companyName)
@@ -76,26 +65,29 @@ export async function POST(request: Request) {
 
     for (const company of batch) {
       const personalized = personalize(bodyContent, company.name);
-      const html = toHtml(personalized);
       try {
         const result = await sendEmail({
           to: company.email!,
           subject,
-          body: html,
+          body: personalized,
           fromName: senderName || undefined,
         });
-        await logEmail(
-          company.branchId,
-          null,
-          session.user.id!,
-          company.email!,
-          company.name,
-          subject,
-          "SENT",
-          null,
-          { resendId: result.id, bulk: true }
-        );
         sent++;
+        try {
+          await logEmail(
+            company.branchId,
+            null,
+            session.user.id!,
+            company.email!,
+            company.name,
+            subject,
+            "SENT",
+            null,
+            { messageId: result.id, bulk: true }
+          );
+        } catch (logErr) {
+          console.error("Email sent but logging failed:", logErr);
+        }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Failed";
         try {

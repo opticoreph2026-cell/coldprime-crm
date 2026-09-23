@@ -62,7 +62,11 @@ export async function POST(request: Request) {
       ccName: ccName || undefined,
     });
 
-    await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName || null, finalSubject, "SENT", null, { resendId: result.id, cc });
+    try {
+      await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName || null, finalSubject, "SENT", null, { messageId: result.id, cc });
+    } catch (logErr) {
+      console.error("Email sent but logging failed:", logErr);
+    }
 
     return NextResponse.json({ success: true, message: "Email sent", data: result });
   } catch (error: unknown) {
