@@ -20,7 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
 
     if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
-    if (vendor.branchId !== branchFilter.branchId && !branchFilter.branchId) {
+    if (branchFilter.branchId && vendor.branchId !== branchFilter.branchId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -41,7 +41,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const vendor = await prisma.vendor.findUnique({ where: { id } });
     if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
-    if (vendor.branchId !== branchFilter.branchId) {
+    if (branchFilter.branchId && vendor.branchId !== branchFilter.branchId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -63,7 +63,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       include: { branch: { select: { id: true, name: true, slug: true } } },
     });
 
-    await logAudit({ branchId: branchFilter.branchId, action: "UPDATE", entity: "Vendor", entityId: vendor.id, details: { name: updated.name } });
+    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "UPDATE", entity: "Vendor", entityId: vendor.id, details: { name: updated.name } });
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -80,12 +80,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const vendor = await prisma.vendor.findUnique({ where: { id } });
     if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
-    if (vendor.branchId !== branchFilter.branchId) {
+    if (branchFilter.branchId && vendor.branchId !== branchFilter.branchId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     await prisma.vendor.delete({ where: { id } });
-    await logAudit({ branchId: branchFilter.branchId, action: "DELETE", entity: "Vendor", entityId: id });
+    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "DELETE", entity: "Vendor", entityId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -84,6 +84,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Activity type is required" }, { status: 400 });
     }
 
+    // Verify all referenced entities belong to the caller's branch
+    if (companyId) {
+      const c = await prisma.company.findFirst({ where: { id: companyId, branchId }, select: { id: true } });
+      if (!c) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    }
+    if (projectId) {
+      const p = await prisma.project.findFirst({ where: { id: projectId, branchId }, select: { id: true } });
+      if (!p) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+    if (contactId) {
+      const ct = await prisma.contact.findFirst({ where: { id: contactId, branchId }, select: { id: true } });
+      if (!ct) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+
     const activity = await prisma.activity.create({
       data: {
         branchId,

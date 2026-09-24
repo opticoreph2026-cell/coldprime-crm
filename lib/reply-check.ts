@@ -111,7 +111,7 @@ export interface ReplyCheckResult {
   companies: string[];
 }
 
-export async function checkReplies(): Promise<ReplyCheckResult> {
+export async function checkReplies(opts?: { branchId?: string }): Promise<ReplyCheckResult> {
   const GMAIL_USER = process.env.GMAIL_USER;
   const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
   if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
@@ -152,6 +152,7 @@ export async function checkReplies(): Promise<ReplyCheckResult> {
   for (const log of matchedLogs.values()) {
     const targets = await prisma.company.findMany({
       where: {
+        ...(opts?.branchId ? { branchId: opts.branchId } : {}),
         OR: [{ email: log.toEmail }, { contacts: { some: { email: log.toEmail } } }],
       },
       select: { id: true, name: true, outreachStatus: true },

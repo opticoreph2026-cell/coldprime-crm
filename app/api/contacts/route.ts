@@ -61,6 +61,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "First name and company are required" }, { status: 400 });
     }
 
+    const company = await prisma.company.findFirst({
+      where: { id: companyId, branchId },
+      select: { id: true },
+    });
+    if (!company) {
+      return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    }
+
     const contact = await prisma.contact.create({
       data: {
         branchId,

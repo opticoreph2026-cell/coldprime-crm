@@ -52,13 +52,27 @@ export async function requireAuth() {
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
+  // Re-validate against DB: deactivated/deleted users lose access immediately
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id as string },
+    select: { isActive: true },
+  });
+  if (!user || !user.isActive) {
+    throw new Error("Unauthorized");
+  }
   return session;
 }
 
 export async function requireRole(roles: string[]) {
   const session = await requireAuth();
-  if (!roles.includes(session.user.role)) {
+  // Use the live DB role, not the JWT-cached one
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id as string },
+    select: { role: true },
+  });
+  if (!user || !roles.includes(user.role)) {
     throw new Error("Forbidden");
   }
+  session.user.role = user.role;
   return session;
 }

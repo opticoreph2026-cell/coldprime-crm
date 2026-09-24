@@ -23,7 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (session.user.role === "BRANCH_ADMIN" && user.branchId !== session.user.branchId) {
+    if (session.user.role === "BRANCH_ADMIN" && (user.branchId !== session.user.branchId || user.role === "HEAD_ADMIN")) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -60,12 +60,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (session.user.role === "BRANCH_ADMIN" && existing.branchId !== session.user.branchId) {
+    if (session.user.role === "BRANCH_ADMIN" && (existing.branchId !== session.user.branchId || existing.role === "HEAD_ADMIN")) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     if (session.user.role === "BRANCH_ADMIN" && role === "HEAD_ADMIN") {
       return NextResponse.json({ error: "Cannot assign Head Admin role" }, { status: 403 });
+    }
+
+    if (existing.id === session.user.id && (role === "BRANCH_ADMIN" || role === "STAFF" || isActive === false)) {
+      return NextResponse.json({ error: "Cannot demote or deactivate your own account" }, { status: 400 });
+    }
+
+    const VALID_ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
+    if (role && !VALID_ROLES.includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     const updateData: Record<string, unknown> = {};

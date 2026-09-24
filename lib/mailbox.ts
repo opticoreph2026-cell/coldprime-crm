@@ -151,9 +151,11 @@ export async function getMailDetail(opts: { folder: "inbox" | "sent"; uid: numbe
   }
 }
 
-export async function getMailByLogId(logId: string): Promise<MailDetail> {
+export async function getMailByLogId(logId: string, branchId?: string): Promise<MailDetail> {
   const { prisma } = await import("./prisma");
-  const log = await prisma.emailLog.findUnique({ where: { id: logId } });
+  const log = await prisma.emailLog.findFirst({
+    where: { id: logId, ...(branchId ? { branchId } : {}) },
+  });
   if (!log) throw new Error("Log not found");
   let storedMid: string | undefined;
   try {

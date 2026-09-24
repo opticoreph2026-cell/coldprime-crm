@@ -41,15 +41,20 @@ export async function POST(request: Request) {
       if (!template) {
         return NextResponse.json({ error: "Template not found" }, { status: 404 });
       }
-      finalSubject = template.subject;
-      finalBody = fillTemplate(template.body, {
+      // Substitute placeholders, but never replace content the user already edited.
+      const branchName = branchFilter.branchId
+        ? ((await prisma.branch.findUnique({ where: { id: branchFilter.branchId }, select: { name: true } }))?.name || "All Branches")
+        : "All Branches";
+      const vars = {
         companyName: companyName || "",
         contactName: toName || "",
-        branchName: branchFilter.branchId ? ((await prisma.branch.findUnique({ where: { id: branchFilter.branchId }, select: { name: true } }))?.name || "All Branches") : "All Branches",
+        branchName,
         senderName: fromName || session.user.name || "Coldprime CRM",
         branchLocation: "",
         targetDate: "",
-      });
+      };
+      if (!finalSubject) finalSubject = fillTemplate(template.subject, vars);
+      finalBody = fillTemplate(finalBody || template.body, vars);
     }
 
     const result = await sendEmail({

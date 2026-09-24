@@ -41,7 +41,9 @@ function ComposeContent() {
     const name = searchParams.get("toName");
     if (to) setToEmail(to);
     if (name) setToName(name);
-    if (templateId && templates.length > 0) {
+    if (templateId) {
+      // Wait until templates have loaded before applying the param
+      if (templates.length === 0) return;
       const tpl = templates.find((t) => t.id === templateId);
       if (tpl) {
         setSelectedTemplate(tpl);

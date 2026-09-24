@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/branch";
+import { requireRole, getBranchFilter } from "@/lib/branch";
 import { listMail, getMailDetail, getMailByLogId } from "@/lib/mailbox";
 
 export const maxDuration = 60;
 
 export async function GET(request: Request) {
   try {
+    // The mailbox is the shared Gmail account — restrict to admins.
+    let branchId: string | undefined;
     try {
-      await requireAuth();
-    } catch {
+      const session = await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]);
+      const branchFilter = await getBranchFilter();
+      branchId = branchFilter.branchId;
+      void session;
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -17,7 +24,7 @@ export async function GET(request: Request) {
 
     const logId = searchParams.get("logId");
     if (logId) {
-      const detail = await getMailByLogId(logId);
+      const detail = await getMailByLogId(logId, branchId);
       return NextResponse.json({ data: detail });
     }
 

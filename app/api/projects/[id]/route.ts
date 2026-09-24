@@ -39,6 +39,15 @@ export async function PUT(
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const body = await request.json();
+
+    if (body.contactId) {
+      const contact = await prisma.contact.findFirst({
+        where: { id: body.contactId, ...branchFilter },
+        select: { id: true },
+      });
+      if (!contact) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+
     const project = await prisma.project.update({
       where: { id },
       data: {

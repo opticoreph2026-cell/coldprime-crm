@@ -9,6 +9,7 @@ declare module "next-auth" {
       branchName: string | null;
       branchSlug: string | null;
       activeBranchId: string | null;
+      isActive?: boolean;
     } & DefaultSession["user"];
   }
 }

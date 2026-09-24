@@ -54,14 +54,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       const user = await prisma.user.findUnique({
         where: { id: token.userId as string },
-        select: { activeBranchId: true },
+        select: {
+          activeBranchId: true,
+          role: true,
+          branchId: true,
+          isActive: true,
+          branch: { select: { name: true, slug: true } },
+        },
       });
       session.user.id = token.userId as string;
-      session.user.role = token.role as string;
-      session.user.branchId = token.branchId as string | null;
-      session.user.branchName = token.branchName as string | null;
-      session.user.branchSlug = token.branchSlug as string | null;
+      // Re-read role/branch from DB every request so demotions/role changes
+      // take effect immediately instead of lasting until the JWT expires.
+      session.user.role = (user?.role ?? token.role) as string;
+      session.user.branchId = (user?.branchId ?? token.branchId) as string | null;
+      session.user.branchName = (user?.branch?.name ?? token.branchName) as string | null;
+      session.user.branchSlug = (user?.branch?.slug ?? token.branchSlug) as string | null;
       session.user.activeBranchId = (user?.activeBranchId || token.activeBranchId) as string | null;
+      session.user.isActive = user?.isActive ?? false;
       return session;
     },
   },
