@@ -16,7 +16,10 @@ async function main() {
   url.searchParams.delete("sslmode");
   const client = new pg.Client({
     connectionString: url.toString(),
-    ssl: { rejectUnauthorized: false },
+    ssl:
+      process.env.PG_INSECURE_SSL === "1"
+        ? { rejectUnauthorized: false }
+        : { rejectUnauthorized: true },
   });
   await client.connect();
 

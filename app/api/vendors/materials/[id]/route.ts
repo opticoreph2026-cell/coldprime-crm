@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {

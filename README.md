@@ -2,6 +2,8 @@
 
 Customer Relationship Management system for **Coldprime Enterprises Corporation** — Cebu Region.
 
+Coldprime is THE HVAC/IAQ vendor. Companies/leads/projects are **clients**. Upstream suppliers live in a separate **Vendor** domain.
+
 ## Quick Start
 
 ### 1. Install Dependencies
@@ -18,7 +20,7 @@ Copy `.env.example` to `.env` and update the database URL:
 cp .env.example .env
 ```
 
-Edit `.env` with your PostgreSQL connection string.
+Edit `.env` with your PostgreSQL connection string. For Gmail sending also set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `CRON_SECRET`.
 
 ### 3. Setup Database
 
@@ -27,15 +29,17 @@ npx prisma generate
 npx prisma db push
 ```
 
+If `prisma db push` cannot run locally, apply schema changes with a raw-SQL script under `scripts/` (see `scripts/db-*.ts`).
+
 ### 4. Seed Initial Data
 
 ```bash
 npm run seed
 ```
 
-This creates:
+This creates (idempotent — safe to re-run):
 - Default admin user (admin@coldprime.ph / Coldprime2026!)
-- Status definitions from the existing Excel workflow
+- Branches, status definitions, sample data
 
 ### 5. Run Development Server
 
@@ -44,6 +48,14 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+### Checks
+
+```bash
+npx tsc --noEmit   # typecheck
+npm run lint       # eslint (0 errors)
+npm audit          # dependency vulnerabilities
+```
 
 ## Default Login
 
@@ -56,8 +68,9 @@ Open [http://localhost:3000](http://localhost:3000)
 - Master company list (no duplicates)
 - Industry classification
 - Contact information
-- Status tracking
+- Status tracking (StatusDefinition-driven)
 - Duplicate detection
+- Outreach status: EMAILED / REPLIED (updated by send + reply detection)
 
 ### Contact Management
 - Multiple contacts per company
@@ -80,6 +93,25 @@ Open [http://localhost:3000](http://localhost:3000)
 - Phone calls, emails, meetings, site visits
 - Follow-up scheduling
 - Activity history per company/project
+
+### Email Outreach
+- Compose single emails (Gmail SMTP primary, Resend fallback)
+- Email templates (branch-scoped, shared library)
+- Bulk send with CC, case-insensitive dedup
+- Sent history / logs with statuses (SENT / FAILED / PENDING)
+- Mailbox tab: Inbox + Sent via Gmail IMAP
+- Reply detection (cron + manual) → company outreach → REPLIED
+- Daily send budget (default 450, Gmail free = 500)
+
+### Vendors (suppliers)
+- HVAC / IAQ equipment and materials suppliers
+- Vendor contacts and material price list
+- Separate from Client domain (Company/Lead/Project = clients)
+
+### Multi-branch & Roles
+- Branch-scoped data isolation (Cebu + others)
+- HEAD_ADMIN / BRANCH_ADMIN / staff roles
+- Per-request session revalidation of role and active status
 
 ### Excel Import
 - Import existing CRM 2026.xlsx workbook
@@ -105,55 +137,36 @@ Open [http://localhost:3000](http://localhost:3000)
 coldprime-crm/
 ├── app/
 │   ├── api/
-│   │   ├── activities/       # Activity CRUD
-│   │   ├── companies/        # Company CRUD
-│   │   ├── contacts/         # Contact CRUD
-│   │   ├── dashboard/        # Dashboard stats
-│   │   ├── export/           # Excel export
-│   │   ├── import/           # Excel import
-│   │   ├── leads/            # Lead CRUD
-│   │   ├── projects/         # Project CRUD
-│   │   ├── reports/          # PDF reports
-│   │   └── status-definitions/
-│   ├── activities/           # Activities UI
-│   ├── companies/            # Companies UI
-│   ├── contacts/             # Contacts UI
-│   ├── dashboard/            # Dashboard UI
-│   ├── import-export/        # Import/Export UI
-│   ├── leads/                # Leads UI
-│   ├── projects/             # Projects UI
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   └── layout/
-│       └── sidebar.tsx       # Sidebar navigation
+│   │   ├── activities/ companies/ contacts/ dashboard/
+│   │   ├── emails/            # send, bulk-send, templates, logs, mailbox, check-replies
+│   │   ├── export/ import/ leads/ projects/ reports/
+│   │   ├── status-definitions/ users/ vendors/ branches/
+│   │   └── auth/
+│   ├── activities/ companies/ contacts/ dashboard/
+│   ├── emails/                # Sent History, Compose, Mailbox
+│   ├── import-export/ leads/ projects/ vendors/
+│   ├── loading.tsx error.tsx  # global fallbacks
+│   ├── layout.tsx page.tsx
+├── components/layout/sidebar.tsx
 ├── lib/
-│   ├── excel/
-│   │   ├── export.ts         # Excel export engine
-│   │   └── import.ts         # Excel import engine
-│   └── prisma.ts             # Prisma client singleton
-├── prisma/
-│   ├── schema.prisma         # Database schema
-│   └── seed.ts               # Seed script
+│   ├── branch.ts auth.ts audit.ts status.ts
+│   ├── email.ts reply-check.ts mailbox.ts
+│   ├── excel/ import.ts export.ts
+│   └── prisma/                # generated client
+├── middleware.ts              # auth, cron Bearer, login rate limit
+├── prisma/ schema.prisma seed.ts
+├── scripts/                   # db-*.ts migrations, test-*.ts
+├── eslint.config.mjs
 ├── .env.example
-├── package.json
-├── postcss.config.mjs
-├── tsconfig.json
 └── README.md
 ```
 
 ## Excel Import Guide
 
-### Importing CRM 2026.xlsx
-
-1. Go to **Import / Export** page
-2. Enter the full file path to `CRM 2026.xlsx`
-3. Click **Preview** to see:
-   - Total rows per sheet
-   - Duplicate companies detected
-   - Validation errors
-4. Click **Import Valid Records** to import
+1. Go to **Import / Export**
+2. Select a workbook (.xlsx/.xls)
+3. Click **Preview** (rows, duplicates, validation errors)
+4. Click **Import Valid Records**
 
 ### Supported Sheets
 
@@ -176,22 +189,27 @@ coldprime-crm/
 
 ## Database
 
-Uses PostgreSQL. Tables:
+PostgreSQL tables include: companies, contacts, leads, projects, activities, status_definitions, import_batches, users, branches, vendors (+ contacts/materials), email_templates, email_logs, audit_logs.
 
-- `companies` — Master company list
-- `contacts` — Contact persons
-- `leads` — Lead tracking
-- `projects` — Project management
-- `activities` — Activity/follow-up log
-- `status_definitions` — Configurable statuses
-- `import_batches` — Import history
-- `admin_users` — User accounts
+## Environment Variables
+
+| Var | Purpose |
+|-----|---------|
+| `DATABASE_URL` | Postgres connection string |
+| `PG_INSECURE_SSL` | `1` only if TLS verify must be disabled |
+| `AUTH_SECRET` | NextAuth JWT secret |
+| `GMAIL_USER` / `GMAIL_APP_PASSWORD` | Gmail SMTP |
+| `EMAIL_FROM_NAME` | From display name |
+| `EMAIL_DAILY_CAP` | Soft daily send limit (default 450) |
+| `CRON_SECRET` | Bearer token for reply-check cron |
+| `RESEND_API_KEY` | Optional Resend fallback |
 
 ## Tech Stack
 
 - **Frontend:** Next.js 16, React 19, Tailwind CSS 4
 - **Backend:** Next.js API Routes
 - **Database:** PostgreSQL + Prisma ORM
-- **Excel:** ExcelJS (export), SheetJS (import)
+- **Excel:** SheetJS (import, SheetJS CDN), ExcelJS (export)
 - **PDF:** jsPDF + jspdf-autotable
-- **Auth:** NextAuth v5
+- **Auth:** NextAuth v5 (JWT)
+- **Email:** Nodemailer (Gmail SMTP), Gmail IMAP (mailbox/replies)

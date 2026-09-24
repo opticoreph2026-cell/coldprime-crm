@@ -4,8 +4,7 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET() {
   try {
-    let session;
-    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const logs = await prisma.emailLog.findMany({
       where: { ...branchFilter },

@@ -4,8 +4,7 @@ import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 
 export async function GET() {
   try {
-    let session;
-    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const templates = await prisma.emailTemplate.findMany({
       where: { ...branchFilter, isActive: true },
@@ -22,8 +21,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    let session;
-    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     let branchId: string;
     try {
       branchId = await requireBranchId();

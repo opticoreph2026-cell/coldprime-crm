@@ -4,8 +4,7 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    let session;
-    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
@@ -25,8 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    let session;
-    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     const body = await request.json();
@@ -54,8 +52,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    let session;
-    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });

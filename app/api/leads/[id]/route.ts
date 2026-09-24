@@ -20,7 +20,7 @@ export async function GET(
     });
     if (!lead) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(lead);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
@@ -51,7 +51,7 @@ export async function PUT(
       },
     });
     return NextResponse.json(lead);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
@@ -70,7 +70,7 @@ export async function DELETE(
 
     await prisma.lead.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

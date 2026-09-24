@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/lib/prisma/client/client";
-import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {

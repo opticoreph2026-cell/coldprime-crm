@@ -20,7 +20,6 @@ interface ImportPreview {
 export default function ImportExportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number; errors: { company: string; reason: string }[] } | null>(null);
@@ -30,7 +29,6 @@ export default function ImportExportPage() {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setFileName(file.name);
       setPreview(null);
       setResult(null);
     }
@@ -47,7 +45,7 @@ export default function ImportExportPage() {
       const data = await res.json();
       if (data.error) { alert(data.error); return; }
       setPreview(data);
-    } catch (err) {
+    } catch {
       alert("Failed to preview file");
     } finally {
       setLoading(false);
@@ -67,9 +65,8 @@ export default function ImportExportPage() {
       setResult(data);
       setPreview(null);
       setSelectedFile(null);
-      setFileName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (err) {
+    } catch {
       alert("Failed to import");
     } finally {
       setImporting(false);

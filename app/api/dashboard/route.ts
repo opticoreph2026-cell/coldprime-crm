@@ -9,9 +9,6 @@ export async function GET() {
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-    const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 6);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
     const [
       totalCompanies,

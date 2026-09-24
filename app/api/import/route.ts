@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
-import { parseExcelFile, mergeImportData, type ImportPreview } from "@/lib/excel/import";
-import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { parseExcelFile, mergeImportData } from "@/lib/excel/import";
+import { requireAuth, requireBranchId } from "@/lib/branch";
 
 const ALLOWED_EXTENSIONS = [".xlsx", ".xls"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
