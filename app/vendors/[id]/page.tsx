@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 
 interface Vendor {
   id: string;
@@ -118,7 +119,7 @@ export default function VendorDetailPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
-      <a href="/vendors" style={{ fontSize: "0.875rem", color: "#3b82f6" }}>← Back to Vendors</a>
+      <Link href="/vendors" style={{ fontSize: "0.875rem", color: "#3b82f6" }}>← Back to Vendors</Link>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: 8, marginBottom: 4 }}>{vendor.name}</h1>
       <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: 24 }}>
         {vendor.category} • {vendor.branch.name} • Status: {vendor.status}

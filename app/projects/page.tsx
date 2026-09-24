@@ -25,6 +25,7 @@ const SUB_STATUSES = ["Not Started", "In Progress", "Completed", "Passed", "Fail
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [statuses, setStatuses] = useState<string[]>(STATUSES);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -38,6 +39,20 @@ export default function ProjectsPage() {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    fetch("/api/status-definitions")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) {
+          const projectStatuses = d
+            .filter((s: { type: string }) => s.type === "project")
+            .map((s: { name: string }) => s.name);
+          if (projectStatuses.length > 0) setStatuses(projectStatuses);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -106,7 +121,7 @@ export default function ProjectsPage() {
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Project Name *</label><input required style={{ width: "100%" }} value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Location</label><input style={{ width: "100%" }} value={form.projectLocation} onChange={(e) => setForm({ ...form, projectLocation: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Type</label><input style={{ width: "100%" }} value={form.projectType} onChange={(e) => setForm({ ...form, projectType: e.target.value })} placeholder="HVAC Installation, Testing..." /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label><select style={{ width: "100%" }} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label><select style={{ width: "100%" }} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Start Date</label><input type="date" style={{ width: "100%" }} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Target Completion</label><input type="date" style={{ width: "100%" }} value={form.targetCompletion} onChange={(e) => setForm({ ...form, targetCompletion: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Installation Status</label><select style={{ width: "100%" }} value={form.installationStatus} onChange={(e) => setForm({ ...form, installationStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
@@ -125,7 +140,7 @@ export default function ProjectsPage() {
         <input placeholder="Search projects..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
-          {STATUSES.map((s) => <option key={s}>{s}</option>)}
+          {statuses.map((s) => <option key={s}>{s}</option>)}
         </select>
       </div>
 
@@ -142,7 +157,7 @@ export default function ProjectsPage() {
                 <td>{p.projectLocation || "-"}</td>
                 <td>
                   <select value={p.status} onChange={(e) => handleStatusChange(p.id, e.target.value)} style={{ padding: "2px 6px", fontSize: "0.75rem" }}>
-                    {STATUSES.map((s) => <option key={s}>{s}</option>)}
+                    {statuses.map((s) => <option key={s}>{s}</option>)}
                   </select>
                 </td>
                 <td>{p.installationStatus || "-"}</td>

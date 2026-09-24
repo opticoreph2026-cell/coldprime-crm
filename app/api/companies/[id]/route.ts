@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
+import { isValidStatus } from "@/lib/status";
 
 export async function GET(
   request: Request,
@@ -46,6 +47,13 @@ export async function PUT(
 
     const existing = await prisma.company.findFirst({ where: { id, ...branchFilter } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    if (status !== undefined && status && !(await isValidStatus(existing.branchId, "company", status))) {
+      return NextResponse.json({ error: `Invalid status: ${status}` }, { status: 400 });
+    }
+    if (industry !== undefined && industry && !(await isValidStatus(existing.branchId, "industry", industry))) {
+      return NextResponse.json({ error: `Invalid industry: ${industry}` }, { status: 400 });
+    }
 
     const company = await prisma.company.update({
       where: { id },

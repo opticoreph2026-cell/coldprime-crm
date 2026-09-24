@@ -42,12 +42,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const u = user as typeof user & {
+          role?: string;
+          branchId?: string | null;
+          branchName?: string | null;
+          branchSlug?: string | null;
+        };
         token.userId = user.id;
-        token.role = (user as any).role;
-        token.branchId = (user as any).branchId;
-        token.branchName = (user as any).branchName;
-        token.branchSlug = (user as any).branchSlug;
-        token.activeBranchId = (user as any).branchId;
+        token.role = u.role;
+        token.branchId = u.branchId;
+        token.branchName = u.branchName;
+        token.branchSlug = u.branchSlug;
+        token.activeBranchId = u.branchId;
       }
       return token;
     },

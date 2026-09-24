@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
+import { isValidStatus } from "@/lib/status";
 
 export async function GET(request: Request) {
   try {
@@ -81,6 +82,13 @@ export async function POST(request: Request) {
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Company name is required" }, { status: 400 });
+    }
+
+    if (status && !(await isValidStatus(branchId, "company", status))) {
+      return NextResponse.json({ error: `Invalid status: ${status}` }, { status: 400 });
+    }
+    if (industry && !(await isValidStatus(branchId, "industry", industry))) {
+      return NextResponse.json({ error: `Invalid industry: ${industry}` }, { status: 400 });
     }
 
     const allPhones = [mobile1, mobile2, mobile3, landline1, landline2, landline3].filter(Boolean).map((p: string) => p.trim());

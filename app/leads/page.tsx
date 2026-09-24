@@ -25,6 +25,7 @@ const PRIORITIES = ["Low", "Medium", "High"];
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [statuses, setStatuses] = useState<string[]>(STATUSES);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -38,6 +39,20 @@ export default function LeadsPage() {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    fetch("/api/status-definitions")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) {
+          const leadStatuses = d
+            .filter((s: { type: string }) => s.type === "project")
+            .map((s: { name: string }) => s.name);
+          if (leadStatuses.length > 0) setStatuses(leadStatuses);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -119,7 +134,7 @@ export default function LeadsPage() {
         <input placeholder="Search leads..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
-          {STATUSES.map((s) => <option key={s}>{s}</option>)}
+          {statuses.map((s) => <option key={s}>{s}</option>)}
         </select>
       </div>
 
@@ -137,7 +152,7 @@ export default function LeadsPage() {
                 <td>{l.industry || "-"}</td>
                 <td>
                   <select value={l.status} onChange={(e) => handleStatusChange(l.id, e.target.value)} style={{ padding: "2px 6px", fontSize: "0.75rem" }}>
-                    {STATUSES.map((s) => <option key={s}>{s}</option>)}
+                    {statuses.map((s) => <option key={s}>{s}</option>)}
                   </select>
                 </td>
                 <td><span className={`badge badge-${l.priority === "High" ? "red" : l.priority === "Low" ? "gray" : "blue"}`}>{l.priority}</span></td>

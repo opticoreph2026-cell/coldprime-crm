@@ -131,18 +131,28 @@ async function main() {
 
   const cebuCompanyIds: string[] = [];
   for (let i = 0; i < 5; i++) {
-    const company = await prisma.company.create({
-      data: {
-        branchId: cebuBranch.id,
-        name: cebuCompanyNames[i],
-        industry: cebuCompanyIndustries[i],
-        email: cebuCompanyEmails[i],
-        mobile1: cebuCompanyMobiles[i],
-        status: cebuCompanyStatuses[i],
-        address: cebuCompanyAddresses[i],
-      },
-    }).catch(() => null);
-    if (company) cebuCompanyIds.push(company.id);
+    const existing = await prisma.company.findFirst({
+      where: { branchId: cebuBranch.id, name: cebuCompanyNames[i] },
+      select: { id: true },
+    });
+    let companyId: string;
+    if (existing) {
+      companyId = existing.id;
+    } else {
+      const company = await prisma.company.create({
+        data: {
+          branchId: cebuBranch.id,
+          name: cebuCompanyNames[i],
+          industry: cebuCompanyIndustries[i],
+          email: cebuCompanyEmails[i],
+          mobile1: cebuCompanyMobiles[i],
+          status: cebuCompanyStatuses[i],
+          address: cebuCompanyAddresses[i],
+        },
+      });
+      companyId = company.id;
+    }
+    cebuCompanyIds.push(companyId);
   }
   console.log(`Cebu companies seeded: ${cebuCompanyIds.length}`);
 
@@ -162,18 +172,28 @@ async function main() {
 
   const manilaCompanyIds: string[] = [];
   for (let i = 0; i < 5; i++) {
-    const company = await prisma.company.create({
-      data: {
-        branchId: manilaBranch.id,
-        name: manilaCompanyNames[i],
-        industry: manilaCompanyIndustries[i],
-        email: manilaCompanyEmails[i],
-        mobile1: manilaCompanyMobiles[i],
-        status: manilaCompanyStatuses[i],
-        address: manilaCompanyAddresses[i],
-      },
-    }).catch(() => null);
-    if (company) manilaCompanyIds.push(company.id);
+    const existing = await prisma.company.findFirst({
+      where: { branchId: manilaBranch.id, name: manilaCompanyNames[i] },
+      select: { id: true },
+    });
+    let companyId: string;
+    if (existing) {
+      companyId = existing.id;
+    } else {
+      const company = await prisma.company.create({
+        data: {
+          branchId: manilaBranch.id,
+          name: manilaCompanyNames[i],
+          industry: manilaCompanyIndustries[i],
+          email: manilaCompanyEmails[i],
+          mobile1: manilaCompanyMobiles[i],
+          status: manilaCompanyStatuses[i],
+          address: manilaCompanyAddresses[i],
+        },
+      });
+      companyId = company.id;
+    }
+    manilaCompanyIds.push(companyId);
   }
 
   // Seed contacts for Cebu client companies
@@ -183,10 +203,15 @@ async function main() {
   ];
   for (const c of cebuContactData) {
     const companyId = cebuCompanyIds[c.companyIdx];
-    if (companyId) {
+    if (!companyId) continue;
+    const existing = await prisma.contact.findFirst({
+      where: { branchId: cebuBranch.id, companyId, email: c.email },
+      select: { id: true },
+    });
+    if (!existing) {
       await prisma.contact.create({
         data: { branchId: cebuBranch.id, companyId, firstName: c.firstName, lastName: c.lastName, email: c.email, mobile: c.mobile, position: c.position },
-      }).catch(() => {});
+      });
     }
   }
 
@@ -197,10 +222,15 @@ async function main() {
   ];
   for (const c of manilaContactData) {
     const companyId = manilaCompanyIds[c.companyIdx];
-    if (companyId) {
+    if (!companyId) continue;
+    const existing = await prisma.contact.findFirst({
+      where: { branchId: manilaBranch.id, companyId, email: c.email },
+      select: { id: true },
+    });
+    if (!existing) {
       await prisma.contact.create({
         data: { branchId: manilaBranch.id, companyId, firstName: c.firstName, lastName: c.lastName, email: c.email, mobile: c.mobile, position: c.position },
-      }).catch(() => {});
+      });
     }
   }
 

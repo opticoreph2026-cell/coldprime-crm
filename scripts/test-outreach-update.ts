@@ -21,7 +21,7 @@ async function main() {
       where: { id: c.id },
       data: { lastEmailedAt: new Date(), ...(c.outreachStatus !== "REPLIED" && { outreachStatus: "EMAILED" }) },
     });
-    let r = await prisma.company.findUnique({ where: { id: c.id }, select: { outreachStatus: true, lastEmailedAt: true } });
+    const r = await prisma.company.findUnique({ where: { id: c.id }, select: { outreachStatus: true, lastEmailedAt: true } });
     console.log(`after send (was ${JSON.stringify(orig.outreachStatus)}): ${r?.outreachStatus}, lastEmailedAt set: ${!!r?.lastEmailedAt}`);
 
     // Simulate reply then another send: REPLIED must be preserved

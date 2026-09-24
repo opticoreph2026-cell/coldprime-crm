@@ -35,7 +35,7 @@ const emptyForm = {
 };
 
 const industries = ["General Contractor", "Architectural", "Construction", "Business Process Outsourcing (BPO)", "Security Systems", "Hotel", "Hospital", "Restaurant", "Retail", "Government", "Manufacturing", "Real Estate", "Education", "IT / Technology", "Healthcare", "Other"];
-const statuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
+const fallbackStatuses = ["Active", "Inactive", "Pending", "Prospect", "Archived"];
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -54,6 +54,21 @@ export default function CompaniesPage() {
   const [landlines, setLandlines] = useState([""]);
   const [checkingReplies, setCheckingReplies] = useState(false);
   const [replyMsg, setReplyMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [statuses, setStatuses] = useState<string[]>(fallbackStatuses);
+
+  useEffect(() => {
+    fetch("/api/status-definitions")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) {
+          const companyStatuses = d
+            .filter((s: { type: string }) => s.type === "company")
+            .map((s: { name: string }) => s.name);
+          if (companyStatuses.length > 0) setStatuses(companyStatuses);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);

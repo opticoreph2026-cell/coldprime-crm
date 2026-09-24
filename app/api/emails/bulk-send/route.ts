@@ -52,9 +52,14 @@ export async function POST(request: Request) {
 
     if (skipAlreadySent) {
       const already = await prisma.emailLog.findMany({
-        where: { subject, status: "SENT", toEmail: { in: companies.map((c) => c.email!) } },
+        where: {
+          subject,
+          status: "SENT",
+          toEmail: { in: companies.map((c) => c.email!).map((e) => e) },
+        },
         select: { toEmail: true },
       });
+      // Case-insensitive compare (emails in logs may differ in case)
       const sentSet = new Set(already.map((l) => l.toEmail.toLowerCase()));
       const before = targets.length;
       targets = targets.filter((c) => c.email && !sentSet.has(c.email.toLowerCase()));

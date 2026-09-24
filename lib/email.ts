@@ -24,7 +24,19 @@ export function fillTemplate(body: string, data: Record<string, string>): string
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// Strip CR/LF and control chars so display names can't inject SMTP headers;
+// wrap in quotes and escape embedded quotes.
+function safeDisplayName(name: string): string {
+  const cleaned = name.replace(/[\r\n]+/g, " ").replace(/[\x00-\x1f\x7f]/g, "").trim();
+  if (!cleaned) return "";
+  return `"${cleaned.replace(/["\\]/g, "\\$&")}"`;
+}
+
+function safeAddress(addr: string): string {
+  return addr.replace(/[\r\n]+/g, "").trim();
 }
 
 export function toHtml(text: string): string {
@@ -50,10 +62,14 @@ async function sendViaGmail({
     },
   });
 
+  const safeTo = safeAddress(to);
+  const safeCc = cc ? safeAddress(cc) : undefined;
+  const safeFromName = safeDisplayName(fromName || FROM_DISPLAY_NAME);
+
   const info = await transporter.sendMail({
-    from: `"${fromName || FROM_DISPLAY_NAME}" <${GMAIL_USER}>`,
-    to: toName ? `${toName} <${to}>` : to,
-    cc: cc ? (ccName ? `${ccName} <${cc}>` : cc) : undefined,
+    from: `${safeFromName} <${GMAIL_USER}>`,
+    to: toName ? `${safeDisplayName(toName)} <${safeTo}>` : safeTo,
+    cc: safeCc ? (ccName ? `${safeDisplayName(ccName)} <${safeCc}>` : safeCc) : undefined,
     subject,
     html: body,
   });
@@ -70,10 +86,12 @@ async function sendViaResend({
     );
   }
 
+  const safeTo = safeAddress(to);
+  const safeCc = cc ? safeAddress(cc) : undefined;
   const from = fromEmail
-    ? `${fromName || fromEmail} <${fromEmail}>`
+    ? `${safeDisplayName(fromName || fromEmail)} <${safeAddress(fromEmail)}>`
     : DEFAULT_FROM;
-  const toStr = toName ? `${toName} <${to}>` : to;
+  const toStr = toName ? `${safeDisplayName(toName)} <${safeTo}>` : safeTo;
 
   const emailData: Record<string, unknown> = {
     from,
@@ -82,8 +100,8 @@ async function sendViaResend({
     html: body,
   };
 
-  if (cc) {
-    emailData.cc = ccName ? `${ccName} <${cc}>` : cc;
+  if (safeCc) {
+    emailData.cc = ccName ? `${safeDisplayName(ccName)} <${safeCc}>` : safeCc;
   }
 
   let parsed;
@@ -115,11 +133,36 @@ async function sendViaResend({
 }
 
 export async function sendEmail(data: EmailData): Promise<{ id: string }> {
+  await ensureSendBudget();
   const payload: EmailData = { ...data, body: toHtml(data.body) };
   if (GMAIL_USER && GMAIL_APP_PASSWORD) {
     return sendViaGmail(payload);
   }
   return sendViaResend(payload);
+}
+
+// Gmail free tier: 500 messages/day. Soft cap well under that so a runaway
+// bulk job can't lock the mailbox for the rest of the day.
+const DAILY_SEND_CAP = Number(process.env.EMAIL_DAILY_CAP || 450);
+
+async function ensureSendBudget(): Promise<void> {
+  try {
+    const { prisma } = await import("./prisma");
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const today = await prisma.emailLog.count({
+      where: { status: "SENT", sentAt: { gte: startOfDay } },
+    });
+    if (today >= DAILY_SEND_CAP) {
+      throw new Error(
+        `Daily email limit reached (${today}/${DAILY_SEND_CAP}). Try again after midnight UTC.`
+      );
+    }
+  } catch (e) {
+    // Only rethrow our own budget error; if the count query fails, don't block sends.
+    if (e instanceof Error && e.message.startsWith("Daily email limit")) throw e;
+    console.error("Send budget check failed (continuing):", e);
+  }
 }
 
 export async function logEmail(
