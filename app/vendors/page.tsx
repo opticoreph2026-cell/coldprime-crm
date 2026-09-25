@@ -16,6 +16,7 @@ export default function VendorsPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({ name: "", category: "", status: "Active" });
   const [error, setError] = useState("");
+  const [view, setView] = useState<"vendors" | "priceList">("vendors");
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -89,6 +90,18 @@ export default function VendorsPage() {
 
       {error && <ErrorBanner message={error} />}
 
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {(["vendors", "priceList"] as const).map((v) => (
+          <button
+            key={v}
+            className={view === v ? "btn btn-primary" : "btn btn-secondary"}
+            onClick={() => setView(v)}
+          >
+            {v === "vendors" ? "Vendors" : "Price List"}
+          </button>
+        ))}
+      </div>
+
       <Modal open={showForm} title={editingId ? "Edit Vendor" : "New Vendor"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -139,6 +152,48 @@ export default function VendorsPage() {
         </select>
       </div>
 
+      {view === "priceList" ? (
+        (() => {
+          const rows = vendors.flatMap((v) =>
+            (v.materials || []).map((m) => ({ vendor: v, m }))
+          ).sort((a, b) => a.vendor.name.localeCompare(b.vendor.name) || a.m.itemName.localeCompare(b.m.itemName));
+          return (
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflowX: "auto" }}>
+              {rows.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
+                  No materials found on this page of vendors. Open a vendor and add items to its Price List.
+                </div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      {["Vendor", "Item", "Category", "Brand", "Model", "Unit", "Unit Price", "Valid Until"].map((h) => (
+                        <th key={h} style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(({ vendor, m }) => (
+                      <tr key={m.id}>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
+                          <a href={`/vendors/${vendor.id}`} style={{ color: "#1e40af", fontWeight: 600, textDecoration: "none" }}>{vendor.name}</a>
+                        </td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{m.itemName}</td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.category || "-"}</td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.brand || "-"}</td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.model || "-"}</td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.unit || "-"}</td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>{m.unitPrice} {m.currency}</td>
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.priceValidUntil ? new Date(m.priceValidUntil).toLocaleDateString() : "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          );
+        })()
+      ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
         {vendors.length === 0 ? (
           <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>No vendors found</div>
@@ -160,6 +215,7 @@ export default function VendorsPage() {
           ))
         )}
       </div>
+      )}
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />
