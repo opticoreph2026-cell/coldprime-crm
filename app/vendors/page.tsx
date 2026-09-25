@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Vendor } from "@/lib/types";
-import { PageHeader, ErrorBanner, Pagination, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyState, Pagination, Modal, ConfirmDialog } from "@/components/ui";
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -193,6 +193,15 @@ export default function VendorsPage() {
             </div>
           );
         })()
+      ) : vendors.length === 0 && !search && !debouncedSearch && !category && !error ? (
+        <EmptyState
+          message="No vendors yet — add your first vendor to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", category: "", status: "Active" }); }}>
+              + Add Vendor
+            </button>
+          }
+        />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
         {vendors.length === 0 ? (

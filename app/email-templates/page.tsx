@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { EmailTemplate as Template } from "@/lib/types";
-import { PageHeader, ErrorBanner, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyState, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 const emptyForm = { name: "", subject: "", body: "", category: "" };
 
@@ -144,6 +144,15 @@ export default function EmailTemplatesPage() {
 
       {loading ? (
         <p style={{ color: "#94a3b8" }}>Loading templates...</p>
+      ) : templates.length === 0 && !search && !categoryFilter && !error ? (
+        <EmptyState
+          message="No email templates yet — create your first template to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm); }}>
+              + New Template
+            </button>
+          }
+        />
       ) : filtered.length === 0 ? (
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
           No templates yet. Create one with <strong>+ New Template</strong>.

@@ -268,6 +268,9 @@ export interface DashboardStats {
   activitiesThisMonth: number;
   newLeadsThisMonth: number;
   accreditationsPending: number;
+  totalActivities: number;
+  totalVendors: number;
+  totalEmailTemplates: number;
   pipelineTotal: number;
   pipelineByStatus: { status: string; count: number; value: number }[];
   recentActivities: {

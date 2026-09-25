@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { COMPANY_TYPES, COMPANY_TYPE_LABELS } from "@/lib/enums";
 import type { Company } from "@/lib/types";
-import { PageHeader, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, EmptyRow, EmptyState, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 const emptyForm = {
   name: "", type: "OTHER", industry: "Other", email: "",
@@ -322,6 +322,15 @@ export default function CompaniesPage() {
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
           Unable to load companies. Check that a branch is selected and try again.
         </div>
+      ) : companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !outreachFilter ? (
+        <EmptyState
+          message="No companies yet — add your first company to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
+              + Add Company
+            </button>
+          }
+        />
       ) : (
         <table>
           <thead>

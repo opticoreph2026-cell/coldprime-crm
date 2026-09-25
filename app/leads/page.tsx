@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { LEAD_TYPES, LEAD_TYPE_STAGES } from "@/lib/enums";
 import type { Lead, CompanyOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, EmptyState, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 
@@ -155,6 +155,16 @@ export default function LeadsPage() {
         </select>
       </div>
 
+      {leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
+        <EmptyState
+          message="No leads yet — add your first lead to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+              + New Lead
+            </button>
+          }
+        />
+      ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
           <thead>
@@ -184,6 +194,7 @@ export default function LeadsPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

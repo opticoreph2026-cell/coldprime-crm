@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Contact, CompanyOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, EmptyState, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -112,6 +112,16 @@ export default function ContactsPage() {
         <SearchInput placeholder="Search contacts..." width={400} value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
       </div>
 
+      {contacts.length === 0 && !search && !debouncedSearch && !error ? (
+        <EmptyState
+          message="No contacts yet — add your first contact to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" }); }}>
+              + Add Contact
+            </button>
+          }
+        />
+      ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
           <thead>
@@ -136,6 +146,7 @@ export default function ContactsPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

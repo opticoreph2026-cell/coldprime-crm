@@ -27,6 +27,9 @@ export async function GET() {
       projectsByStatus,
       pipelineByStatus,
       accreditationsPending,
+      totalActivities,
+      totalVendors,
+      totalEmailTemplates,
       recentActivities,
     ] = await Promise.all([
       prisma.company.count({ where: branchFilter }),
@@ -74,6 +77,9 @@ export async function GET() {
       prisma.company.count({
         where: { ...branchFilter, accreditationStatus: { in: ["DOCUMENTS_SUBMITTED", "UNDER_REVIEW"] } },
       }),
+      prisma.activity.count({ where: branchFilter }),
+      prisma.vendor.count({ where: branchFilter }),
+      prisma.emailTemplate.count({ where: branchFilter }),
       prisma.activity.findMany({
         where: branchFilter,
         orderBy: { date: "desc" },
@@ -102,6 +108,9 @@ export async function GET() {
       activitiesThisMonth,
       newLeadsThisMonth,
       accreditationsPending,
+      totalActivities,
+      totalVendors,
+      totalEmailTemplates,
       pipelineTotal,
       pipelineByStatus: pipelineByStatus
         .map((p) => ({ status: p.status, count: p._count, value: Number(p._sum.estimatedValue || 0) }))

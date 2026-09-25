@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Activity, CompanyOption, ProjectOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, EmptyState, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
   const TYPES = ["Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Site Inspection", "Follow-Up", "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up", "Data Gathering", "Other"];
 
@@ -135,6 +135,16 @@ export default function ActivitiesPage() {
         </select>
       </div>
 
+      {activities.length === 0 && !search && !debouncedSearch && !typeFilter && !error ? (
+        <EmptyState
+          message="No activities yet — log your first activity to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+              + Log Activity
+            </button>
+          }
+        />
+      ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
           <thead>
@@ -159,6 +169,7 @@ export default function ActivitiesPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

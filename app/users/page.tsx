@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import type { User, Branch } from "@/lib/types";
-import { PageHeader, EmptyRow, Modal, ConfirmDialog } from "@/components/ui";
+import { PageHeader, EmptyRow, EmptyState, Modal, ConfirmDialog } from "@/components/ui";
 
 const ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
 
@@ -142,6 +142,16 @@ export default function UsersPage() {
         onConfirm={handleDelete}
       />
 
+      {users.length === 0 && !error ? (
+        <EmptyState
+          message="No users yet — add your first user to get started."
+          action={
+            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", email: "", password: "", role: "STAFF", branchId: session?.user?.branchId || "" }); setError(""); }}>
+              + Add User
+            </button>
+          }
+        />
+      ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
           <thead>
@@ -166,6 +176,7 @@ export default function UsersPage() {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }

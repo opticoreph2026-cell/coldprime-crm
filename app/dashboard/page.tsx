@@ -17,6 +17,51 @@ const TYPE_ICONS: Record<string, string> = {
   QUOTATION: "📄", PROPOSAL: "📑", OTHER: "📌",
 };
 
+function SetupChecklist({ stats }: { stats: DashboardStats }) {
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => { setDismissed(localStorage.getItem("cp_setup_dismissed") === "1"); }, []);
+  if (dismissed) return null;
+
+  const steps = [
+    { label: "Add your first company", href: "/companies", done: stats.totalCompanies > 0 },
+    { label: "Add contacts to your companies", href: "/contacts", done: stats.totalContacts > 0 },
+    { label: "Create a lead to start your pipeline", href: "/leads", done: stats.totalLeads > 0 },
+    { label: "Log an activity or follow-up", href: "/activities", done: stats.totalActivities > 0 },
+    { label: "Create an email template", href: "/email-templates", done: stats.totalEmailTemplates > 0 },
+    { label: "Add an HVAC/IAQ vendor", href: "/vendors", done: stats.totalVendors > 0 },
+  ];
+  const doneCount = steps.filter((s) => s.done).length;
+  if (doneCount === steps.length) return null;
+
+  const dismiss = () => { localStorage.setItem("cp_setup_dismissed", "1"); setDismissed(true); };
+
+  return (
+    <Card style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>Get started — {doneCount}/{steps.length} done</h2>
+        <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }} onClick={dismiss}>Dismiss</button>
+      </div>
+      <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: 12 }}>Finish these steps to unlock the full Coldprime workflow.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
+        {steps.map((s) => (
+          <Link
+            key={s.label}
+            href={s.href}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 6,
+              border: "1px solid #e2e8f0", fontSize: "0.8rem", textDecoration: "none",
+              color: s.done ? "#166534" : "#0f172a", background: s.done ? "#f0fdf4" : "#fff",
+            }}
+          >
+            <span>{s.done ? "✅" : "⬜"}</span>
+            <span style={{ textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.7 : 1 }}>{s.label}</span>
+          </Link>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -67,6 +112,8 @@ export default function DashboardPage() {
           </span>
         }
       />
+
+      <SetupChecklist stats={stats} />
 
       <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         {cards.map((card) => (
