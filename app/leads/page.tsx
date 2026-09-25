@@ -86,7 +86,7 @@ export default function LeadsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    if (!res.ok) { alert("Failed to create lead"); return; }
+    if (!res.ok) { setError("Failed to save - please try again"); return; }
     setShowForm(false);
     fetchLeads();
   };

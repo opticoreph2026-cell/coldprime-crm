@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import type { ImportPreview } from "@/lib/types";
+import { ErrorBanner } from "@/components/ui";
 
 export default function ImportExportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -10,6 +11,7 @@ export default function ImportExportPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number; errors: { company: string; reason: string }[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -17,22 +19,24 @@ export default function ImportExportPage() {
       setSelectedFile(file);
       setPreview(null);
       setResult(null);
+      setError("");
     }
   };
 
   const handlePreview = async () => {
-    if (!selectedFile) return alert("Please select an Excel file first");
+    if (!selectedFile) { setError("Please select an Excel file first"); return; }
     setLoading(true);
+    setError("");
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("action", "preview");
       const res = await fetch("/api/import", { method: "POST", body: formData });
       const data = await res.json();
-      if (data.error) { alert(data.error); return; }
+      if (data.error) { setError(data.error); return; }
       setPreview(data);
     } catch {
-      alert("Failed to preview file");
+      setError("Failed to preview file");
     } finally {
       setLoading(false);
     }
@@ -41,19 +45,20 @@ export default function ImportExportPage() {
   const handleImport = async () => {
     if (!selectedFile) return;
     setImporting(true);
+    setError("");
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("action", "import");
       const res = await fetch("/api/import", { method: "POST", body: formData });
       const data = await res.json();
-      if (!res.ok || data.error) { alert(data.error || "Import failed"); return; }
+      if (!res.ok || data.error) { setError(data.error || "Import failed"); return; }
       setResult(data);
       setPreview(null);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
-      alert("Failed to import");
+      setError("Failed to import");
     } finally {
       setImporting(false);
     }
@@ -62,6 +67,8 @@ export default function ImportExportPage() {
   return (
     <div style={{ padding: 24 }}>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 24 }}>Import / Export</h1>
+
+      <ErrorBanner message={error} />
 
       {/* IMPORT SECTION */}
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>

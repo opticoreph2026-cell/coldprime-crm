@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { DOCUMENT_CATEGORIES, COMPANY_TYPE_LABELS } from "@/lib/enums";
 import type { Company, Document } from "@/lib/types";
+import { ErrorBanner, ConfirmDialog } from "@/components/ui";
 
 type Tab = "overview" | "accreditation" | "contacts" | "leads" | "projects" | "activities" | "documents";
 
@@ -52,6 +53,9 @@ export default function CompanyDetailPage() {
   const [error, setError] = useState("");
   const [docForm, setDocForm] = useState({ category: "Company Profile", fileName: "", fileUrl: "" });
   const [saving, setSaving] = useState(false);
+  const [accredConfirm, setAccredConfirm] = useState<{ status: string; message: string } | null>(null);
+  const [docDelete, setDocDelete] = useState<{ id: string; name: string } | null>(null);
+  const [docError, setDocError] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -67,8 +71,7 @@ export default function CompanyDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const setAccreditation = async (status: string, confirmMsg?: string) => {
-    if (confirmMsg && !confirm(confirmMsg)) return;
+  const setAccreditation = async (status: string) => {
     setSaving(true);
     try {
       const res = await fetch(`/api/companies/${id}`, {
@@ -93,19 +96,21 @@ export default function CompanyDetailPage() {
       });
       if (res.ok) {
         setDocForm({ category: "Company Profile", fileName: "", fileUrl: "" });
+        setDocError("");
         await load();
       } else {
         const d = await res.json();
-        alert(d.error || "Failed to add document");
+        setDocError(d.error || "Failed to add document");
       }
     } finally {
       setSaving(false);
     }
   };
 
-  const deleteDocument = async (docId: string) => {
-    if (!confirm("Delete this document record?")) return;
-    await fetch(`/api/documents/${docId}`, { method: "DELETE" });
+  const deleteDocument = async () => {
+    if (!docDelete) return;
+    await fetch(`/api/documents/${docDelete.id}`, { method: "DELETE" });
+    setDocDelete(null);
     await load();
   };
 
@@ -173,7 +178,7 @@ export default function CompanyDetailPage() {
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {ACCREDITATION_ACTIONS.filter((a) => a.to !== company.accreditationStatus).map((a) => (
-              <button key={a.to} className="btn btn-secondary" disabled={saving} onClick={() => setAccreditation(a.to, a.confirm)}>
+              <button key={a.to} className="btn btn-secondary" disabled={saving} onClick={() => a.confirm ? setAccredConfirm({ status: a.to, message: a.confirm }) : setAccreditation(a.to)}>
                 {a.label}
               </button>
             ))}
@@ -270,6 +275,7 @@ export default function CompanyDetailPage() {
             </div>
             <button className="btn btn-primary" disabled={saving} onClick={addDocument}>Add</button>
           </div>
+          <ErrorBanner message={docError} />
           {company.documents.length === 0 ? (
             <p style={{ color: "#94a3b8" }}>No documents yet.</p>
           ) : (
@@ -281,7 +287,7 @@ export default function CompanyDetailPage() {
                     <td><span className="badge badge-gray">{d.category}</span></td>
                     <td><a href={d.fileUrl} target="_blank" rel="noreferrer" style={{ color: "#1e40af" }}>{d.fileName}</a></td>
                     <td>{new Date(d.createdAt).toLocaleDateString("en-PH")}</td>
-                    <td><button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => deleteDocument(d.id)}>Delete</button></td>
+                    <td><button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDocDelete({ id: d.id, name: d.fileName })}>Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -289,6 +295,28 @@ export default function CompanyDetailPage() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={accredConfirm !== null}
+        title="Confirm accreditation change"
+        message={accredConfirm?.message || ""}
+        confirmLabel="Continue"
+        danger={false}
+        busy={saving}
+        onCancel={() => setAccredConfirm(null)}
+        onConfirm={async () => {
+          if (accredConfirm) await setAccreditation(accredConfirm.status);
+          setAccredConfirm(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={docDelete !== null}
+        title="Delete document"
+        message={`Delete "${docDelete?.name}"? This only removes the record — the linked file itself is not touched.`}
+        onCancel={() => setDocDelete(null)}
+        onConfirm={deleteDocument}
+      />
     </div>
   );
 }

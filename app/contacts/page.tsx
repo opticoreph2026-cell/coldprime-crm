@@ -47,7 +47,7 @@ export default function ContactsPage() {
     const url = editingId ? `/api/contacts/${editingId}` : "/api/contacts";
     const method = editingId ? "PUT" : "POST";
     const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    if (!res.ok) { alert("Failed to save contact"); return; }
+    if (!res.ok) { setError("Failed to save - please try again"); return; }
     setShowForm(false);
     setEditingId(null);
     fetchContacts();

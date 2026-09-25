@@ -65,7 +65,7 @@ export default function ActivitiesPage() {
     e.preventDefault();
     const body = { ...form, nextFollowUp: form.nextFollowUp || null };
     const res = await fetch("/api/activities", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.ok) { alert("Failed to log activity"); return; }
+    if (!res.ok) { setError("Failed to save - please try again"); return; }
     setShowForm(false);
     fetchActivities();
   };

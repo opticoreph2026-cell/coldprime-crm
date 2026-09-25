@@ -65,7 +65,7 @@ export default function ProjectsPage() {
     e.preventDefault();
     const body = { ...form, startDate: form.startDate || null, targetCompletion: form.targetCompletion || null };
     const res = await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.ok) { alert("Failed to create project"); return; }
+    if (!res.ok) { setError("Failed to save - please try again"); return; }
     setShowForm(false);
     fetchProjects();
   };

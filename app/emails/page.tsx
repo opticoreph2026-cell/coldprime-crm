@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type { EmailTemplate as Template, Recipient, EmailLog, MailSummary, MailViewState } from "@/lib/types";
+import { ConfirmDialog } from "@/components/ui";
 
 const DEFAULT_SUBJECT = "Application for Accreditation as HVAC & IAQ Vendor – Coldprime Enterprises Corporation";
 
@@ -45,6 +46,8 @@ export default function EmailsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [skipAlreadySent, setSkipAlreadySent] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendConfirm, setSendConfirm] = useState<{ count: number; ccNote: string } | null>(null);
+  const [tplDelete, setTplDelete] = useState<Template | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [result, setResult] = useState<{ sent: number; failed: number; skipped: number } | null>(null);
   const [error, setError] = useState("");
@@ -253,7 +256,7 @@ export default function EmailsPage() {
     }
   };
 
-  const handleBulkSend = async () => {
+  const requestBulkSend = () => {
     if (!subject.trim() || !body.trim()) {
       setError("Subject and body are required");
       return;
@@ -263,7 +266,18 @@ export default function EmailsPage() {
       return;
     }
     const ccNote = cc.trim() ? ` The CC address (${cc}) will receive a copy of EVERY email sent (${finalTargets.length} copies).` : "";
-    if (!window.confirm(`Send this email to ${finalTargets.length} companies?${ccNote} This cannot be undone.`)) return;
+    setSendConfirm({ count: finalTargets.length, ccNote });
+  };
+
+  const handleBulkSend = async () => {
+    if (!subject.trim() || !body.trim()) {
+      setError("Subject and body are required");
+      return;
+    }
+    if (finalTargets.length === 0) {
+      setError("Select at least one company to send to");
+      return;
+    }
 
     setError("");
     setNotice("");
@@ -385,8 +399,11 @@ export default function EmailsPage() {
     }
   };
 
-  const handleDeleteTemplate = async (tpl: Template) => {
-    if (!window.confirm(`Delete template "${tpl.name}"? This cannot be undone.`)) return;
+  const requestDeleteTemplate = (tpl: Template) => setTplDelete(tpl);
+
+  const handleDeleteTemplate = async () => {
+    const tpl = tplDelete;
+    if (!tpl) return;
     setError("");
     setNotice("");
     try {
@@ -395,6 +412,7 @@ export default function EmailsPage() {
         setTemplates((prev) => prev.filter((t) => t.id !== tpl.id));
         setNotice(`Template "${tpl.name}" deleted.`);
         if (editingId === tpl.id) setEditingId(null);
+        setTplDelete(null);
       } else {
         const data = await res.json();
         setError(data.error || "Failed to delete template");
@@ -689,7 +707,7 @@ export default function EmailsPage() {
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button
-              onClick={handleBulkSend}
+              onClick={requestBulkSend}
               disabled={sending || finalTargets.length === 0}
               style={{
                 padding: "10px 24px",
@@ -845,7 +863,7 @@ export default function EmailsPage() {
                     <button onClick={() => (editingId === tpl.id ? setEditingId(null) : startEdit(tpl))} style={btnStyle("#fff", "#1e40af", "#1e40af")}>
                       {editingId === tpl.id ? "Cancel edit" : "Edit"}
                     </button>
-                    <button onClick={() => handleDeleteTemplate(tpl)} style={btnStyle("#fef2f2", "#dc2626", "#fecaca")}>
+                    <button onClick={() => requestDeleteTemplate(tpl)} style={btnStyle("#fef2f2", "#dc2626", "#fecaca")}>
                       Delete
                     </button>
                   </div>
@@ -1146,6 +1164,28 @@ export default function EmailsPage() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={sendConfirm !== null}
+        title="Confirm bulk send"
+        message={`Send this email to ${sendConfirm?.count ?? 0} companies?${sendConfirm?.ccNote || ""} This cannot be undone.`}
+        confirmLabel="Send"
+        danger={false}
+        busy={sending}
+        onCancel={() => setSendConfirm(null)}
+        onConfirm={async () => {
+          setSendConfirm(null);
+          await handleBulkSend();
+        }}
+      />
+
+      <ConfirmDialog
+        open={tplDelete !== null}
+        title="Delete template"
+        message={`Delete template "${tplDelete?.name}"? This cannot be undone.`}
+        onCancel={() => setTplDelete(null)}
+        onConfirm={handleDeleteTemplate}
+      />
     </div>
   );
 }
