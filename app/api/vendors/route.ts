@@ -27,7 +27,17 @@ export async function GET(request: Request) {
     if (status) where.status = status;
 
     const [vendors, total] = await Promise.all([
-      prisma.vendor.findMany({ where, include: { branch: { select: { name: true } } }, orderBy: { createdAt: "desc" }, skip: offset, take: limit }),
+      prisma.vendor.findMany({
+        where,
+        include: {
+          branch: { select: { id: true, name: true } },
+          contacts: { select: { id: true, firstName: true, lastName: true, position: true } },
+          materials: { select: { id: true, itemName: true, category: true, unitPrice: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: limit,
+      }),
       prisma.vendor.count({ where }),
     ]);
 

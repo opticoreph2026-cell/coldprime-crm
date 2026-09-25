@@ -1,16 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-interface EmailLog {
-  id: string;
-  toEmail: string;
-  toName: string | null;
-  subject: string;
-  status: string;
-  sentAt: string;
-  errorCode: string | null;
-}
+import type { EmailLog } from "@/lib/types";
 
 export default function SentPage() {
   const [logs, setLogs] = useState<EmailLog[]>([]);

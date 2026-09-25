@@ -2,14 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
-interface Template {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
-  category: string | null;
-}
+import type { EmailTemplate as Template } from "@/lib/types";
 
 function ComposeContent() {
   const router = useRouter();

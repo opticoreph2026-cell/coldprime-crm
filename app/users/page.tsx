@@ -2,22 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  isActive: boolean;
-  branch: { id: string; name: string; slug: string } | null;
-  createdAt: string;
-}
-
-interface Branch {
-  id: string;
-  name: string;
-  slug: string;
-}
+import type { User, Branch } from "@/lib/types";
 
 const ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
 

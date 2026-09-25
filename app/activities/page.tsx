@@ -1,24 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
-interface Activity {
-  id: string;
-  type: string;
-  date: string;
-  time: string | null;
-  performedBy: string | null;
-  contactPerson: string | null;
-  description: string | null;
-  result: string | null;
-  nextAction: string | null;
-  nextFollowUp: string | null;
-  company: { id: string; name: string } | null;
-  project: { id: string; projectName: string } | null;
-}
-
-interface CompanyOption { id: string; name: string }
-interface ProjectOption { id: string; projectName: string }
+import type { Activity, CompanyOption, ProjectOption } from "@/lib/types";
 
   const TYPES = ["Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Site Inspection", "Follow-Up", "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up", "Data Gathering", "Other"];
 

@@ -1,21 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string | null;
-  position: string | null;
-  email: string | null;
-  mobile: string | null;
-  landline: string | null;
-  notes: string | null;
-  status: string;
-  company: { id: string; name: string };
-}
-
-interface CompanyOption { id: string; name: string }
+import type { Contact, CompanyOption } from "@/lib/types";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);

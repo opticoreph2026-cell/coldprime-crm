@@ -1,23 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
-interface Project {
-  id: string;
-  projectName: string;
-  projectLocation: string | null;
-  projectType: string | null;
-  status: string;
-  startDate: string | null;
-  targetCompletion: string | null;
-  installationStatus: string | null;
-  testingStatus: string | null;
-  commissioningStatus: string | null;
-  remarks: string | null;
-  company: { id: string; name: string };
-}
-
-interface CompanyOption { id: string; name: string }
+import type { Project, CompanyOption } from "@/lib/types";
 
 const STATUSES = ["Quotation", "Approved", "Installation", "Testing", "Commissioning", "Completed", "On Hold", "Cancelled"];
 const SUB_STATUSES = ["Not Started", "In Progress", "Completed", "Passed", "Failed", "Deficiencies"];

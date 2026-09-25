@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
-interface Vendor {
-  id: string;
-  name: string;
-  category: string | null;
-  status: string;
-  branch: { id: string; name: string };
-  contacts: { id: string; firstName: string; lastName?: string; position?: string }[];
-  materials: { id: string; itemName: string; category?: string; unitPrice?: number }[];
-  createdAt: string;
-}
+import type { Vendor } from "@/lib/types";
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);

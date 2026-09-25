@@ -2,24 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { LEAD_TYPES, LEAD_TYPE_STAGES } from "@/lib/enums";
-
-interface Lead {
-  id: string;
-  source: string | null;
-  industry: string | null;
-  type: string;
-  status: string;
-  priority: string;
-  estimatedValue: number | null;
-  lastContactDate: string | null;
-  nextFollowUp: string | null;
-  notes: string | null;
-  dateAdded: string;
-  company: { id: string; name: string } | null;
-  contact: { id: string; firstName: string; lastName: string | null } | null;
-}
-
-interface CompanyOption { id: string; name: string }
+import type { Lead, CompanyOption } from "@/lib/types";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 

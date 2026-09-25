@@ -3,48 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-
-interface Vendor {
-  id: string;
-  name: string;
-  category: string | null;
-  address: string | null;
-  website: string | null;
-  email: string | null;
-  mobile1: string | null;
-  mobile2: string | null;
-  landline1: string | null;
-  landline2: string | null;
-  status: string;
-  notes: string | null;
-  branch: { id: string; name: string };
-  createdAt: string;
-}
-
-interface VendorContact {
-  id: string;
-  firstName: string;
-  lastName?: string;
-  position?: string;
-  email?: string;
-  mobile?: string;
-  landline?: string;
-  contactPreference?: string;
-  notes?: string;
-}
-
-interface VendorMaterial {
-  id: string;
-  itemName: string;
-  category?: string;
-  brand?: string;
-  model?: string;
-  unit?: string;
-  unitPrice?: number;
-  currency: string;
-  priceValidUntil?: string;
-  notes?: string;
-}
+import type { Vendor, VendorContact, VendorMaterial } from "@/lib/types";
 
 export default function VendorDetailPage() {
   const { id } = useParams();

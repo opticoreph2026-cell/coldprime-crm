@@ -1,16 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
-interface Template {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
-  category: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { EmailTemplate as Template } from "@/lib/types";
 
 const emptyForm = { name: "", subject: "", body: "", category: "" };
 

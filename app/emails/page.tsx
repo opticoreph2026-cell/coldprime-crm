@@ -3,56 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-
-interface Template {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
-  category: string | null;
-}
-
-interface Recipient {
-  id?: string;
-  email: string;
-  name: string | null;
-  type: "contact" | "company";
-  companyName?: string;
-  industry?: string;
-}
-
-interface EmailLog {
-  id: string;
-  toEmail: string;
-  toName: string | null;
-  subject: string;
-  status: string;
-  sentAt: string;
-  errorCode: string | null;
-}
-
-interface MailSummary {
-  uid: number;
-  subject: string;
-  from: string;
-  to: string;
-  date: string | null;
-  matched: boolean;
-  company: { id: string; name: string } | null;
-}
-
-interface MailDetail extends MailSummary {
-  html: string | null;
-  text: string | null;
-  cc: string;
-}
-
-interface MailViewState {
-  key: string;
-  loading: boolean;
-  data: MailDetail | null;
-  error: string;
-}
+import type { EmailTemplate as Template, Recipient, EmailLog, MailSummary, MailViewState } from "@/lib/types";
 
 const DEFAULT_SUBJECT = "Application for Accreditation as HVAC & IAQ Vendor – Coldprime Enterprises Corporation";
 
@@ -374,10 +325,7 @@ export default function EmailsPage() {
       const data = await res.json();
       if (res.ok) {
         setNotice(`Template "${name}" saved.`);
-        setTemplates((prev) => [
-          { id: data.id, name: data.name, subject: data.subject, body: data.body, category: data.category },
-          ...prev,
-        ]);
+        setTemplates((prev) => [data, ...prev]);
         setShowSaveForm(false);
       } else {
         setError(data.error || "Failed to save template");

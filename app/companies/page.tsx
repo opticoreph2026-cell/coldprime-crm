@@ -2,33 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { COMPANY_TYPES, COMPANY_TYPE_LABELS } from "@/lib/enums";
-
-interface Company {
-  id: string;
-  name: string;
-  type: string;
-  accreditationStatus: string;
-  industry: string;
-  email: string | null;
-  mobile1: string | null;
-  mobile2: string | null;
-  mobile3: string | null;
-  landline1: string | null;
-  landline2: string | null;
-  landline3: string | null;
-  address: string | null;
-  website: string | null;
-  status: string;
-  outreachStatus: string | null;
-  lastEmailedAt: string | null;
-  lastRepliedAt: string | null;
-  notes: string | null;
-  source: string | null;
-  createdAt: string;
-  contacts: { id: string }[];
-  projects: { id: string; status: string }[];
-  _count: { activities: number; leads: number };
-}
+import type { Company } from "@/lib/types";
 
 const emptyForm = {
   name: "", type: "OTHER", industry: "Other", email: "",

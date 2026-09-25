@@ -4,37 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { DOCUMENT_CATEGORIES, COMPANY_TYPE_LABELS } from "@/lib/enums";
+import type { Company, Document } from "@/lib/types";
 
 type Tab = "overview" | "accreditation" | "contacts" | "leads" | "projects" | "activities" | "documents";
-
-interface Company {
-  id: string;
-  name: string;
-  type: string;
-  accreditationStatus: string;
-  accreditationSubmittedAt: string | null;
-  accreditationDecisionAt: string | null;
-  industry: string;
-  address: string | null;
-  website: string | null;
-  email: string | null;
-  mobile1: string | null;
-  mobile2: string | null;
-  mobile3: string | null;
-  landline1: string | null;
-  status: string;
-  outreachStatus: string | null;
-  notes: string | null;
-  source: string | null;
-  createdAt: string;
-  contacts: { id: string; firstName: string; lastName: string | null; position: string | null; email: string | null; mobile: string | null }[];
-  projects: { id: string; projectName: string; status: string; projectLocation: string | null; createdAt: string }[];
-  activities: { id: string; type: string; date: string; description: string | null; performedBy: string | null }[];
-  leads: { id: string; type: string; status: string; priority: string; estimatedValue: number | null; dateAdded: string }[];
-  documents: { id: string; category: string; fileName: string; fileUrl: string; createdAt: string }[];
-}
-
-interface Doc { id: string; category: string; fileName: string; fileUrl: string; createdAt: string }
 
 const TYPE_LABELS = COMPANY_TYPE_LABELS;
 
@@ -256,7 +228,7 @@ export default function CompanyDetailPage() {
                     <td style={{ fontWeight: 500 }}>{p.projectName}</td>
                     <td>{p.projectLocation || "-"}</td>
                     <td>{p.status}</td>
-                    <td>{new Date(p.createdAt).toLocaleDateString("en-PH")}</td>
+                    <td>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-PH") : "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -304,7 +276,7 @@ export default function CompanyDetailPage() {
             <table>
               <thead><tr><th>Category</th><th>File</th><th>Added</th><th></th></tr></thead>
               <tbody>
-                {company.documents.map((d: Doc) => (
+                {company.documents.map((d: Document) => (
                   <tr key={d.id}>
                     <td><span className="badge badge-gray">{d.category}</span></td>
                     <td><a href={d.fileUrl} target="_blank" rel="noreferrer" style={{ color: "#1e40af" }}>{d.fileName}</a></td>

@@ -1,21 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-
-interface ImportPreview {
-  filename: string;
-  totalRows: number;
-  validRows: number;
-  duplicateRows: number;
-  errorRows: number;
-  sheets: {
-    name: string;
-    totalRows: number;
-    duplicates: number[];
-    errors: { row: number; reason: string }[];
-    rows: { rowIndex: number; company?: string; sheetName: string }[];
-  }[];
-}
+import type { ImportPreview } from "@/lib/types";
 
 export default function ImportExportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);

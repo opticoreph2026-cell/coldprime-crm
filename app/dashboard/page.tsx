@@ -2,20 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-
-interface DashboardStats {
-  totalCompanies: number;
-  totalContacts: number;
-  totalLeads: number;
-  totalProjects: number;
-  activeLeads: number;
-  activeProjects: number;
-  upcomingFollowUps: number;
-  overdueFollowUps: number;
-  activitiesThisMonth: number;
-  newLeadsThisMonth: number;
-  projectsByStatus: { status: string; count: number }[];
-}
+import type { DashboardStats } from "@/lib/types";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
