@@ -85,14 +85,14 @@ export default function DashboardPage() {
   }, []);
 
   if (error) return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <ErrorBanner message={error}>
         <button className="btn btn-primary" onClick={() => { setError(""); setStats(null); window.location.reload(); }}>Retry</button>
       </ErrorBanner>
     </div>
   );
 
-  if (!stats) return <div style={{ padding: 24, color: "#64748b" }}>Loading dashboard...</div>;
+  if (!stats) return <div className="page"><p style={{ color: "#64748b" }}>Loading dashboard...</p></div>;
 
   const cards = [
     { label: "Pipeline Value", value: peso(stats.pipelineTotal), color: "#1e40af", sub: `${stats.activeLeads} open leads` },

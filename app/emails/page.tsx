@@ -432,8 +432,8 @@ export default function EmailsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
-        Loading emails...
+      <div className="page">
+        <p style={{ textAlign: "center", color: "#94a3b8" }}>Loading emails...</p>
       </div>
     );
   }
