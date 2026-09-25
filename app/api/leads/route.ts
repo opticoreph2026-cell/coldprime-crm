@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/lib/prisma/client/client";
+import { Prisma, LeadType } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { isValidStatus } from "@/lib/status";
+import { isLeadType } from "@/lib/enums";
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +13,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const type = searchParams.get("type") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
@@ -23,6 +26,7 @@ export async function GET(request: Request) {
       ];
     }
     if (status) where.status = status;
+    if (type) where.type = type as LeadType;
 
     const [leads, total] = await Promise.all([
       prisma.lead.findMany({
@@ -54,7 +58,14 @@ export async function POST(request: Request) {
     const branchId = await requireBranchId();
 
     const body = await request.json();
-    const { companyId, contactId, source, industry, priority, estimatedValue, assignedTo, notes } = body;
+    const { companyId, contactId, source, industry, type, status, priority, estimatedValue, assignedTo, notes } = body;
+
+    if (type !== undefined && !isLeadType(type)) {
+      return NextResponse.json({ error: `Invalid lead type: ${type}` }, { status: 400 });
+    }
+    if (status !== undefined && !(await isValidStatus(branchId, "lead", status))) {
+      return NextResponse.json({ error: `Invalid status: ${status}` }, { status: 400 });
+    }
 
     // Verify company belongs to same branch
     if (companyId) {
@@ -85,7 +96,8 @@ export async function POST(request: Request) {
         contactId: contactId || null,
         source: source?.trim() || null,
         industry: industry || null,
-        status: "New",
+        ...(type && { type: type as LeadType }),
+        status: status || "New",
         priority: priority || "Medium",
         estimatedValue: estimatedValue ? Number(estimatedValue) : null,
         assignedTo: assignedTo?.trim() || null,
@@ -99,3 +111,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
   }
 }
+

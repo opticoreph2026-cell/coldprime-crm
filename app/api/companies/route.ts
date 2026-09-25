@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/lib/prisma/client/client";
+import { Prisma, CompanyType, AccreditationStatus } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 import { isValidStatus } from "@/lib/status";
+import { isCompanyType, isAccreditationStatus } from "@/lib/enums";
 
 export async function GET(request: Request) {
   try {
@@ -16,6 +17,8 @@ export async function GET(request: Request) {
     const outreach = searchParams.get("outreach") || "";
     const industry = searchParams.get("industry") || "";
     const source = searchParams.get("source") || "";
+    const type = searchParams.get("type") || "";
+    const accreditation = searchParams.get("accreditation") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = (page - 1) * limit;
@@ -41,6 +44,8 @@ export async function GET(request: Request) {
     else if (outreach) where.outreachStatus = outreach;
     if (industry) where.industry = industry;
     if (source) where.source = source;
+    if (type) where.type = type as CompanyType;
+    if (accreditation) where.accreditationStatus = accreditation as AccreditationStatus;
 
     const [companies, total] = await Promise.all([
       prisma.company.findMany({
@@ -78,10 +83,17 @@ export async function POST(request: Request) {
     const branchId = await requireBranchId();
 
     const body = await request.json();
-    const { name, industry, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
+    const { name, industry, type, accreditationStatus, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Company name is required" }, { status: 400 });
+    }
+
+    if (type !== undefined && !isCompanyType(type)) {
+      return NextResponse.json({ error: `Invalid company type: ${type}` }, { status: 400 });
+    }
+    if (accreditationStatus !== undefined && !isAccreditationStatus(accreditationStatus)) {
+      return NextResponse.json({ error: `Invalid accreditation status: ${accreditationStatus}` }, { status: 400 });
     }
 
     if (status && !(await isValidStatus(branchId, "company", status))) {
@@ -124,6 +136,7 @@ export async function POST(request: Request) {
       data: {
         branchId,
         name: name.trim(),
+        ...(type && { type: type as CompanyType }),
         industry: industry || "Other",
         address: address?.trim() || null,
         website: website?.trim() || null,
@@ -135,6 +148,7 @@ export async function POST(request: Request) {
         landline2: landline2?.trim() || null,
         landline3: landline3?.trim() || null,
         status: status || "Active",
+        ...(accreditationStatus && { accreditationStatus: accreditationStatus as AccreditationStatus }),
         notes: notes?.trim() || null,
         source: source?.trim() || null,
       },

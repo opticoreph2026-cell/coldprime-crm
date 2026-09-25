@@ -4,7 +4,7 @@ import { prisma } from "./prisma";
 // If the branch has no definitions of this type, accept any value (legacy data).
 export async function isValidStatus(
   branchId: string,
-  type: "company" | "project" | "activity" | "industry",
+  type: "company" | "project" | "activity" | "industry" | "lead",
   status: string
 ): Promise<boolean> {
   const count = await prisma.statusDefinition.count({

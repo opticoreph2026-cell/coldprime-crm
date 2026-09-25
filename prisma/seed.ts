@@ -97,12 +97,19 @@ async function main() {
     "Hospital", "Restaurant", "Retail", "Government", "Manufacturing",
     "Real Estate", "Education", "IT / Technology", "Healthcare", "Other",
   ];
+  // Lead pipeline stages (union of Accreditation, Project Bid, Design Partnership)
+  const leadStatuses = [
+    "New", "Contacted", "Documents Submitted", "Under Review", "Accredited",
+    "Rejected", "Quotation Sent", "Negotiation", "Won", "Lost",
+    "Technical Discussion", "Proposal Sent", "Confirmed", "Inactive",
+  ];
 
   const allStatuses = [
     ...companyStatuses.map((s) => ({ name: s, type: "company" })),
     ...projectStatuses.map((s) => ({ name: s, type: "project" })),
     ...activityTypes.map((s) => ({ name: s, type: "activity" })),
     ...industries.map((s) => ({ name: s, type: "industry" })),
+    ...leadStatuses.map((s) => ({ name: s, type: "lead" })),
   ];
 
   // Seed status definitions for both branches

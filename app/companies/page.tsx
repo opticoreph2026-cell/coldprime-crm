@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { COMPANY_TYPES } from "@/lib/enums";
 
 interface Company {
   id: string;
   name: string;
+  type: string;
+  accreditationStatus: string;
   industry: string;
   email: string | null;
   mobile1: string | null;
@@ -28,10 +31,33 @@ interface Company {
 }
 
 const emptyForm = {
-  name: "", industry: "Other", email: "",
+  name: "", type: "OTHER", industry: "Other", email: "",
   mobile1: "", mobile2: "", mobile3: "",
   landline1: "", landline2: "", landline3: "",
   address: "", website: "", status: "Active", notes: "", source: "",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  GENERAL_CONTRACTOR: "General Contractor",
+  ARCHITECT: "Architect",
+  DEVELOPER: "Developer",
+  PROPERTY_MANAGER: "Property Manager",
+  END_CLIENT: "End Client",
+  OTHER: "Other",
+};
+
+const ACCREDITATION_LABELS: Record<string, string> = {
+  DOCUMENTS_SUBMITTED: "Docs Submitted",
+  UNDER_REVIEW: "Under Review",
+  ACCREDITED: "Accredited",
+  REJECTED: "Rejected",
+};
+
+const ACCREDITATION_BADGE: Record<string, string> = {
+  DOCUMENTS_SUBMITTED: "badge-blue",
+  UNDER_REVIEW: "badge-yellow",
+  ACCREDITED: "badge-green",
+  REJECTED: "badge-red",
 };
 
 const industries = ["General Contractor", "Architectural", "Construction", "Business Process Outsourcing (BPO)", "Security Systems", "Hotel", "Hospital", "Restaurant", "Retail", "Government", "Manufacturing", "Real Estate", "Education", "IT / Technology", "Healthcare", "Other"];
@@ -42,6 +68,7 @@ export default function CompaniesPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [outreachFilter, setOutreachFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -81,6 +108,7 @@ export default function CompaniesPage() {
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
+      if (typeFilter) params.set("type", typeFilter);
       if (outreachFilter) params.set("outreach", outreachFilter);
       const res = await fetch(`/api/companies?${params}`);
       const data = await res.json();
@@ -95,7 +123,7 @@ export default function CompaniesPage() {
       console.error("Failed to fetch companies:", error);
       setApiError("Failed to load companies");
     }
-  }, [page, debouncedSearch, statusFilter, outreachFilter]);
+  }, [page, debouncedSearch, statusFilter, outreachFilter, typeFilter]);
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
@@ -142,7 +170,7 @@ export default function CompaniesPage() {
 
   const handleEdit = (c: Company) => {
     setForm({
-      name: c.name, industry: c.industry, email: c.email || "",
+      name: c.name, type: c.type || "OTHER", industry: c.industry, email: c.email || "",
       mobile1: c.mobile1 || "", mobile2: c.mobile2 || "", mobile3: c.mobile3 || "",
       landline1: c.landline1 || "", landline2: c.landline2 || "", landline3: c.landline3 || "",
       address: c.address || "", website: c.website || "", status: c.status, notes: c.notes || "", source: c.source || "",
@@ -232,6 +260,7 @@ export default function CompaniesPage() {
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit Company" : "New Company"}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={labelStyle}>Company Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><label style={labelStyle}>Client Type</label><select style={inputStyle} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
             <div><label style={labelStyle}>Industry</label><select style={inputStyle} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{industries.map((i) => <option key={i}>{i}</option>)}</select></div>
             <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             <div><label style={labelStyle}>Website</label><input style={inputStyle} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
@@ -282,6 +311,10 @@ export default function CompaniesPage() {
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <input placeholder="Search companies..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}>
+          <option value="">All Types</option>
+          {COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
+        </select>
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
           {statuses.map((s) => <option key={s}>{s}</option>)}
@@ -304,11 +337,13 @@ export default function CompaniesPage() {
           <thead>
             <tr>
               <th>Company</th>
+              <th>Type</th>
               <th>Industry</th>
               <th>Email</th>
               <th>Mobile</th>
               <th>Landline</th>
               <th>Status</th>
+              <th>Accreditation</th>
               <th>Outreach</th>
               <th>Contacts</th>
               <th>Projects</th>
@@ -318,12 +353,22 @@ export default function CompaniesPage() {
           <tbody>
             {companies.map((c) => (
               <tr key={c.id}>
-                <td style={{ fontWeight: 500 }}>{c.name}</td>
+                <td style={{ fontWeight: 500 }}>
+                  <a href={`/companies/${c.id}`} style={{ color: "#1e40af", textDecoration: "none" }}>{c.name}</a>
+                </td>
+                <td><span className="badge badge-gray">{TYPE_LABELS[c.type] || c.type}</span></td>
                 <td>{c.industry}</td>
                 <td>{c.email || "-"}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{phoneLabel(c)}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{landlineLabel(c)}</td>
                 <td><span className={`badge badge-${c.status === "Active" ? "green" : c.status === "Inactive" ? "gray" : "blue"}`}>{c.status}</span></td>
+                <td>
+                  {c.accreditationStatus && c.accreditationStatus !== "NOT_STARTED" ? (
+                    <span className={`badge ${ACCREDITATION_BADGE[c.accreditationStatus] || "badge-gray"}`}>{ACCREDITATION_LABELS[c.accreditationStatus] || c.accreditationStatus}</span>
+                  ) : (
+                    <span style={{ color: "#cbd5e1" }}>—</span>
+                  )}
+                </td>
                 <td>
                   {c.outreachStatus ? (
                     <span
@@ -345,7 +390,7 @@ export default function CompaniesPage() {
               </tr>
             ))}
             {companies.length === 0 && (
-              <tr><td colSpan={10} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
+              <tr><td colSpan={12} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
             )}
           </tbody>
         </table>

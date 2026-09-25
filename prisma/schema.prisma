@@ -13,6 +13,29 @@ enum UserRole {
   STAFF
 }
 
+enum CompanyType {
+  GENERAL_CONTRACTOR
+  ARCHITECT
+  DEVELOPER
+  PROPERTY_MANAGER
+  END_CLIENT
+  OTHER
+}
+
+enum AccreditationStatus {
+  NOT_STARTED
+  DOCUMENTS_SUBMITTED
+  UNDER_REVIEW
+  ACCREDITED
+  REJECTED
+}
+
+enum LeadType {
+  ACCREDITATION
+  PROJECT_BID
+  DESIGN_PARTNERSHIP
+}
+
 model Branch {
   id        String   @id @default(cuid())
   name      String
@@ -33,6 +56,7 @@ model Branch {
    emailTemplates  EmailTemplate[]
    emailLogs       EmailLog[]
    vendors         Vendor[]
+   documents       Document[]
 
    @@map("branches")
 }
@@ -64,7 +88,11 @@ model Company {
   branchId  String   @map("branch_id")
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   name      String
+  type      CompanyType @default(OTHER)
   industry  String   @default("Other")
+  accreditationStatus AccreditationStatus @default(NOT_STARTED) @map("accreditation_status")
+  accreditationSubmittedAt DateTime? @map("accreditation_submitted_at")
+  accreditationDecisionAt   DateTime? @map("accreditation_decision_at")
   address   String?
   website   String?
   email     String?
@@ -86,8 +114,10 @@ model Company {
   projects  Project[]
   activities Activity[]
   leads     Lead[]
+  documents  Document[]
 
   @@index([branchId])
+  @@index([branchId, type])
   @@index([branchId, name])
   @@index([branchId, status])
   @@index([branchId, outreachStatus])
@@ -132,6 +162,7 @@ model Lead {
   contact         Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
   source          String?
   industry        String?
+  type            LeadType  @default(PROJECT_BID)
   status          String   @default("New")
   priority        String   @default("Medium")
   estimatedValue  Decimal? @db.Decimal(12, 2)
@@ -142,9 +173,11 @@ model Lead {
   dateAdded       DateTime @default(now()) @map("date_added")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
+  documents       Document[]
 
   @@index([branchId])
   @@index([branchId, status])
+  @@index([branchId, type])
   @@index([companyId])
   @@index([nextFollowUp])
   @@map("leads")
@@ -173,8 +206,9 @@ model Project {
   commissioningStatus String?
   remarks             String?
   createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
   activities          Activity[]
+  documents           Document[]
 
   @@index([branchId])
   @@index([branchId, status])
@@ -333,6 +367,7 @@ model Vendor {
 
   contacts  VendorContact[]
   materials VendorMaterial[]
+  documents Document[]
 
   @@index([branchId])
   @@index([branchId, name])
@@ -377,4 +412,29 @@ model VendorMaterial {
   @@index([vendorId])
   @@index([vendorId, category])
   @@map("vendor_materials")
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  branchId  String   @map("branch_id")
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  companyId String?  @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leadId    String?  @map("lead_id")
+  lead      Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  projectId String?  @map("project_id")
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  vendorId  String?  @map("vendor_id")
+  vendor    Vendor?  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category  String
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([branchId])
+  @@index([companyId])
+  @@index([leadId])
+  @@index([projectId])
+  @@index([vendorId])
+  @@map("documents")
 }

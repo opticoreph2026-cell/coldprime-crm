@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { LeadType } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
+import { isValidStatus } from "@/lib/status";
+import { isLeadType } from "@/lib/enums";
 
 export async function GET(
   request: Request,
@@ -38,9 +41,18 @@ export async function PUT(
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const body = await request.json();
+
+    if (body.type !== undefined && !isLeadType(body.type)) {
+      return NextResponse.json({ error: `Invalid lead type: ${body.type}` }, { status: 400 });
+    }
+    if (body.status !== undefined && !(await isValidStatus(existing.branchId, "lead", body.status))) {
+      return NextResponse.json({ error: `Invalid status: ${body.status}` }, { status: 400 });
+    }
+
     const lead = await prisma.lead.update({
       where: { id },
       data: {
+        ...(body.type !== undefined && { type: body.type as LeadType }),
         ...(body.status !== undefined && { status: body.status }),
         ...(body.priority !== undefined && { priority: body.priority }),
         ...(body.lastContactDate !== undefined && { lastContactDate: body.lastContactDate ? new Date(body.lastContactDate) : null }),

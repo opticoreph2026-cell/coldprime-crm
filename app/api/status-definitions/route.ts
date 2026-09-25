@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
+    const type = new URL(request.url).searchParams.get("type") || undefined;
     const statuses = await prisma.statusDefinition.findMany({
-      where: { ...branchFilter, isActive: true },
+      where: { ...branchFilter, isActive: true, ...(type && { type }) },
       orderBy: { name: "asc" },
     });
     return NextResponse.json(statuses);

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { CompanyType, AccreditationStatus } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { isValidStatus } from "@/lib/status";
+import { isCompanyType, isAccreditationStatus } from "@/lib/enums";
 
 export async function GET(
   request: Request,
@@ -19,6 +21,7 @@ export async function GET(
         projects: { orderBy: { createdAt: "desc" } },
         activities: { orderBy: { date: "desc" }, take: 50 },
         leads: { orderBy: { createdAt: "desc" } },
+        documents: { orderBy: { createdAt: "desc" } },
       },
     });
 
@@ -43,10 +46,34 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, industry, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
+    const { name, industry, type, accreditationStatus, accreditationSubmittedAt, accreditationDecisionAt, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
 
     const existing = await prisma.company.findFirst({ where: { id, ...branchFilter } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    if (type !== undefined && !isCompanyType(type)) {
+      return NextResponse.json({ error: `Invalid company type: ${type}` }, { status: 400 });
+    }
+    if (accreditationStatus !== undefined && !isAccreditationStatus(accreditationStatus)) {
+      return NextResponse.json({ error: `Invalid accreditation status: ${accreditationStatus}` }, { status: 400 });
+    }
+
+    // Auto-maintain accreditation timestamps on status transitions
+    let submittedAt = existing.accreditationSubmittedAt;
+    let decisionAt = existing.accreditationDecisionAt;
+    if (accreditationStatus !== undefined && accreditationStatus !== existing.accreditationStatus) {
+      const now = new Date();
+      if ((accreditationStatus === "DOCUMENTS_SUBMITTED" || accreditationStatus === "UNDER_REVIEW") && !submittedAt) {
+        submittedAt = now;
+      }
+      if ((accreditationStatus === "ACCREDITED" || accreditationStatus === "REJECTED")) {
+        decisionAt = now;
+      }
+      if (accreditationStatus === "NOT_STARTED") {
+        submittedAt = null;
+        decisionAt = null;
+      }
+    }
 
     if (status !== undefined && status && !(await isValidStatus(existing.branchId, "company", status))) {
       return NextResponse.json({ error: `Invalid status: ${status}` }, { status: 400 });
@@ -59,6 +86,12 @@ export async function PUT(
       where: { id },
       data: {
         ...(name !== undefined && { name: name.trim() }),
+        ...(type !== undefined && { type: type as CompanyType }),
+        ...(accreditationStatus !== undefined && { accreditationStatus: accreditationStatus as AccreditationStatus }),
+        ...(accreditationStatus !== undefined && {
+          accreditationSubmittedAt: accreditationSubmittedAt !== undefined ? (accreditationSubmittedAt ? new Date(accreditationSubmittedAt) : null) : submittedAt,
+          accreditationDecisionAt: accreditationDecisionAt !== undefined ? (accreditationDecisionAt ? new Date(accreditationDecisionAt) : null) : decisionAt,
+        }),
         ...(industry !== undefined && { industry }),
         ...(address !== undefined && { address: address?.trim() || null }),
         ...(website !== undefined && { website: website?.trim() || null }),
