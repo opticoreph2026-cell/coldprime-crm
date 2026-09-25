@@ -196,7 +196,6 @@ PostgreSQL tables include: companies, contacts, leads, projects, activities, sta
 | Var | Purpose |
 |-----|---------|
 | `DATABASE_URL` | Postgres connection string |
-| `PG_INSECURE_SSL` | `1` only if TLS verify must be disabled |
 | `AUTH_SECRET` | NextAuth JWT secret |
 | `GMAIL_USER` / `GMAIL_APP_PASSWORD` | Gmail SMTP |
 | `EMAIL_FROM_NAME` | From display name |

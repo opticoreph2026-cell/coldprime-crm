@@ -11,10 +11,8 @@ function parseDatabaseUrl(url: string) {
     database: u.pathname.replace(/^\//, ""),
     user: decodeURIComponent(u.username),
     password: decodeURIComponent(u.password),
-    ssl:
-      process.env.PG_INSECURE_SSL === "1"
-        ? { rejectUnauthorized: false }
-        : { rejectUnauthorized: true },
+    // Supabase pooler chain has a self-signed root — encrypt without CA verify
+    ssl: { rejectUnauthorized: false },
   };
 }
 
