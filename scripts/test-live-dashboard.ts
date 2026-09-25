@@ -32,11 +32,21 @@ async function main() {
     console.log(`${ok ? "OK  " : "FAIL"} dashboard.${k} = ${JSON.stringify(d[k])?.slice(0, 80)}`);
   }
 
-  for (const path of ["/dashboard", "/admin/statuses", "/vendors", "/companies", "/leads", "/contacts", "/projects", "/activities", "/users", "/email-templates"]) {
+  for (const path of ["/dashboard", "/admin/statuses", "/vendors", "/companies", "/leads", "/contacts", "/projects", "/activities", "/users", "/email-templates", "/emails", "/import-export"]) {
     const r = await fetch(`${BASE}${path}`, { headers: { cookie }, redirect: "manual" });
     const ok = r.status === 200;
     if (!ok) fail++;
     console.log(`${ok ? "OK  " : "FAIL"} GET ${path} -> ${r.status}`);
+  }
+
+  const coRes = await fetch(`${BASE}/api/companies?limit=1`, { headers: { cookie } });
+  const coData = await coRes.json();
+  const firstCo = coData.data?.[0]?.id;
+  if (firstCo) {
+    const r = await fetch(`${BASE}/companies/${firstCo}`, { headers: { cookie }, redirect: "manual" });
+    const ok = r.status === 200;
+    if (!ok) fail++;
+    console.log(`${ok ? "OK  " : "FAIL"} GET /companies/${firstCo} -> ${r.status}`);
   }
 
   console.log(`\nRESULT: ${fail === 0 ? "all passed" : fail + " failed"}`);
