@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
 import bcrypt from "bcryptjs";
+import { parseOr400, readJson } from "@/lib/validations";
+import { userCreateSchema } from "@/lib/validations/user";
 
 const VALID_ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"] as const;
 type UserRole = (typeof VALID_ROLES)[number];
@@ -53,16 +55,9 @@ export async function POST(request: Request) {
       if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       throw error;
     }
-    const body = await request.json();
-    const { email, name, password, role, branchId } = body;
-
-    if (!email || !name || !password) {
-      return NextResponse.json({ error: "Email, name, and password are required" }, { status: 400 });
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
-    }
+    const parsed = parseOr400(userCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const { email, name, password, role, branchId } = parsed.data;
 
     const userRole = session.user.role === "HEAD_ADMIN" && VALID_ROLES.includes((role || "STAFF") as UserRole)
       ? (role as UserRole)

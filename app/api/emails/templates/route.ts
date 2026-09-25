@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { parseOr400, readJson } from "@/lib/validations";
+import { emailTemplateCreateSchema } from "@/lib/validations/email-template";
 
 export async function GET() {
   try {
@@ -32,12 +34,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const body = await request.json();
-    const { name, subject, body: bodyContent, category } = body;
-
-    if (!name || !subject || !bodyContent) {
-      return NextResponse.json({ error: "Name, subject, and body are required" }, { status: 400 });
-    }
+    const parsed = parseOr400(emailTemplateCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const { name, subject, body: bodyContent, category } = parsed.data;
 
     const template = await prisma.emailTemplate.create({
       data: {

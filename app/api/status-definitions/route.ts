@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { parseOr400, readJson } from "@/lib/validations";
+import { statusDefinitionCreateSchema } from "@/lib/validations/status-definition";
 
 export async function GET(request: Request) {
   try {
@@ -27,15 +29,9 @@ export async function POST(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
-    const body = await request.json();
-    const { name, type } = body;
-
-    if (!name || !type) {
-      return NextResponse.json(
-        { error: "Name and type are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = parseOr400(statusDefinitionCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const { name, type } = parsed.data;
 
     const status = await prisma.statusDefinition.upsert({
       where: { branchId_name_type: { branchId, name, type } },

@@ -5,6 +5,8 @@ import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 import { isValidStatus } from "@/lib/status";
 import { isCompanyType, isAccreditationStatus } from "@/lib/enums";
+import { parseOr400, readJson } from "@/lib/validations";
+import { companyCreateSchema } from "@/lib/validations/company";
 
 export async function GET(request: Request) {
   try {
@@ -82,12 +84,10 @@ export async function POST(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
-    const body = await request.json();
+    const parsed = parseOr400(companyCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { name, industry, type, accreditationStatus, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
-
-    if (!name || !name.trim()) {
-      return NextResponse.json({ error: "Company name is required" }, { status: 400 });
-    }
 
     if (type !== undefined && !isCompanyType(type)) {
       return NextResponse.json({ error: `Invalid company type: ${type}` }, { status: 400 });
@@ -103,7 +103,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Invalid industry: ${industry}` }, { status: 400 });
     }
 
-    const allPhones = [mobile1, mobile2, mobile3, landline1, landline2, landline3].filter(Boolean).map((p: string) => p.trim());
+    const allPhones = [mobile1, mobile2, mobile3, landline1, landline2, landline3]
+      .filter((p): p is string => Boolean(p))
+      .map((p) => p.trim());
 
     const existing = await prisma.company.findFirst({
       where: {

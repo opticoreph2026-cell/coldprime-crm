@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
+import { parseOr400, readJson } from "@/lib/validations";
+import { vendorUpdateSchema } from "@/lib/validations/vendor";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,7 +37,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
-    const body = await request.json();
+    const parsed = parseOr400(vendorUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { name, category, address, website, email, mobile1, mobile2, landline1, landline2, status, notes } = body;
 
     const vendor = await prisma.vendor.findUnique({ where: { id } });

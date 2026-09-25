@@ -4,6 +4,8 @@ import { Prisma, LeadType } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { isValidStatus } from "@/lib/status";
 import { isLeadType } from "@/lib/enums";
+import { parseOr400, readJson } from "@/lib/validations";
+import { leadCreateSchema } from "@/lib/validations/lead";
 
 export async function GET(request: Request) {
   try {
@@ -57,7 +59,9 @@ export async function POST(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
-    const body = await request.json();
+    const parsed = parseOr400(leadCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { companyId, contactId, source, industry, type, status, priority, estimatedValue, assignedTo, notes } = body;
 
     if (type !== undefined && !isLeadType(type)) {

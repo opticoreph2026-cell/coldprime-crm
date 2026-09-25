@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
-import { DOCUMENT_CATEGORIES } from "@/lib/enums";
+import { parseOr400, readJson } from "@/lib/validations";
+import { documentCreateSchema } from "@/lib/validations/document";
 
 // Verify an optional parent reference exists in the caller's branch
 async function verifyParent(branchId: string, field: "companyId" | "leadId" | "projectId" | "vendorId", id: string) {
@@ -73,15 +74,10 @@ export async function POST(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
-    const body = await request.json();
+    const parsed = parseOr400(documentCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { category, fileName, fileUrl, companyId, leadId, projectId, vendorId } = body;
-
-    if (!category || !fileName || !fileUrl) {
-      return NextResponse.json({ error: "category, fileName and fileUrl are required" }, { status: 400 });
-    }
-    if (!(DOCUMENT_CATEGORIES as readonly string[]).includes(category)) {
-      return NextResponse.json({ error: `Invalid category: ${category}` }, { status: 400 });
-    }
 
     if (companyId && !(await verifyParent(branchId, "companyId", companyId))) {
       return NextResponse.json({ error: "Company not found in your branch" }, { status: 400 });

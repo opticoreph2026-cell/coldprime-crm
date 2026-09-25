@@ -4,6 +4,8 @@ import { LeadType } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { isValidStatus } from "@/lib/status";
 import { isLeadType } from "@/lib/enums";
+import { parseOr400, readJson } from "@/lib/validations";
+import { leadUpdateSchema } from "@/lib/validations/lead";
 
 export async function GET(
   request: Request,
@@ -40,7 +42,9 @@ export async function PUT(
     const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const body = await request.json();
+    const parsed = parseOr400(leadUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
     if (body.type !== undefined && !isLeadType(body.type)) {
       return NextResponse.json({ error: `Invalid lead type: ${body.type}` }, { status: 400 });

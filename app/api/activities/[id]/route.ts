@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
+import { parseOr400, readJson } from "@/lib/validations";
+import { activityUpdateSchema } from "@/lib/validations/activity";
 
 export async function GET(
   request: Request,
@@ -34,13 +36,15 @@ export async function PUT(
     const existing = await prisma.activity.findFirst({ where: { id, ...branchFilter } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const body = await request.json();
+    const parsed = parseOr400(activityUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const activity = await prisma.activity.update({
       where: { id },
       data: {
         ...(body.type !== undefined && { type: body.type }),
-        ...(body.date !== undefined && { date: new Date(body.date) }),
-        ...(body.time !== undefined && { time: body.time }),
+        ...(body.date !== undefined && body.date && { date: new Date(body.date) }),
+        ...(body.time !== undefined && { time: body.time || null }),
         ...(body.performedBy !== undefined && { performedBy: body.performedBy }),
         ...(body.contactPerson !== undefined && { contactPerson: body.contactPerson }),
         ...(body.description !== undefined && { description: body.description }),

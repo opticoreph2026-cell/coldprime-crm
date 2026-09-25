@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
+import { parseOr400, readJson } from "@/lib/validations";
+import { projectUpdateSchema } from "@/lib/validations/project";
 
 export async function GET(
   request: Request,
@@ -38,7 +40,9 @@ export async function PUT(
     const existing = await prisma.project.findFirst({ where: { id, ...branchFilter } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const body = await request.json();
+    const parsed = parseOr400(projectUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
     if (body.contactId) {
       const contact = await prisma.contact.findFirst({

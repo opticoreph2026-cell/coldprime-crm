@@ -4,6 +4,8 @@ import { CompanyType, AccreditationStatus } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { isValidStatus } from "@/lib/status";
 import { isCompanyType, isAccreditationStatus } from "@/lib/enums";
+import { parseOr400, readJson } from "@/lib/validations";
+import { companyUpdateSchema } from "@/lib/validations/company";
 
 export async function GET(
   request: Request,
@@ -45,7 +47,9 @@ export async function PUT(
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
-    const body = await request.json();
+    const parsed = parseOr400(companyUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { name, industry, type, accreditationStatus, accreditationSubmittedAt, accreditationDecisionAt, address, website, email, mobile1, mobile2, mobile3, landline1, landline2, landline3, status, notes, source } = body;
 
     const existing = await prisma.company.findFirst({ where: { id, ...branchFilter } });

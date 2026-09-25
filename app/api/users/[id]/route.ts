@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/branch";
 import bcrypt from "bcryptjs";
+import { parseOr400, readJson } from "@/lib/validations";
+import { userUpdateSchema } from "@/lib/validations/user";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -52,8 +54,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       throw error;
     }
     const { id } = await params;
-    const body = await request.json();
-    const { name, email, role, branchId, isActive, password } = body;
+    const parsed = parseOr400(userUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const { name, email, role, branchId, isActive, password } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
@@ -72,11 +75,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Cannot demote or deactivate your own account" }, { status: 400 });
     }
 
-    const VALID_ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
-    if (role && !VALID_ROLES.includes(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
-    }
-
     const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name.trim();
     if (email) updateData.email = email.trim();
@@ -84,9 +82,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (branchId && session.user.role === "HEAD_ADMIN") updateData.branchId = branchId;
     if (typeof isActive === "boolean") updateData.isActive = isActive;
     if (password) {
-      if (password.length < 8) {
-        return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
-      }
       updateData.password = await bcrypt.hash(password, 10);
     }
 

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
+import { parseOr400, readJson } from "@/lib/validations";
+import { vendorCreateSchema } from "@/lib/validations/vendor";
 
 export async function GET(request: Request) {
   try {
@@ -41,7 +43,9 @@ export async function POST(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
-    const body = await request.json();
+    const parsed = parseOr400(vendorCreateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { name, category, address, website, email, mobile1, mobile2, landline1, landline2, status, notes } = body;
 
     if (!name || !name.trim()) {
