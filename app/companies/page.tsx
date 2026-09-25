@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { COMPANY_TYPES, COMPANY_TYPE_LABELS } from "@/lib/enums";
 import type { Company } from "@/lib/types";
+import { PageHeader, EmptyRow, Pagination, SearchInput } from "@/components/ui";
 
 const emptyForm = {
   name: "", type: "OTHER", industry: "Other", email: "",
@@ -195,20 +196,20 @@ export default function CompaniesPage() {
 
   return (
 <div style={{ padding: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Companies</h1>
-            <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} potential clients total</p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-secondary" onClick={handleCheckReplies} disabled={checkingReplies}>
-              {checkingReplies ? "Checking…" : "🔄 Check replies"}
-            </button>
-            <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
-              {showForm ? "Cancel" : "+ Add Company"}
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          title="Companies"
+          subtitle={`${total} potential clients total`}
+          actions={
+            <>
+              <button className="btn btn-secondary" onClick={handleCheckReplies} disabled={checkingReplies}>
+                {checkingReplies ? "Checking…" : "🔄 Check replies"}
+              </button>
+              <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
+                {showForm ? "Cancel" : "+ Add Company"}
+              </button>
+            </>
+          }
+        />
 
         {replyMsg && (
           <div style={{ background: replyMsg.ok ? "#dcfce7" : "#fef2f2", color: replyMsg.ok ? "#166534" : "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: `1px solid ${replyMsg.ok ? "#bbf7d0" : "#fecaca"}` }}>
@@ -277,7 +278,7 @@ export default function CompaniesPage() {
       )}
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <input placeholder="Search companies..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <SearchInput placeholder="Search companies..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
         <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}>
           <option value="">All Types</option>
           {COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
@@ -356,18 +357,12 @@ export default function CompaniesPage() {
                 </td>
               </tr>
             ))}
-            {companies.length === 0 && (
-              <tr><td colSpan={12} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No companies found</td></tr>
-            )}
+            {companies.length === 0 && <EmptyRow colSpan={12} message="No companies found" />}
           </tbody>
         </table>
       )}
       {total > 50 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-          <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-          <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {Math.ceil(total / 50)}</span>
-          <button className="btn btn-secondary" disabled={page >= Math.ceil(total / 50)} onClick={() => setPage(page + 1)}>Next</button>
-        </div>
+        <Pagination page={page} total={total} onPage={setPage} />
       )}
     </div>
   );

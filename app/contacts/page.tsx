@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Contact, CompanyOption } from "@/lib/types";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -65,21 +66,17 @@ export default function ContactsPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Contacts</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} contacts total</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" }); }}>
-          {showForm ? "Cancel" : "+ Add Contact"}
-        </button>
-      </div>
+      <PageHeader
+        title="Contacts"
+        subtitle={`${total} contacts total`}
+        actions={
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" }); }}>
+            {showForm ? "Cancel" : "+ Add Contact"}
+          </button>
+        }
+      />
 
-      {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
@@ -103,7 +100,7 @@ export default function ContactsPage() {
       )}
 
       <div style={{ marginBottom: 16 }}>
-        <input placeholder="Search contacts..." style={{ width: 400 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <SearchInput placeholder="Search contacts..." width={400} value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
       </div>
 
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
@@ -126,17 +123,13 @@ export default function ContactsPage() {
                 </td>
               </tr>
             ))}
-            {contacts.length === 0 && <tr><td colSpan={7} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No contacts found</td></tr>}
+            {contacts.length === 0 && <EmptyRow colSpan={7} message="No contacts found" />}
           </tbody>
         </table>
       </div>
 
       {total > 50 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-          <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-          <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {Math.ceil(total / 50)}</span>
-          <button className="btn btn-secondary" disabled={page >= Math.ceil(total / 50)} onClick={() => setPage(page + 1)}>Next</button>
-        </div>
+        <Pagination page={page} total={total} onPage={setPage} />
       )}
     </div>
   );

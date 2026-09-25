@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { EmailTemplate as Template } from "@/lib/types";
+import { PageHeader, ErrorBanner, SearchInput } from "@/components/ui";
 
 const emptyForm = { name: "", subject: "", body: "", category: "" };
 
@@ -85,21 +86,17 @@ export default function EmailTemplatesPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Email Templates</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{templates.length} reusable templates — use them in Bulk Send and Compose</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); }}>
-          {showForm ? "Cancel" : "+ New Template"}
-        </button>
-      </div>
+      <PageHeader
+        title="Email Templates"
+        subtitle={`${templates.length} reusable templates — use them in Bulk Send and Compose`}
+        actions={
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); }}>
+            {showForm ? "Cancel" : "+ New Template"}
+          </button>
+        }
+      />
 
-      {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
@@ -129,7 +126,7 @@ export default function EmailTemplatesPage() {
       )}
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <input placeholder="Search templates..." style={{ width: 300 }} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <SearchInput placeholder="Search templates..." value={search} onChange={(v) => setSearch(v)} />
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="">All Categories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}

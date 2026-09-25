@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Vendor } from "@/lib/types";
+import { PageHeader, ErrorBanner, Pagination } from "@/components/ui";
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -74,21 +75,17 @@ export default function VendorsPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Vendors</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>Equipment and materials suppliers — HVAC, IAQ, and related</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", category: "", status: "Active" }); }}>
-          {showForm ? "Cancel" : "+ Add Vendor"}
-        </button>
-      </div>
+      <PageHeader
+        title="Vendors"
+        subtitle="Equipment and materials suppliers — HVAC, IAQ, and related"
+        actions={
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", category: "", status: "Active" }); }}>
+            {showForm ? "Cancel" : "+ Add Vendor"}
+          </button>
+        }
+      />
 
-      {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
@@ -156,11 +153,7 @@ export default function VendorsPage() {
       </div>
 
       {total > 50 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-          <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-          <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {Math.ceil(total / 50)}</span>
-          <button className="btn btn-secondary" disabled={page >= Math.ceil(total / 50)} onClick={() => setPage(page + 1)}>Next</button>
-        </div>
+        <Pagination page={page} total={total} onPage={setPage} />
       )}
     </div>
   );

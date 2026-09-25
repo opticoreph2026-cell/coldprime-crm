@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { LEAD_TYPES, LEAD_TYPE_STAGES } from "@/lib/enums";
 import type { Lead, CompanyOption } from "@/lib/types";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 
@@ -102,21 +103,17 @@ export default function LeadsPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Leads</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} leads total</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Cancel" : "+ New Lead"}
-        </button>
-      </div>
+      <PageHeader
+        title="Leads"
+        subtitle={`${total} leads total`}
+        actions={
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            {showForm ? "Cancel" : "+ New Lead"}
+          </button>
+        }
+      />
 
-      {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
@@ -138,7 +135,7 @@ export default function LeadsPage() {
       )}
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <input placeholder="Search leads..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <SearchInput placeholder="Search leads..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
         <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setStatusFilter(""); setPage(1); }}>
           <option value="">All Types</option>
           {LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
@@ -174,17 +171,13 @@ export default function LeadsPage() {
                 </td>
               </tr>
             ))}
-            {leads.length === 0 && <tr><td colSpan={9} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No leads found</td></tr>}
+            {leads.length === 0 && <EmptyRow colSpan={9} message="No leads found" />}
           </tbody>
         </table>
       </div>
 
       {total > 50 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-          <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-          <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {Math.ceil(total / 50)}</span>
-          <button className="btn btn-secondary" disabled={page >= Math.ceil(total / 50)} onClick={() => setPage(page + 1)}>Next</button>
-        </div>
+        <Pagination page={page} total={total} onPage={setPage} />
       )}
     </div>
   );

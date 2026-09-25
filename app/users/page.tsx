@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import type { User, Branch } from "@/lib/types";
+import { PageHeader, EmptyRow } from "@/components/ui";
 
 const ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
 
@@ -104,15 +105,15 @@ export default function UsersPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>User Management</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{users.length} users</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", email: "", password: "", role: "STAFF", branchId: session?.user?.branchId || "" }); setError(""); }}>
-          {showForm ? "Cancel" : "+ Add User"}
-        </button>
-      </div>
+      <PageHeader
+        title="User Management"
+        subtitle={`${users.length} users`}
+        actions={
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", email: "", password: "", role: "STAFF", branchId: session?.user?.branchId || "" }); setError(""); }}>
+            {showForm ? "Cancel" : "+ Add User"}
+          </button>
+        }
+      />
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
@@ -152,7 +153,7 @@ export default function UsersPage() {
                 </td>
               </tr>
             ))}
-            {users.length === 0 && <tr><td colSpan={6} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No users found</td></tr>}
+            {users.length === 0 && <EmptyRow colSpan={6} message="No users found" />}
           </tbody>
         </table>
       </div>

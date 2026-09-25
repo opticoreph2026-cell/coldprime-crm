@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Project, CompanyOption } from "@/lib/types";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
 
 const STATUSES = ["Quotation", "Approved", "Installation", "Testing", "Commissioning", "Completed", "On Hold", "Cancelled"];
 const SUB_STATUSES = ["Not Started", "In Progress", "Completed", "Passed", "Failed", "Deficiencies"];
@@ -81,21 +82,17 @@ export default function ProjectsPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Projects</h1>
-          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{total} projects total</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Cancel" : "+ New Project"}
-        </button>
-      </div>
+      <PageHeader
+        title="Projects"
+        subtitle={`${total} projects total`}
+        actions={
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            {showForm ? "Cancel" : "+ New Project"}
+          </button>
+        }
+      />
 
-      {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
@@ -121,7 +118,7 @@ export default function ProjectsPage() {
       )}
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <input placeholder="Search projects..." style={{ width: 300 }} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <SearchInput placeholder="Search projects..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
           {statuses.map((s) => <option key={s}>{s}</option>)}
@@ -152,17 +149,13 @@ export default function ProjectsPage() {
                 </td>
               </tr>
             ))}
-            {projects.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>No projects found</td></tr>}
+            {projects.length === 0 && <EmptyRow colSpan={8} message="No projects found" />}
           </tbody>
         </table>
       </div>
 
       {total > 50 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-          <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-          <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {Math.ceil(total / 50)}</span>
-          <button className="btn btn-secondary" disabled={page >= Math.ceil(total / 50)} onClick={() => setPage(page + 1)}>Next</button>
-        </div>
+        <Pagination page={page} total={total} onPage={setPage} />
       )}
     </div>
   );
