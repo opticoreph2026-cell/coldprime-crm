@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import type { User, Branch } from "@/lib/types";
-import { PageHeader, EmptyRow } from "@/components/ui";
+import { PageHeader, EmptyRow, Modal, ConfirmDialog } from "@/components/ui";
 
 const ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
 
@@ -13,6 +13,7 @@ export default function UsersPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "STAFF", branchId: "" });
   const [error, setError] = useState("");
 
@@ -76,10 +77,11 @@ export default function UsersPage() {
     setError("");
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this user?")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await fetch(`/api/users/${id}`, { method: "DELETE" });
+      await fetch(`/api/users/${deleteTarget.id}`, { method: "DELETE" });
+      setDeleteTarget(null);
       fetchUsers();
     } catch {
       console.error("Failed to delete user");
@@ -109,15 +111,14 @@ export default function UsersPage() {
         title="User Management"
         subtitle={`${users.length} users`}
         actions={
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", email: "", password: "", role: "STAFF", branchId: session?.user?.branchId || "" }); setError(""); }}>
-            {showForm ? "Cancel" : "+ Add User"}
+          <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", email: "", password: "", role: "STAFF", branchId: session?.user?.branchId || "" }); setError(""); }}>
+            + Add User
           </button>
         }
       />
 
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit User" : "New User"}</h2>
+      <Modal open={showForm} title={editingId ? "Edit User" : "New User"} onClose={() => { setShowForm(false); setEditingId(null); }}>
+        <form onSubmit={handleSubmit}>
           {error && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "0.75rem 1rem", borderRadius: 6, fontSize: "0.875rem", marginBottom: 16 }}>{error}</div>}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Name *</label><input required style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
@@ -131,7 +132,15 @@ export default function UsersPage() {
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete user"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
@@ -149,7 +158,7 @@ export default function UsersPage() {
                 <td>
                   <button className="btn btn-ghost" onClick={() => handleEdit(u)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
                   <button className="btn btn-ghost" onClick={() => handleToggleActive(u)} style={{ padding: "0.25rem 0.5rem" }}>{u.isActive ? "Deactivate" : "Activate"}</button>
-                  {isHeadAdmin && u.id !== session?.user?.id && <button className="btn btn-ghost" onClick={() => handleDelete(u.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>}
+                  {isHeadAdmin && u.id !== session?.user?.id && <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: u.id, name: u.email })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>}
                 </td>
               </tr>
             ))}

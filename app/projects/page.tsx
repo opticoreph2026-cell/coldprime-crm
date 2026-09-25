@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Project, CompanyOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 const STATUSES = ["Quotation", "Approved", "Installation", "Testing", "Commissioning", "Completed", "On Hold", "Cancelled"];
 const SUB_STATUSES = ["Not Started", "In Progress", "Completed", "Passed", "Failed", "Deficiencies"];
@@ -17,6 +17,7 @@ export default function ProjectsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ companyId: "", projectName: "", projectLocation: "", projectType: "", status: "Quotation", startDate: "", targetCompletion: "", installationStatus: "", testingStatus: "", commissioningStatus: "", remarks: "" });
 
@@ -74,9 +75,10 @@ export default function ProjectsPage() {
     if (res.ok) fetchProjects();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this project?")) return;
-    await fetch(`/api/projects/${id}`, { method: "DELETE" });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await fetch(`/api/projects/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleteTarget(null);
     fetchProjects();
   };
 
@@ -86,17 +88,16 @@ export default function ProjectsPage() {
         title="Projects"
         subtitle={`${total} projects total`}
         actions={
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-            {showForm ? "Cancel" : "+ New Project"}
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            + New Project
           </button>
         }
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
-        <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>New Project</h2>
+      <Modal open={showForm} title="New Project" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleCreate}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company *</label><select required style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Project Name *</label><input required style={{ width: "100%" }} value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} /></div>
@@ -115,7 +116,15 @@ export default function ProjectsPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
           </div>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete project"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <SearchInput placeholder="Search projects..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
@@ -145,7 +154,7 @@ export default function ProjectsPage() {
                 <td>{p.testingStatus || "-"}</td>
                 <td>{p.commissioningStatus || "-"}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => handleDelete(p.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: p.id, name: p.projectName })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
                 </td>
               </tr>
             ))}

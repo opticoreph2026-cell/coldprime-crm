@@ -1,4 +1,78 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
+
+export function Modal({ open, title, onClose, children, footer, width = 560 }: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  width?: number;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.45)", zIndex: 50, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "6vh 16px 16px" }}
+    >
+      <div role="dialog" aria-modal="true" aria-label={title} style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: width, maxHeight: "86vh", overflowY: "auto", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, background: "#fff", borderRadius: "10px 10px 0 0" }}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 600, margin: 0 }}>{title}</h2>
+          <button type="button" aria-label="Close" onClick={onClose} style={{ border: "none", background: "transparent", fontSize: "1.25rem", color: "#64748b", cursor: "pointer", lineHeight: 1 }}>✕</button>
+        </div>
+        <div style={{ padding: 24 }}>{children}</div>
+        {footer && (
+          <div style={{ padding: "14px 24px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 8, position: "sticky", bottom: 0, background: "#fff", borderRadius: "0 0 10px 10px" }}>{footer}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ConfirmDialog({ open, title = "Are you sure?", message, confirmLabel = "Delete", cancelLabel = "Cancel", danger = true, busy = false, onConfirm, onCancel }: {
+  open: boolean;
+  title?: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  busy?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      title={title}
+      onClose={onCancel}
+      width={420}
+      footer={
+        <>
+          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={busy}>{cancelLabel}</button>
+          <button type="button" className="btn btn-primary" onClick={onConfirm} disabled={busy} style={danger ? { background: "#dc2626", borderColor: "#dc2626" } : undefined}>
+            {busy ? "Working…" : confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p style={{ fontSize: "0.875rem", color: "#334155", margin: 0 }}>{message}</p>
+    </Modal>
+  );
+}
 
 export function PageHeader({ title, subtitle, actions }: {
   title: string;

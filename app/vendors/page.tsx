@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Vendor } from "@/lib/types";
-import { PageHeader, ErrorBanner, Pagination } from "@/components/ui";
+import { PageHeader, ErrorBanner, Pagination, Modal, ConfirmDialog } from "@/components/ui";
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -13,6 +13,7 @@ export default function VendorsPage() {
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({ name: "", category: "", status: "Active" });
   const [error, setError] = useState("");
 
@@ -63,10 +64,11 @@ export default function VendorsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this vendor?")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/vendors/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/vendors/${deleteTarget.id}`, { method: "DELETE" });
+      setDeleteTarget(null);
       if (res.ok) fetchVendors();
     } catch {
       setError("Failed to delete");
@@ -79,17 +81,16 @@ export default function VendorsPage() {
         title="Vendors"
         subtitle="Equipment and materials suppliers — HVAC, IAQ, and related"
         actions={
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: "", category: "", status: "Active" }); }}>
-            {showForm ? "Cancel" : "+ Add Vendor"}
+          <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", category: "", status: "Active" }); }}>
+            + Add Vendor
           </button>
         }
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit Vendor" : "New Vendor"}</h2>
+      <Modal open={showForm} title={editingId ? "Edit Vendor" : "New Vendor"} onClose={() => { setShowForm(false); setEditingId(null); }}>
+        <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Name *</label>
@@ -115,7 +116,15 @@ export default function VendorsPage() {
             {editingId ? "Update" : "Create"}
           </button>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete vendor"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <input placeholder="Search vendors..." style={{ flex: 1, padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
@@ -145,7 +154,7 @@ export default function VendorsPage() {
               <div style={{ display: "flex", gap: 8 }}>
                 <a href={`/vendors/${v.id}`} className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem", textDecoration: "none" }}>View</a>
                 <button className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem" }} onClick={() => { setEditingId(v.id); setForm({ name: v.name, category: v.category || "", status: v.status }); setShowForm(true); }}>Edit</button>
-                <button className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem", color: "#dc2626" }} onClick={() => handleDelete(v.id)}>Delete</button>
+                <button className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ id: v.id, name: v.name })}>Delete</button>
               </div>
             </div>
           ))

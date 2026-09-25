@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { EmailTemplate as Template } from "@/lib/types";
-import { PageHeader, ErrorBanner, SearchInput } from "@/components/ui";
+import { PageHeader, ErrorBanner, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 const emptyForm = { name: "", subject: "", body: "", category: "" };
 
@@ -12,6 +12,7 @@ export default function EmailTemplatesPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -71,9 +72,10 @@ export default function EmailTemplatesPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this template?")) return;
-    await fetch(`/api/emails/templates/${id}`, { method: "DELETE" });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await fetch(`/api/emails/templates/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleteTarget(null);
     fetchTemplates();
   };
 
@@ -90,17 +92,16 @@ export default function EmailTemplatesPage() {
         title="Email Templates"
         subtitle={`${templates.length} reusable templates — use them in Bulk Send and Compose`}
         actions={
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm); }}>
-            {showForm ? "Cancel" : "+ New Template"}
+          <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm); }}>
+            + New Template
           </button>
         }
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit Template" : "New Template"}</h2>
+      <Modal open={showForm} title={editingId ? "Edit Template" : "New Template"} onClose={() => { setShowForm(false); setEditingId(null); }}>
+        <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={labelStyle}>Template Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="IAQ Indoor Air Quality Proposal" /></div>
             <div><label style={labelStyle}>Category</label><input style={inputStyle} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="IAQ Proposal, General Vendor Outreach, GC, Architect..." /></div>
@@ -123,7 +124,15 @@ export default function EmailTemplatesPage() {
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete template"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <SearchInput placeholder="Search templates..." value={search} onChange={(v) => setSearch(v)} />
@@ -157,7 +166,7 @@ export default function EmailTemplatesPage() {
                 </div>
                 <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                   <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => handleEdit(t)}>Edit</button>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => handleDelete(t.id)}>Delete</button>
+                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ id: t.id, name: t.name })}>Delete</button>
                 </div>
               </div>
             </div>

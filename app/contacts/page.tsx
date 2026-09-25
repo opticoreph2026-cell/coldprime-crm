@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Contact, CompanyOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -13,6 +13,7 @@ export default function ContactsPage() {
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" });
 
@@ -58,9 +59,10 @@ export default function ContactsPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this contact?")) return;
-    await fetch(`/api/contacts/${id}`, { method: "DELETE" });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await fetch(`/api/contacts/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleteTarget(null);
     fetchContacts();
   };
 
@@ -70,17 +72,16 @@ export default function ContactsPage() {
         title="Contacts"
         subtitle={`${total} contacts total`}
         actions={
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" }); }}>
-            {showForm ? "Cancel" : "+ Add Contact"}
+          <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" }); }}>
+            + Add Contact
           </button>
         }
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>{editingId ? "Edit Contact" : "New Contact"}</h2>
+      <Modal open={showForm} title={editingId ? "Edit Contact" : "New Contact"} onClose={() => { setShowForm(false); setEditingId(null); }}>
+        <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company *</label><select required style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div></div>
@@ -97,7 +98,15 @@ export default function ContactsPage() {
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete contact"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ marginBottom: 16 }}>
         <SearchInput placeholder="Search contacts..." width={400} value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
@@ -119,7 +128,7 @@ export default function ContactsPage() {
                 <td style={{ whiteSpace: "nowrap" }}>{c.landline || "-"}</td>
                 <td>
                   <button className="btn btn-ghost" onClick={() => handleEdit(c)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
-                  <button className="btn btn-ghost" onClick={() => handleDelete(c.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: c.id, name: `${c.firstName} ${c.lastName || ""}`.trim() })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
                 </td>
               </tr>
             ))}

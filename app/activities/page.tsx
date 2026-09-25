@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Activity, CompanyOption, ProjectOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
   const TYPES = ["Phone Call", "Email", "SMS", "Meeting", "Site Visit", "Site Inspection", "Follow-Up", "Quotation Sent", "Quotation Follow-Up", "Accreditation Follow-Up", "Data Gathering", "Other"];
 
@@ -15,6 +15,7 @@ export default function ActivitiesPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState("");
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [form, setForm] = useState({ companyId: "", projectId: "", type: "Phone Call", date: new Date().toISOString().split("T")[0], time: "", performedBy: "", contactPerson: "", description: "", result: "", nextAction: "", nextFollowUp: "", notes: "" });
@@ -69,9 +70,10 @@ export default function ActivitiesPage() {
     fetchActivities();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this activity?")) return;
-    await fetch(`/api/activities/${id}`, { method: "DELETE" });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await fetch(`/api/activities/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleteTarget(null);
     fetchActivities();
   };
 
@@ -86,17 +88,16 @@ export default function ActivitiesPage() {
         title="Activities"
         subtitle={`${total} activities total`}
         actions={
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-            {showForm ? "Cancel" : "+ Log Activity"}
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            + Log Activity
           </button>
         }
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
-        <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>Log Activity</h2>
+      <Modal open={showForm} title="Log Activity" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleCreate}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Type *</label><select required style={{ width: "100%" }} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company</label><select style={{ width: "100%" }} value={form.companyId} onChange={(e) => handleCompanyChange(e.target.value)}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
@@ -116,7 +117,15 @@ export default function ActivitiesPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
           </div>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete activity"
+        message={`Delete activity "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <SearchInput placeholder="Search activities..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
@@ -142,7 +151,7 @@ export default function ActivitiesPage() {
                 <td>{a.result || "-"}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{a.nextFollowUp ? new Date(a.nextFollowUp).toLocaleDateString("en-PH") : "-"}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => handleDelete(a.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: a.id, name: a.description || a.type })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
                 </td>
               </tr>
             ))}

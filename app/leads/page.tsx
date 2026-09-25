@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { LEAD_TYPES, LEAD_TYPE_STAGES } from "@/lib/enums";
 import type { Lead, CompanyOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput } from "@/components/ui";
+import { PageHeader, ErrorBanner, EmptyRow, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 
@@ -30,6 +30,7 @@ export default function LeadsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ companyId: "", type: "PROJECT_BID", source: "", industry: "", priority: "Medium", estimatedValue: "", notes: "" });
 
@@ -95,9 +96,10 @@ export default function LeadsPage() {
     if (res.ok) fetchLeads();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this lead?")) return;
-    await fetch(`/api/leads/${id}`, { method: "DELETE" });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await fetch(`/api/leads/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleteTarget(null);
     fetchLeads();
   };
 
@@ -107,17 +109,16 @@ export default function LeadsPage() {
         title="Leads"
         subtitle={`${total} leads total`}
         actions={
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-            {showForm ? "Cancel" : "+ New Lead"}
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            + New Lead
           </button>
         }
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
-        <form onSubmit={handleCreate} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>New Lead</h2>
+      <Modal open={showForm} title="New Lead" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleCreate}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company</label><select style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Lead Type</label><select style={{ width: "100%" }} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
@@ -132,7 +133,15 @@ export default function LeadsPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
           </div>
         </form>
-      )}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete lead"
+        message={`Delete the lead for "${deleteTarget?.name}"? This cannot be undone.`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <SearchInput placeholder="Search leads..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
@@ -167,7 +176,7 @@ export default function LeadsPage() {
                 <td><span className={`badge badge-${l.priority === "High" ? "red" : l.priority === "Low" ? "gray" : "blue"}`}>{l.priority}</span></td>
                 <td style={{ whiteSpace: "nowrap" }}>{l.nextFollowUp ? new Date(l.nextFollowUp).toLocaleDateString("en-PH") : "-"}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => handleDelete(l.id)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: l.id, name: l.company?.name || "Walk-in" })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
                 </td>
               </tr>
             ))}
