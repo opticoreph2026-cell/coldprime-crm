@@ -38,7 +38,8 @@ async function main() {
   console.log(`Branches: ${cebuBranch.name}, ${manilaBranch.name}`);
 
   // Seed users
-  const passwordHash = await bcrypt.hash("Coldprime2026!", 10);
+  // Fresh installs only — existing users are never updated (rotate via scripts/rotate-admin-password.ts)
+  const passwordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "Coldprime2026!", 10);
 
   const headAdmin = await prisma.user.upsert({
     where: { email: "admin@coldprime.ph" },

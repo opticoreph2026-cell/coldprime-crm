@@ -25,8 +25,8 @@ async function main() {
     const admin = users.rows.find((u: { email: string }) => u.email === "admin@coldprime.ph");
     if (admin) {
       const full = await client.query(`SELECT password FROM users WHERE email=$1`, ["admin@coldprime.ph"]);
-      const ok = await bcrypt.compare("Coldprime2026!", full.rows[0].password);
-      console.log(`\nbcrypt.compare("Coldprime2026!", admin hash): ${ok}`);
+      const ok = await bcrypt.compare(process.env.ADMIN_PASSWORD || "", full.rows[0].password);
+      console.log(`\nbcrypt.compare(ADMIN_PASSWORD, admin hash): ${ok}`);
     }
   } finally {
     await client.end();

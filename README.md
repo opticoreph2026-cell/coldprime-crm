@@ -38,7 +38,7 @@ npm run seed
 ```
 
 This creates (idempotent — safe to re-run):
-- Default admin user (admin@coldprime.ph / Coldprime2026!)
+- Default admin user (admin@coldprime.ph — password from `SEED_ADMIN_PASSWORD`/`ADMIN_PASSWORD` env, legacy bootstrap default otherwise; rotate with `scripts/rotate-admin-password.ts`)
 - Branches, status definitions, sample data
 
 ### 5. Run Development Server
@@ -60,7 +60,7 @@ npm audit          # dependency vulnerabilities
 ## Default Login
 
 - **Email:** admin@coldprime.ph
-- **Password:** Coldprime2026!
+- **Password:** stored in `.env` as `ADMIN_PASSWORD` (rotated — never commit it; fresh-install default comes from `SEED_ADMIN_PASSWORD`)
 
 ## Features
 

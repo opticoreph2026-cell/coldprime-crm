@@ -1,6 +1,10 @@
 export {};
 
+import "dotenv/config";
+
 const BASE = process.env.TEST_BASE || "https://coldprime-crm.vercel.app";
+const PASSWORD = process.env.ADMIN_PASSWORD || "";
+if (!PASSWORD) throw new Error("ADMIN_PASSWORD not set in .env");
 
 async function main() {
   const csrfRes = await fetch(`${BASE}/api/auth/csrf`, { redirect: "manual" });
@@ -12,7 +16,7 @@ async function main() {
   const body = new URLSearchParams({
     csrfToken: csrfJson.csrfToken,
     email: "admin@coldprime.ph",
-    password: "Coldprime2026!",
+    password: PASSWORD,
     redirect: "false",
     json: "true",
   });

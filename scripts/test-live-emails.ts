@@ -1,13 +1,18 @@
 export {};
 
+import "dotenv/config";
+
 const BASE = process.env.TEST_BASE || "https://coldprime-crm.vercel.app";
+const PASSWORD = process.env.ADMIN_PASSWORD || "";
+if (!PASSWORD) throw new Error("ADMIN_PASSWORD not set in .env");
 
 async function login(email: string): Promise<string> {
+  const password = email.startsWith("admin@") ? PASSWORD! : process.env.STAFF_PASSWORD || PASSWORD!;
   const csrfRes = await fetch(`${BASE}/api/auth/csrf`);
   const setCookie = csrfRes.headers.getSetCookie?.() ?? [];
   const { csrfToken } = await csrfRes.json();
   const cookieHeader = setCookie.map((c) => c.split(";")[0]).join("; ");
-  const body = new URLSearchParams({ csrfToken, email, password: "Coldprime2026!", redirect: "false", json: "true" });
+  const body = new URLSearchParams({ csrfToken, email, password, redirect: "false", json: "true" });
   const res = await fetch(`${BASE}/api/auth/callback/credentials`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded", cookie: cookieHeader },
