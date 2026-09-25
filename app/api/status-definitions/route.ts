@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
+import { getBranchFilter, requireAuth, requireBranchId, requireRole } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { statusDefinitionCreateSchema } from "@/lib/validations/status-definition";
 
@@ -9,10 +9,12 @@ export async function GET(request: Request) {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
-    const type = new URL(request.url).searchParams.get("type") || undefined;
+    const url = new URL(request.url);
+    const type = url.searchParams.get("type") || undefined;
+    const includeInactive = url.searchParams.get("all") === "1";
     const statuses = await prisma.statusDefinition.findMany({
-      where: { ...branchFilter, isActive: true, ...(type && { type }) },
-      orderBy: { name: "asc" },
+      where: { ...branchFilter, ...(includeInactive ? {} : { isActive: true }), ...(type && { type }) },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
     return NextResponse.json(statuses);
   } catch (error) {
@@ -26,7 +28,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    try { await requireRole(["HEAD_ADMIN", "BRANCH_ADMIN"]); } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg === "Forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const branchId = await requireBranchId();
 
     const parsed = parseOr400(statusDefinitionCreateSchema, await readJson(request));

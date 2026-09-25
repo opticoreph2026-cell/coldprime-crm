@@ -51,6 +51,19 @@ export default function CompaniesPage() {
   const [checkingReplies, setCheckingReplies] = useState(false);
   const [replyMsg, setReplyMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [statuses, setStatuses] = useState<string[]>(fallbackStatuses);
+  const [industryList, setIndustryList] = useState<string[]>(industries);
+
+  useEffect(() => {
+    fetch("/api/status-definitions?type=industry")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) {
+          const names = d.map((s: { name: string }) => s.name);
+          if (names.length > 0) setIndustryList(names);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/status-definitions")
@@ -230,7 +243,7 @@ export default function CompaniesPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div><label style={labelStyle}>Company Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><label style={labelStyle}>Client Type</label><select style={inputStyle} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
-            <div><label style={labelStyle}>Industry</label><select style={inputStyle} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{industries.map((i) => <option key={i}>{i}</option>)}</select></div>
+            <div><label style={labelStyle}>Industry</label><select style={inputStyle} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{(industryList.includes(form.industry) ? industryList : [form.industry, ...industryList]).map((i) => <option key={i}>{i}</option>)}</select></div>
             <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             <div><label style={labelStyle}>Website</label><input style={inputStyle} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
             <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>

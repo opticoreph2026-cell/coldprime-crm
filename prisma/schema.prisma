@@ -259,9 +259,10 @@ model StatusDefinition {
   id        String   @id @default(cuid())
   branchId  String   @map("branch_id")
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  name      String
-  type      String
-  isActive  Boolean  @default(true)
+    name      String
+    type      String
+    sortOrder Int      @default(0)
+    isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -7,15 +7,14 @@ async function main() {
   u.searchParams.delete("sslmode");
   const p = new Pool({ connectionString: u.toString(), ssl: { rejectUnauthorized: false } });
   const r = await p.query(
-    `SELECT table_name, string_agg(column_name, ', ' ORDER BY ordinal_position) AS cols
-     FROM information_schema.columns
-     WHERE table_schema = 'public'
-     GROUP BY table_name
-     ORDER BY table_name`
+    `SELECT type, count(*) AS n, bool_and(isActive) AS all_active, count(*) FILTER (WHERE NOT "isActive") AS inactive
+     FROM status_definitions GROUP BY type ORDER BY type`
+  ).catch(async () =>
+    p.query(
+      `SELECT type, count(*) AS n FROM status_definitions GROUP BY type ORDER BY type`
+    )
   );
-  for (const row of r.rows as { table_name: string; cols: string }[]) {
-    console.log(`${row.table_name}: ${row.cols}`);
-  }
+  console.table(r.rows);
   await p.end();
 }
 main().catch((e) => { console.error(e); process.exit(1); });

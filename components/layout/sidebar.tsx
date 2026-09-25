@@ -20,6 +20,7 @@ const navItems = [
 
 const adminNavItems = [
   { href: "/users", label: "Users", icon: "👥" },
+  { href: "/admin/statuses", label: "Statuses", icon: "🏷️" },
 ];
 
 export function Sidebar({ children }: { children: ReactNode }) {
