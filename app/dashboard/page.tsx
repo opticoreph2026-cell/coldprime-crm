@@ -18,9 +18,15 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 function SetupChecklist({ stats }: { stats: DashboardStats }) {
+  // Render nothing until localStorage has been read (avoids flashing the
+  // step buttons on every load before dismissal state is known).
+  const [ready, setReady] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  useEffect(() => { setDismissed(localStorage.getItem("cp_setup_dismissed") === "1"); }, []);
-  if (dismissed) return null;
+  useEffect(() => {
+    setDismissed(localStorage.getItem("cp_setup_dismissed") === "1");
+    setReady(true);
+  }, []);
+  if (!ready || dismissed) return null;
 
   const steps = [
     { label: "Add your first company", href: "/companies", done: stats.totalCompanies > 0 },
