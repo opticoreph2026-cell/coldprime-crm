@@ -68,7 +68,7 @@ export default function DashboardPage() {
         }
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         {cards.map((card) => (
           <Card key={card.label} padding={20}>
             <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div className="responsive-split" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
         <Card>
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 4 }}>Pipeline Value by Status</h2>
           <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: 16 }}>Estimated value of open leads, excluding completed/cancelled.</p>

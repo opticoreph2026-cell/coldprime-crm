@@ -125,3 +125,22 @@ input:focus, select:focus, textarea:focus {
 .badge-red { background: #fee2e2; color: #991b1b; }
 .badge-gray { background: #f1f5f9; color: #475569; }
 .badge-purple { background: #f3e8ff; color: #6b21a8; }
+
+/* Phones/tablets: tables scroll horizontally instead of overflowing the page */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Phones/tablets: collapse wide card grids */
+@media (max-width: 900px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .responsive-split {
+    grid-template-columns: 1fr !important;
+  }
+}

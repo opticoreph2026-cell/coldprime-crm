@@ -80,12 +80,12 @@ export function PageHeader({ title, subtitle, actions }: {
   actions?: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
       <div>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{title}</h1>
         {subtitle && <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{subtitle}</p>}
       </div>
-      {actions && <div style={{ display: "flex", gap: 8 }}>{actions}</div>}
+      {actions && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{actions}</div>}
     </div>
   );
 }

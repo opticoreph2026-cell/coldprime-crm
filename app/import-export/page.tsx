@@ -69,7 +69,7 @@ export default function ImportExportPage() {
         <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: 12 }}>
           Select an Excel workbook (.xlsx/.xls) to import. The system will parse all relevant sheets, merge duplicates, and create company records.
         </p>
-        <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           <input
             ref={fileInputRef}
             type="file"

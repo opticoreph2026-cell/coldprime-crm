@@ -29,6 +29,18 @@ export function Sidebar({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [switching, setSwitching] = useState(false);
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1024px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const user = session?.user;
   const isHeadAdmin = user?.role === "HEAD_ADMIN";
@@ -69,6 +81,30 @@ export function Sidebar({ children }: { children: ReactNode }) {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
+      {isMobile && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 52, background: "#0f172a", color: "#fff", display: "flex", alignItems: "center", gap: 12, padding: "0 16px", zIndex: 45 }}>
+          <button
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+            style={{ background: "transparent", border: "none", color: "#fff", fontSize: "1.25rem", cursor: "pointer", padding: "0 4px" }}
+          >
+            ☰
+          </button>
+          <div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 700, lineHeight: 1.1 }}>COLDPRIME</div>
+            <div style={{ fontSize: "0.6rem", color: "#94a3b8" }}>{user?.branchName || "All Branches"}</div>
+          </div>
+        </div>
+      )}
+
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", zIndex: 48 }}
+        />
+      )}
+
+      {(!isMobile || mobileOpen) && (
       <aside
         style={{
           width: 240,
@@ -77,8 +113,22 @@ export function Sidebar({ children }: { children: ReactNode }) {
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
+          ...(isMobile
+            ? { position: "fixed" as const, top: 0, left: 0, bottom: 0, zIndex: 49, overflowY: "auto" as const }
+            : {}),
         }}
       >
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "flex-end", padding: "0.5rem 0.75rem 0" }}>
+            <button
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.25rem", cursor: "pointer" }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <div style={{ padding: "1.25rem 1rem", borderBottom: "1px solid #1e293b" }}>
           <div style={{ fontSize: "1rem", fontWeight: 700, color: "#fff" }}>
             COLDPRIME
@@ -232,7 +282,8 @@ export function Sidebar({ children }: { children: ReactNode }) {
           Coldprime CRM v2.0
         </div>
       </aside>
-      <main style={{ flex: 1, overflow: "auto" }}>{children}</main>
+      )}
+      <main style={{ flex: 1, overflow: "auto", paddingTop: isMobile ? 52 : 0 }}>{children}</main>
     </div>
   );
 }
