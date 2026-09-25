@@ -63,7 +63,7 @@ async function main() {
   // cascade rename: company record follows the status rename
   const co = await call("POST", "/api/companies", { name: "__probe_co__", status: "__probe_status__" }, 201);
   const coId = co.json.id as string;
-  const renamed = await call("PUT", `/api/status-definitions/${id}`, { name: "__probe_status_renamed__" }, 200);
+  await call("PUT", `/api/status-definitions/${id}`, { name: "__probe_status_renamed__" }, 200);
   const coCheck = await call("GET", `/api/companies/${coId}`);
   const coStatus = (coCheck.json as Record<string, unknown>).status;
   if (coStatus === "__probe_status_renamed__") { pass++; console.log("OK   cascade rename updated company.status"); }

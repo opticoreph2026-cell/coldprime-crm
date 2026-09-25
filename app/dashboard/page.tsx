@@ -1,8 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import type { DashboardStats } from "@/lib/types";
+import { PageHeader, ErrorBanner, Card, EmptyState, Badge } from "@/components/ui";
+
+const peso = (v: number) =>
+  new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(v);
+
+const fmtDate = (d: string) =>
+  new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+
+const TYPE_ICONS: Record<string, string> = {
+  CALL: "📞", EMAIL: "✉️", MEETING: "🤝", SITE_VISIT: "🚚", FOLLOW_UP: "🔔",
+  QUOTATION: "📄", PROPOSAL: "📑", OTHER: "📌",
+};
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -22,79 +35,128 @@ export default function DashboardPage() {
 
   if (error) return (
     <div style={{ padding: 24 }}>
-      <div style={{ background: "#fef2f2", color: "#dc2626", padding: 16, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
-        {error}
-      </div>
-      <button onClick={() => { setError(""); setStats(null); window.location.reload(); }} style={{ padding: "8px 16px", background: "#1e40af", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
-        Retry
-      </button>
+      <ErrorBanner message={error}>
+        <button className="btn btn-primary" onClick={() => { setError(""); setStats(null); window.location.reload(); }}>Retry</button>
+      </ErrorBanner>
     </div>
   );
 
   if (!stats) return <div style={{ padding: 24, color: "#64748b" }}>Loading dashboard...</div>;
 
   const cards = [
-    { label: "Total Companies", value: stats.totalCompanies, color: "#1e40af" },
-    { label: "Total Contacts", value: stats.totalContacts, color: "#0f766e" },
-    { label: "Active Leads", value: stats.activeLeads, color: "#c2410c" },
-    { label: "Active Projects", value: stats.activeProjects, color: "#7c3aed" },
-    { label: "Upcoming Follow-Ups", value: stats.upcomingFollowUps, color: "#15803d" },
-    { label: "Overdue Follow-Ups", value: stats.overdueFollowUps, color: "#dc2626" },
-    { label: "Activities This Month", value: stats.activitiesThisMonth, color: "#0369a1" },
-    { label: "New Leads This Month", value: stats.newLeadsThisMonth, color: "#a16207" },
+    { label: "Pipeline Value", value: peso(stats.pipelineTotal), color: "#1e40af", sub: `${stats.activeLeads} open leads` },
+    { label: "Follow-Ups Due Today", value: stats.followUpsDueToday, color: stats.followUpsDueToday > 0 ? "#c2410c" : "#15803d", sub: stats.overdueFollowUps > 0 ? `${stats.overdueFollowUps} overdue` : "on track", subColor: stats.overdueFollowUps > 0 ? "#dc2626" : undefined },
+    { label: "Accreditations Pending", value: stats.accreditationsPending, color: "#7c3aed", sub: "docs submitted / under review" },
+    { label: "Upcoming Follow-Ups", value: stats.upcomingFollowUps, color: "#0f766e", sub: "next 7 days" },
+    { label: "Total Companies", value: stats.totalCompanies, color: "#334155" },
+    { label: "Total Contacts", value: stats.totalContacts, color: "#334155" },
+    { label: "Active Leads", value: stats.activeLeads, color: "#334155" },
+    { label: "Active Projects", value: stats.activeProjects, color: "#334155" },
   ];
+
+  const maxPipeline = Math.max(...stats.pipelineByStatus.map((p) => p.value), 1);
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Dashboard</h1>
-        <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-          Coldprime Enterprises Corporation — {branchName}
-        </p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        subtitle={`Coldprime Enterprises Corporation — ${branchName}`}
+        actions={
+          <span style={{ fontSize: "0.8rem", color: "#64748b", alignSelf: "center" }}>
+            This month: <strong>{stats.activitiesThisMonth}</strong> activities · <strong>{stats.newLeadsThisMonth}</strong> new leads
+          </span>
+        }
+      />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         {cards.map((card) => (
-          <div
-            key={card.label}
-            style={{
-              background: "#fff",
-              borderRadius: 8,
-              padding: "1.25rem",
-              border: "1px solid #e2e8f0",
-            }}
-          >
-            <div style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <Card key={card.label} padding={20}>
+            <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               {card.label}
             </div>
-            <div style={{ fontSize: "2rem", fontWeight: 700, color: card.color, marginTop: 4 }}>
-              {card.value != null ? card.value.toLocaleString() : "-"}
+            <div style={{ fontSize: "1.75rem", fontWeight: 700, color: card.color, marginTop: 4 }}>
+              {typeof card.value === "string" ? card.value : card.value.toLocaleString()}
             </div>
-          </div>
+            {card.sub && (
+              <div style={{ fontSize: "0.72rem", marginTop: 4, color: card.subColor || "#94a3b8" }}>{card.sub}</div>
+            )}
+          </Card>
         ))}
       </div>
 
-      {stats.projectsByStatus.length > 0 && (
-        <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0", padding: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
+        <Card>
+          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 4 }}>Pipeline Value by Status</h2>
+          <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: 16 }}>Estimated value of open leads, excluding completed/cancelled.</p>
+          {stats.pipelineByStatus.length === 0 ? (
+            <EmptyState message="No open leads with estimated values yet." action={<Link className="btn btn-primary" href="/leads">+ New Lead</Link>} />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {stats.pipelineByStatus.map((p) => (
+                <div key={p.status}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: 3 }}>
+                    <span style={{ fontWeight: 500 }}>{p.status} <span style={{ color: "#94a3b8" }}>({p.count})</span></span>
+                    <span style={{ fontWeight: 600, color: "#1e40af" }}>{peso(p.value)}</span>
+                  </div>
+                  <div style={{ height: 8, background: "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${Math.max(2, (p.value / maxPipeline) * 100)}%`, background: "#1e40af", borderRadius: 4 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card>
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>Projects by Status</h2>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {stats.projectsByStatus.map((p) => (
-              <div
-                key={p.status}
-                style={{
-                  padding: "0.5rem 1rem",
-                  background: "#f1f5f9",
-                  borderRadius: 6,
-                  fontSize: "0.875rem",
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>{p.count}</span>{" "}
-                <span style={{ color: "#64748b" }}>{p.status}</span>
-              </div>
-            ))}
-          </div>
+          {stats.projectsByStatus.length === 0 ? (
+            <EmptyState message="No projects yet." />
+          ) : (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {stats.projectsByStatus.map((p) => (
+                <div key={p.status} style={{ padding: "0.4rem 0.75rem", background: "#f1f5f9", borderRadius: 6, fontSize: "0.8rem" }}>
+                  <span style={{ fontWeight: 600 }}>{p.count}</span>{" "}
+                  <span style={{ color: "#64748b" }}>{p.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>Recent Activity</h2>
+          <Link href="/activities" style={{ fontSize: "0.8rem", color: "#1e40af" }}>View all →</Link>
         </div>
-      )}
+        {stats.recentActivities.length === 0 ? (
+          <EmptyState message="No activities logged yet." action={<Link className="btn btn-primary" href="/activities">+ Log Activity</Link>} />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {stats.recentActivities.map((a, i) => {
+              const overdue = a.nextFollowUp && new Date(a.nextFollowUp) < new Date();
+              return (
+                <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid #f1f5f9" }}>
+                  <span style={{ fontSize: "1rem", width: 24, textAlign: "center" }}>{TYPE_ICONS[a.type] || "📌"}</span>
+                  <span style={{ fontSize: "0.75rem", color: "#64748b", width: 56, whiteSpace: "nowrap" }}>{fmtDate(a.date)}</span>
+                  <Badge color="gray" title={a.type}>{a.type.replace(/_/g, " ")}</Badge>
+                  <span style={{ flex: 1, fontSize: "0.85rem", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {a.description || "—"}
+                    {(a.company || a.project) && (
+                      <span style={{ color: "#64748b" }}> · {a.company?.name || a.project?.projectName}</span>
+                    )}
+                  </span>
+                  {a.nextFollowUp && (
+                    <span style={{ fontSize: "0.72rem", whiteSpace: "nowrap", color: overdue ? "#dc2626" : "#0f766e", fontWeight: overdue ? 600 : 400 }}>
+                      {overdue ? "overdue " : "next "}{fmtDate(a.nextFollowUp)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

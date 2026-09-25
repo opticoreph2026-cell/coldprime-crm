@@ -264,8 +264,22 @@ export interface DashboardStats {
   activeProjects: number;
   upcomingFollowUps: number;
   overdueFollowUps: number;
+  followUpsDueToday: number;
   activitiesThisMonth: number;
   newLeadsThisMonth: number;
+  accreditationsPending: number;
+  pipelineTotal: number;
+  pipelineByStatus: { status: string; count: number; value: number }[];
+  recentActivities: {
+    id: string;
+    type: string;
+    date: string;
+    time: string | null;
+    description: string | null;
+    nextFollowUp: string | null;
+    company: { id: string; name: string } | null;
+    project: { id: string; projectName: string } | null;
+  }[];
   projectsByStatus: { status: string; count: number }[];
 }
 

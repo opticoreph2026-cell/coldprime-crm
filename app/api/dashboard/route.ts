@@ -9,6 +9,8 @@ export async function GET() {
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
 
     const [
       totalCompanies,
@@ -19,9 +21,13 @@ export async function GET() {
       activeProjects,
       upcomingFollowUps,
       overdueFollowUps,
+      followUpsDueToday,
       activitiesThisMonth,
       newLeadsThisMonth,
       projectsByStatus,
+      pipelineByStatus,
+      accreditationsPending,
+      recentActivities,
     ] = await Promise.all([
       prisma.company.count({ where: branchFilter }),
       prisma.contact.count({ where: branchFilter }),
@@ -42,6 +48,12 @@ export async function GET() {
         },
       }),
       prisma.activity.count({
+        where: {
+          ...branchFilter,
+          nextFollowUp: { gte: startOfToday, lt: startOfTomorrow },
+        },
+      }),
+      prisma.activity.count({
         where: { ...branchFilter, date: { gte: startOfMonth } },
       }),
       prisma.lead.count({
@@ -53,7 +65,29 @@ export async function GET() {
         _count: true,
         orderBy: { _count: { status: "desc" } },
       }),
+      prisma.lead.groupBy({
+        by: ["status"],
+        where: { ...branchFilter, status: { notIn: ["Completed", "Cancelled", "Declined"] } },
+        _count: true,
+        _sum: { estimatedValue: true },
+      }),
+      prisma.company.count({
+        where: { ...branchFilter, accreditationStatus: { in: ["DOCUMENTS_SUBMITTED", "UNDER_REVIEW"] } },
+      }),
+      prisma.activity.findMany({
+        where: branchFilter,
+        orderBy: { date: "desc" },
+        take: 6,
+        select: {
+          id: true, type: true, date: true, time: true, description: true,
+          nextFollowUp: true,
+          company: { select: { id: true, name: true } },
+          project: { select: { id: true, projectName: true } },
+        },
+      }),
     ]);
+
+    const pipelineTotal = pipelineByStatus.reduce((sum, p) => sum + Number(p._sum.estimatedValue || 0), 0);
 
     return NextResponse.json({
       totalCompanies,
@@ -64,8 +98,15 @@ export async function GET() {
       activeProjects,
       upcomingFollowUps,
       overdueFollowUps,
+      followUpsDueToday,
       activitiesThisMonth,
       newLeadsThisMonth,
+      accreditationsPending,
+      pipelineTotal,
+      pipelineByStatus: pipelineByStatus
+        .map((p) => ({ status: p.status, count: p._count, value: Number(p._sum.estimatedValue || 0) }))
+        .sort((a, b) => b.value - a.value),
+      recentActivities,
       projectsByStatus: projectsByStatus.map((p) => ({
         status: p.status,
         count: p._count,
