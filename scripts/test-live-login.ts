@@ -1,3 +1,5 @@
+export {};
+
 const BASE = process.env.TEST_BASE || "https://coldprime-crm.vercel.app";
 
 async function main() {

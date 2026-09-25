@@ -202,7 +202,9 @@ export default function EmailsPage() {
         setMailList(data.data || []);
       } else {
         setMailList(null);
-        setMailListError(data.error || "Failed to load mailbox");
+        setMailListError(res.status === 403
+          ? "Inbox and Sent are restricted to admin accounts (shared mailbox). Your Sent History tab still shows everything the CRM sent."
+          : data.error || "Failed to load mailbox");
       }
     } catch {
       setMailList(null);
