@@ -21,6 +21,7 @@ const TYPE_BADGE: Record<string, string> = {
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -75,6 +76,8 @@ export default function LeadsPage() {
     } catch (error) {
       setError("Failed to load leads");
       console.error("Failed to fetch leads:", error);
+    } finally {
+      setLoading(false);
     }
   }, [page, debouncedSearch, statusFilter, typeFilter]);
 
@@ -155,7 +158,7 @@ export default function LeadsPage() {
         </select>
       </div>
 
-      {leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
+      {!loading && leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
         <EmptyState
           message="No leads yet — add your first lead to get started."
           action={
@@ -190,7 +193,7 @@ export default function LeadsPage() {
                 </td>
               </tr>
             ))}
-            {leads.length === 0 && <EmptyRow colSpan={9} message="No leads found" />}
+            {leads.length === 0 && <EmptyRow colSpan={9} message={loading ? "Loading…" : "No leads found"} />}
           </tbody>
         </table>
       </div>

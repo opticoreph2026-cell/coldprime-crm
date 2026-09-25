@@ -6,6 +6,7 @@ import { PageHeader, ErrorBanner, EmptyState, Pagination, Modal, ConfirmDialog }
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -35,6 +36,8 @@ export default function VendorsPage() {
       setTotal(data.pagination?.total || 0);
     } catch {
       setError("Failed to load vendors");
+    } finally {
+      setLoading(false);
     }
   }, [page, debouncedSearch, category]);
 
@@ -193,7 +196,7 @@ export default function VendorsPage() {
             </div>
           );
         })()
-      ) : vendors.length === 0 && !search && !debouncedSearch && !category && !error ? (
+      ) : !loading && vendors.length === 0 && !search && !debouncedSearch && !category && !error ? (
         <EmptyState
           message="No vendors yet — add your first vendor to get started."
           action={
@@ -205,7 +208,7 @@ export default function VendorsPage() {
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
         {vendors.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>No vendors found</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>{loading ? "Loading…" : "No vendors found"}</div>
         ) : (
           vendors.map((v) => (
             <div key={v.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

@@ -10,6 +10,7 @@ const ROLES = ["HEAD_ADMIN", "BRANCH_ADMIN", "STAFF"];
 export default function UsersPage() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -27,6 +28,8 @@ export default function UsersPage() {
       setUsers(data.data || []);
     } catch {
       setError("Failed to load users");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -142,7 +145,7 @@ export default function UsersPage() {
         onConfirm={handleDelete}
       />
 
-      {users.length === 0 && !error ? (
+      {!loading && users.length === 0 && !error ? (
         <EmptyState
           message="No users yet — add your first user to get started."
           action={
@@ -172,7 +175,7 @@ export default function UsersPage() {
                 </td>
               </tr>
             ))}
-            {users.length === 0 && <EmptyRow colSpan={6} message="No users found" />}
+            {users.length === 0 && <EmptyRow colSpan={6} message={loading ? "Loading…" : "No users found"} />}
           </tbody>
         </table>
       </div>

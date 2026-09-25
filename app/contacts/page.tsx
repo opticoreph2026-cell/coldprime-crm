@@ -6,6 +6,7 @@ import { PageHeader, ErrorBanner, EmptyRow, EmptyState, Pagination, SearchInput,
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -34,6 +35,8 @@ export default function ContactsPage() {
     } catch (error) {
       setError("Failed to load contacts");
       console.error("Failed to fetch contacts:", error);
+    } finally {
+      setLoading(false);
     }
   }, [page, debouncedSearch]);
 
@@ -112,7 +115,7 @@ export default function ContactsPage() {
         <SearchInput placeholder="Search contacts..." width={400} value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
       </div>
 
-      {contacts.length === 0 && !search && !debouncedSearch && !error ? (
+      {!loading && contacts.length === 0 && !search && !debouncedSearch && !error ? (
         <EmptyState
           message="No contacts yet — add your first contact to get started."
           action={
@@ -142,7 +145,7 @@ export default function ContactsPage() {
                 </td>
               </tr>
             ))}
-            {contacts.length === 0 && <EmptyRow colSpan={7} message="No contacts found" />}
+            {contacts.length === 0 && <EmptyRow colSpan={7} message={loading ? "Loading…" : "No contacts found"} />}
           </tbody>
         </table>
       </div>

@@ -33,6 +33,7 @@ const fallbackStatuses = ["Active", "Inactive", "Pending", "Prospect", "Archived
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -104,6 +105,8 @@ export default function CompaniesPage() {
     } catch (error) {
       console.error("Failed to fetch companies:", error);
       setApiError("Failed to load companies");
+    } finally {
+      setLoading(false);
     }
   }, [page, debouncedSearch, statusFilter, outreachFilter, typeFilter]);
 
@@ -322,7 +325,7 @@ export default function CompaniesPage() {
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
           Unable to load companies. Check that a branch is selected and try again.
         </div>
-      ) : companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !outreachFilter ? (
+      ) : !loading && companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !outreachFilter ? (
         <EmptyState
           message="No companies yet — add your first company to get started."
           action={
@@ -388,7 +391,7 @@ export default function CompaniesPage() {
                 </td>
               </tr>
             ))}
-            {companies.length === 0 && <EmptyRow colSpan={12} message="No companies found" />}
+            {companies.length === 0 && <EmptyRow colSpan={12} message={loading ? "Loading…" : "No companies found"} />}
           </tbody>
         </table>
       )}

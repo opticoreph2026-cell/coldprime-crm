@@ -9,6 +9,7 @@ const SUB_STATUSES = ["Not Started", "In Progress", "Completed", "Passed", "Fail
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [statuses, setStatuses] = useState<string[]>(STATUSES);
   const [search, setSearch] = useState("");
@@ -53,6 +54,8 @@ export default function ProjectsPage() {
     } catch (error) {
       setError("Failed to load projects");
       console.error("Failed to fetch projects:", error);
+    } finally {
+      setLoading(false);
     }
   }, [page, debouncedSearch, statusFilter]);
 
@@ -134,7 +137,7 @@ export default function ProjectsPage() {
         </select>
       </div>
 
-      {projects.length === 0 && !search && !debouncedSearch && !statusFilter && !error ? (
+      {!loading && projects.length === 0 && !search && !debouncedSearch && !statusFilter && !error ? (
         <EmptyState
           message="No projects yet — add your first project to get started."
           action={
@@ -168,7 +171,7 @@ export default function ProjectsPage() {
                 </td>
               </tr>
             ))}
-            {projects.length === 0 && <EmptyRow colSpan={8} message="No projects found" />}
+            {projects.length === 0 && <EmptyRow colSpan={8} message={loading ? "Loading…" : "No projects found"} />}
           </tbody>
         </table>
       </div>

@@ -8,6 +8,7 @@ import { PageHeader, ErrorBanner, EmptyRow, EmptyState, Pagination, SearchInput,
 
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -38,6 +39,8 @@ export default function ActivitiesPage() {
     } catch (error) {
       setError("Failed to load activities");
       console.error("Failed to fetch activities:", error);
+    } finally {
+      setLoading(false);
     }
   }, [page, debouncedSearch, typeFilter]);
 
@@ -135,7 +138,7 @@ export default function ActivitiesPage() {
         </select>
       </div>
 
-      {activities.length === 0 && !search && !debouncedSearch && !typeFilter && !error ? (
+      {!loading && activities.length === 0 && !search && !debouncedSearch && !typeFilter && !error ? (
         <EmptyState
           message="No activities yet — log your first activity to get started."
           action={
@@ -165,7 +168,7 @@ export default function ActivitiesPage() {
                 </td>
               </tr>
             ))}
-            {activities.length === 0 && <EmptyRow colSpan={8} message="No activities found" />}
+            {activities.length === 0 && <EmptyRow colSpan={8} message={loading ? "Loading…" : "No activities found"} />}
           </tbody>
         </table>
       </div>

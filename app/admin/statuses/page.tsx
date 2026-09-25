@@ -15,12 +15,13 @@ const TYPES = [
 ];
 
 export default function StatusesAdminPage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const role = session?.user?.role;
   const isAdmin = role === "HEAD_ADMIN" || role === "BRANCH_ADMIN";
 
   const [activeType, setActiveType] = useState("company");
   const [rows, setRows] = useState<StatusRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -43,6 +44,8 @@ export default function StatusesAdminPage() {
       else setError(data.error || "Failed to load statuses");
     } catch {
       setError("Failed to load statuses");
+    } finally {
+      setLoading(false);
     }
   }, [activeType, isAdmin]);
 
@@ -141,6 +144,15 @@ export default function StatusesAdminPage() {
     }
   };
 
+  if (sessionStatus === "loading") {
+    return (
+      <div style={{ padding: 24 }}>
+        <PageHeader title="Statuses" subtitle="Pipeline statuses & dropdown values" />
+        <p style={{ color: "#94a3b8" }}>Loading…</p>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div style={{ padding: 24 }}>
@@ -186,7 +198,9 @@ export default function StatusesAdminPage() {
         <span style={{ marginLeft: "auto" }}>Inactive values stay visible on existing records but leave the dropdowns.</span>
       </div>
 
-      {rows.length === 0 ? (
+      {loading ? (
+        <p style={{ color: "#94a3b8" }}>Loading statuses…</p>
+      ) : rows.length === 0 ? (
         <EmptyState
           message={`No ${meta.label.toLowerCase()} yet.`}
           action={<button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Add {meta.singular}</button>}
