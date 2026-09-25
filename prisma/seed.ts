@@ -39,7 +39,11 @@ async function main() {
 
   // Seed users
   // Fresh installs only — existing users are never updated (rotate via scripts/rotate-admin-password.ts)
-  const passwordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "Coldprime2026!", 10);
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
+  if (!seedPassword) {
+    throw new Error("Set SEED_ADMIN_PASSWORD (or ADMIN_PASSWORD) in .env before running prisma/seed.ts — no default password is bundled.");
+  }
+  const passwordHash = await bcrypt.hash(seedPassword, 10);
 
   const headAdmin = await prisma.user.upsert({
     where: { email: "admin@coldprime.ph" },
