@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { projectUpdateSchema } from "@/lib/validations/project";
+import { isForeignKeyError } from "@/lib/prisma-error";
 
 export async function GET(
   request: Request,
@@ -91,7 +92,14 @@ export async function DELETE(
 
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  } catch (error) {
+    if (isForeignKeyError(error)) {
+      return NextResponse.json(
+        { error: "Cannot delete this project while related activities or documents still reference it." },
+        { status: 409 }
+      );
+    }
+    console.error("Error deleting project:", error);
+    return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }

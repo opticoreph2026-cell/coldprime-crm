@@ -30,6 +30,9 @@ export async function POST(request: Request) {
     if (!toEmail) {
       return NextResponse.json({ error: "Recipient email is required" }, { status: 400 });
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) {
+      return NextResponse.json({ error: "Invalid recipient email address" }, { status: 400 });
+    }
 
     let finalSubject = subject || "";
     let finalBody = bodyContent || "";
@@ -55,6 +58,10 @@ export async function POST(request: Request) {
       };
       if (!finalSubject) finalSubject = fillTemplate(template.subject, vars);
       finalBody = fillTemplate(finalBody || template.body, vars);
+    }
+
+    if (!finalBody) {
+      return NextResponse.json({ error: "Email body is required" }, { status: 400 });
     }
 
     const result = await sendEmail({

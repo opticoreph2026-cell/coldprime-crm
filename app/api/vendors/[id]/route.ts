@@ -4,6 +4,7 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 import { parseOr400, readJson } from "@/lib/validations";
 import { vendorUpdateSchema } from "@/lib/validations/vendor";
+import { isForeignKeyError } from "@/lib/prisma-error";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -92,7 +93,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isForeignKeyError(error)) {
+      return NextResponse.json(
+        { error: "Cannot delete this vendor while related records still reference it." },
+        { status: 409 }
+      );
+    }
     console.error("Error deleting vendor:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete vendor" }, { status: 500 });
   }
 }

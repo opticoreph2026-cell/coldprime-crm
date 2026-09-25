@@ -6,6 +6,7 @@ import { isValidStatus } from "@/lib/status";
 import { isCompanyType, isAccreditationStatus } from "@/lib/enums";
 import { parseOr400, readJson } from "@/lib/validations";
 import { companyUpdateSchema } from "@/lib/validations/company";
+import { isForeignKeyError } from "@/lib/prisma-error";
 
 export async function GET(
   request: Request,
@@ -134,6 +135,12 @@ export async function DELETE(
     await prisma.company.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isForeignKeyError(error)) {
+      return NextResponse.json(
+        { error: "Cannot delete this company while related records still reference it. Delete its contacts, projects, and documents first." },
+        { status: 409 }
+      );
+    }
     console.error("Error deleting company:", error);
     return NextResponse.json({ error: "Failed to delete company" }, { status: 500 });
   }

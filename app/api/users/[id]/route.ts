@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/branch";
 import bcrypt from "bcryptjs";
 import { parseOr400, readJson } from "@/lib/validations";
 import { userUpdateSchema } from "@/lib/validations/user";
+import { isForeignKeyError } from "@/lib/prisma-error";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -77,7 +78,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name.trim();
-    if (email) updateData.email = email.trim();
+    if (email && email.trim() !== existing.email) {
+      const dupe = await prisma.user.findUnique({ where: { email: email.trim() } });
+      if (dupe) {
+        return NextResponse.json({ error: "Email already exists" }, { status: 409 });
+      }
+      updateData.email = email.trim();
+    }
     if (role && session.user.role === "HEAD_ADMIN") updateData.role = role;
     if (branchId && session.user.role === "HEAD_ADMIN") updateData.branchId = branchId;
     if (typeof isActive === "boolean") updateData.isActive = isActive;
@@ -128,6 +135,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     await prisma.user.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
+    if (isForeignKeyError(error)) {
+      return NextResponse.json(
+        { error: "Cannot delete this user while audit records still reference them." },
+        { status: 409 }
+      );
+    }
     console.error("Error deleting user:", error);
     return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }

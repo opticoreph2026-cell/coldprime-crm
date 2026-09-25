@@ -6,6 +6,7 @@ import { isValidStatus } from "@/lib/status";
 import { isLeadType } from "@/lib/enums";
 import { parseOr400, readJson } from "@/lib/validations";
 import { leadUpdateSchema } from "@/lib/validations/lead";
+import { isForeignKeyError } from "@/lib/prisma-error";
 
 export async function GET(
   request: Request,
@@ -86,7 +87,14 @@ export async function DELETE(
 
     await prisma.lead.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  } catch (error) {
+    if (isForeignKeyError(error)) {
+      return NextResponse.json(
+        { error: "Cannot delete this lead while related documents still reference it." },
+        { status: 409 }
+      );
+    }
+    console.error("Error deleting lead:", error);
+    return NextResponse.json({ error: "Failed to delete lead" }, { status: 500 });
   }
 }
