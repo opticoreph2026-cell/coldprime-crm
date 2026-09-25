@@ -86,7 +86,7 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Projects"
         subtitle={`${total} projects total`}
@@ -137,15 +137,9 @@ export default function ProjectsPage() {
         </select>
       </div>
 
+      <div className="page-scroll">
       {!loading && projects.length === 0 && !search && !debouncedSearch && !statusFilter && !error ? (
-        <EmptyState
-          message="No projects yet — add your first project to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-              + New Project
-            </button>
-          }
-        />
+        <EmptyState message="No projects yet — use + New Project to create the first one." />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
@@ -176,6 +170,7 @@ export default function ProjectsPage() {
         </table>
       </div>
       )}
+      </div>
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

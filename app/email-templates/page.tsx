@@ -87,7 +87,7 @@ export default function EmailTemplatesPage() {
   const labelStyle = { fontSize: "0.75rem", fontWeight: 500 as const, display: "block" as const, marginBottom: 4 };
 
   return (
-    <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
+    <div className="page page-center">
       <PageHeader
         title="Email Templates"
         subtitle={`${templates.length} reusable templates — use them in Bulk Send and Compose`}
@@ -142,17 +142,11 @@ export default function EmailTemplatesPage() {
         </select>
       </div>
 
+      <div className="page-scroll">
       {loading ? (
         <p style={{ color: "#94a3b8" }}>Loading templates...</p>
       ) : templates.length === 0 && !search && !categoryFilter && !error ? (
-        <EmptyState
-          message="No email templates yet — create your first template to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm); }}>
-              + New Template
-            </button>
-          }
-        />
+        <EmptyState message="No email templates yet — use + New Template to create the first one." />
       ) : filtered.length === 0 ? (
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
           No templates yet. Create one with <strong>+ New Template</strong>.
@@ -182,6 +176,7 @@ export default function EmailTemplatesPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

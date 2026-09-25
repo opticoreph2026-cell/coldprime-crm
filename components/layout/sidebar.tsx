@@ -80,7 +80,7 @@ export function Sidebar({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       {isMobile && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 52, background: "#0f172a", color: "#fff", display: "flex", alignItems: "center", gap: 12, padding: "0 16px", zIndex: 45 }}>
           <button

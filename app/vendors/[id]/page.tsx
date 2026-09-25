@@ -159,7 +159,7 @@ export default function VendorDetailPage() {
   const labelStyle = { fontSize: "0.75rem", fontWeight: 500 as const, display: "block" as const, marginBottom: 4 };
 
   return (
-    <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
+    <div className="page page-center">
       <PageHeader
         title={vendor.name}
         subtitle={`${vendor.category || "Vendor"} • ${vendor.branch.name}`}
@@ -189,11 +189,12 @@ export default function VendorDetailPage() {
         ))}
       </div>
 
+      <div className="page-scroll">
       {activeTab === "contacts" && (
         <div>
           <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={() => openContact()}>+ Add Contact</button>
           {contacts.length === 0 ? (
-            <EmptyState message="No contacts yet." action={<button className="btn btn-primary" onClick={() => openContact()}>+ Add Contact</button>} />
+            <EmptyState message="No contacts yet — use + Add Contact to add the first one." />
           ) : (
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
               {contacts.map((c, i) => (
@@ -216,7 +217,7 @@ export default function VendorDetailPage() {
         <div>
           <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={() => openMaterial()}>+ Add Material</button>
           {materials.length === 0 ? (
-            <EmptyState message="No materials listed." action={<button className="btn btn-primary" onClick={() => openMaterial()}>+ Add Material</button>} />
+            <EmptyState message="No materials listed — use + Add Material to add the first item." />
           ) : (
             <div style={{ overflowX: "auto", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
@@ -269,6 +270,7 @@ export default function VendorDetailPage() {
           )}
         </div>
       )}
+      </div>
 
       <Modal open={contactModal.open} title={contactModal.id ? "Edit Contact" : "Add Contact"} onClose={() => setContactModal({ open: false, id: null })} width={520}>
         <form onSubmit={saveContact} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

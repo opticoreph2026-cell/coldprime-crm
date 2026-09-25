@@ -166,7 +166,7 @@ export default function StatusesAdminPage() {
   const inactiveCount = rows.length - activeCount;
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Statuses"
         subtitle="Manage pipeline statuses and dropdown values"
@@ -198,13 +198,11 @@ export default function StatusesAdminPage() {
         <span style={{ marginLeft: "auto" }}>Inactive values stay visible on existing records but leave the dropdowns.</span>
       </div>
 
+      <div className="page-scroll">
       {loading ? (
         <p style={{ color: "#94a3b8" }}>Loading statuses…</p>
       ) : rows.length === 0 ? (
-        <EmptyState
-          message={`No ${meta.label.toLowerCase()} yet.`}
-          action={<button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Add {meta.singular}</button>}
-        />
+        <EmptyState message={`No ${meta.label.toLowerCase()} yet — use + Add ${meta.singular} to create the first one.`} />
       ) : (
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
           {rows.map((row, i) => (
@@ -234,6 +232,7 @@ export default function StatusesAdminPage() {
           ))}
         </div>
       )}
+      </div>
 
       <Modal open={showAdd} title={`Add ${meta.singular}`} onClose={() => setShowAdd(false)} width={420}>
         <form onSubmit={handleAdd}>

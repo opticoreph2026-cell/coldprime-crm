@@ -107,7 +107,7 @@ export default function LeadsPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Leads"
         subtitle={`${total} leads total`}
@@ -158,15 +158,9 @@ export default function LeadsPage() {
         </select>
       </div>
 
+      <div className="page-scroll">
       {!loading && leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
-        <EmptyState
-          message="No leads yet — add your first lead to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-              + New Lead
-            </button>
-          }
-        />
+        <EmptyState message="No leads yet — use + New Lead to create the first one." />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
@@ -198,6 +192,7 @@ export default function LeadsPage() {
         </table>
       </div>
       )}
+      </div>
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

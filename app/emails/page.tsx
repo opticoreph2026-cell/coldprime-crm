@@ -470,7 +470,7 @@ export default function EmailsPage() {
   });
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
+    <div className="page" style={{ maxWidth: 900, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 24 }}>
         ✉️ Email Outreach
       </h1>
@@ -513,6 +513,7 @@ export default function EmailsPage() {
         </div>
       )}
 
+      <div className="page-scroll">
       {activeTab === "bulk" && (
         <div>
           <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, marginBottom: 16 }}>
@@ -1164,6 +1165,7 @@ export default function EmailsPage() {
           )}
         </div>
       )}
+      </div>
 
       <ConfirmDialog
         open={sendConfirm !== null}

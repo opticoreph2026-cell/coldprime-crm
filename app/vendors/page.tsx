@@ -80,7 +80,7 @@ export default function VendorsPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Vendors"
         subtitle="Equipment and materials suppliers — HVAC, IAQ, and related"
@@ -155,6 +155,7 @@ export default function VendorsPage() {
         </select>
       </div>
 
+      <div className="page-scroll">
       {view === "priceList" ? (
         (() => {
           const rows = vendors.flatMap((v) =>
@@ -197,14 +198,7 @@ export default function VendorsPage() {
           );
         })()
       ) : !loading && vendors.length === 0 && !search && !debouncedSearch && !category && !error ? (
-        <EmptyState
-          message="No vendors yet — add your first vendor to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", category: "", status: "Active" }); }}>
-              + Add Vendor
-            </button>
-          }
-        />
+        <EmptyState message="No vendors yet — use + Add Vendor to create the first one." />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
         {vendors.length === 0 ? (
@@ -228,6 +222,7 @@ export default function VendorsPage() {
         )}
       </div>
       )}
+      </div>
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

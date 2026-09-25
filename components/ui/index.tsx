@@ -85,7 +85,7 @@ export function PageHeader({ title, subtitle, actions }: {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{title}</h1>
         {subtitle && <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{subtitle}</p>}
       </div>
-      {actions && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{actions}</div>}
+      {actions && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginLeft: "auto", justifyContent: "flex-end" }}>{actions}</div>}
     </div>
   );
 }

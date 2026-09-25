@@ -108,7 +108,7 @@ export default function DashboardPage() {
   const maxPipeline = Math.max(...stats.pipelineByStatus.map((p) => p.value), 1);
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Dashboard"
         subtitle={`Coldprime Enterprises Corporation — ${branchName}`}
@@ -119,6 +119,7 @@ export default function DashboardPage() {
         }
       />
 
+      <div className="page-scroll">
       <SetupChecklist stats={stats} />
 
       <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
@@ -142,7 +143,7 @@ export default function DashboardPage() {
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 4 }}>Pipeline Value by Status</h2>
           <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: 16 }}>Estimated value of open leads, excluding completed/cancelled.</p>
           {stats.pipelineByStatus.length === 0 ? (
-            <EmptyState message="No open leads with estimated values yet." action={<Link className="btn btn-primary" href="/leads">+ New Lead</Link>} />
+            <EmptyState message="No open leads with estimated values yet." />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {stats.pipelineByStatus.map((p) => (
@@ -183,7 +184,7 @@ export default function DashboardPage() {
           <Link href="/activities" style={{ fontSize: "0.8rem", color: "#1e40af" }}>View all →</Link>
         </div>
         {stats.recentActivities.length === 0 ? (
-          <EmptyState message="No activities logged yet." action={<Link className="btn btn-primary" href="/activities">+ Log Activity</Link>} />
+            <EmptyState message="No activities logged yet." />
         ) : (
           <div style={{ display: "flex", flexDirection: "column" }}>
             {stats.recentActivities.map((a, i) => {
@@ -210,6 +211,7 @@ export default function DashboardPage() {
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 }

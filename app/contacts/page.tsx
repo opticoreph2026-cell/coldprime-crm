@@ -70,7 +70,7 @@ export default function ContactsPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Contacts"
         subtitle={`${total} contacts total`}
@@ -115,15 +115,9 @@ export default function ContactsPage() {
         <SearchInput placeholder="Search contacts..." width={400} value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
       </div>
 
+      <div className="page-scroll">
       {!loading && contacts.length === 0 && !search && !debouncedSearch && !error ? (
-        <EmptyState
-          message="No contacts yet — add your first contact to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ companyId: "", firstName: "", lastName: "", position: "", email: "", mobile: "", landline: "", notes: "" }); }}>
-              + Add Contact
-            </button>
-          }
-        />
+        <EmptyState message="No contacts yet — use + Add Contact to create the first one." />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
@@ -150,6 +144,7 @@ export default function ContactsPage() {
         </table>
       </div>
       )}
+      </div>
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

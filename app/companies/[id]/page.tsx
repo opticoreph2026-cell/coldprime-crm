@@ -119,7 +119,7 @@ export default function CompanyDetailPage() {
   if (!company) return null;
 
   return (
-    <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
+    <div className="page page-center">
       <Link href="/companies" style={{ fontSize: "0.875rem", color: "#3b82f6" }}>← Back to Companies</Link>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, marginBottom: 4 }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{company.name}</h1>
@@ -146,6 +146,7 @@ export default function CompanyDetailPage() {
         ))}
       </div>
 
+      <div className="page-scroll">
       {activeTab === "overview" && (
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", rowGap: 10, fontSize: "0.875rem" }}>
@@ -295,6 +296,7 @@ export default function CompanyDetailPage() {
           )}
         </div>
       )}
+      </div>
 
       <ConfirmDialog
         open={accredConfirm !== null}

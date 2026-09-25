@@ -86,7 +86,7 @@ export default function ActivitiesPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="Activities"
         subtitle={`${total} activities total`}
@@ -138,15 +138,9 @@ export default function ActivitiesPage() {
         </select>
       </div>
 
+      <div className="page-scroll">
       {!loading && activities.length === 0 && !search && !debouncedSearch && !typeFilter && !error ? (
-        <EmptyState
-          message="No activities yet — log your first activity to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-              + Log Activity
-            </button>
-          }
-        />
+        <EmptyState message="No activities yet — use + Log Activity to record the first one." />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
@@ -173,6 +167,7 @@ export default function ActivitiesPage() {
         </table>
       </div>
       )}
+      </div>
 
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />

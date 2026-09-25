@@ -213,7 +213,7 @@ export default function CompaniesPage() {
   const labelStyle = { fontSize: "0.75rem", fontWeight: 500 as const, display: "block" as const, marginBottom: 4 };
 
   return (
-<div style={{ padding: 24 }}>
+<div className="page">
         <PageHeader
           title="Companies"
           subtitle={`${total} potential clients total`}
@@ -321,19 +321,13 @@ export default function CompaniesPage() {
         {apiError && <button className="btn btn-secondary" onClick={fetchCompanies}>Retry</button>}
       </div>
 
+      <div className="page-scroll">
       {apiError ? (
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
           Unable to load companies. Check that a branch is selected and try again.
         </div>
       ) : !loading && companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !outreachFilter ? (
-        <EmptyState
-          message="No companies yet — add your first company to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm); setMobiles([""]); setLandlines([""]); }}>
-              + Add Company
-            </button>
-          }
-        />
+        <EmptyState message="No companies yet — use + Add Company to create the first one." />
       ) : (
         <table>
           <thead>
@@ -395,6 +389,7 @@ export default function CompaniesPage() {
           </tbody>
         </table>
       )}
+      </div>
       {total > 50 && (
         <Pagination page={page} total={total} onPage={setPage} />
       )}

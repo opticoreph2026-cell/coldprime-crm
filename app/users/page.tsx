@@ -109,7 +109,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="page">
       <PageHeader
         title="User Management"
         subtitle={`${users.length} users`}
@@ -145,15 +145,9 @@ export default function UsersPage() {
         onConfirm={handleDelete}
       />
 
+      <div className="page-scroll">
       {!loading && users.length === 0 && !error ? (
-        <EmptyState
-          message="No users yet — add your first user to get started."
-          action={
-            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", email: "", password: "", role: "STAFF", branchId: session?.user?.branchId || "" }); setError(""); }}>
-              + Add User
-            </button>
-          }
-        />
+        <EmptyState message="No users yet — use + Add User to create the first one." />
       ) : (
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
         <table>
@@ -180,6 +174,7 @@ export default function UsersPage() {
         </table>
       </div>
       )}
+      </div>
     </div>
   );
 }
