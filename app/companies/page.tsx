@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { COMPANY_TYPES } from "@/lib/enums";
+import { COMPANY_TYPES, COMPANY_TYPE_LABELS } from "@/lib/enums";
 
 interface Company {
   id: string;
@@ -37,14 +37,7 @@ const emptyForm = {
   address: "", website: "", status: "Active", notes: "", source: "",
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  GENERAL_CONTRACTOR: "General Contractor",
-  ARCHITECT: "Architect",
-  DEVELOPER: "Developer",
-  PROPERTY_MANAGER: "Property Manager",
-  END_CLIENT: "End Client",
-  OTHER: "Other",
-};
+const TYPE_LABELS = COMPANY_TYPE_LABELS;
 
 const ACCREDITATION_LABELS: Record<string, string> = {
   DOCUMENTS_SUBMITTED: "Docs Submitted",

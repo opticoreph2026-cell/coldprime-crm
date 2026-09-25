@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { DOCUMENT_CATEGORIES } from "@/lib/enums";
+import { DOCUMENT_CATEGORIES, COMPANY_TYPE_LABELS } from "@/lib/enums";
 
 type Tab = "overview" | "accreditation" | "contacts" | "leads" | "projects" | "activities" | "documents";
 
@@ -36,14 +36,7 @@ interface Company {
 
 interface Doc { id: string; category: string; fileName: string; fileUrl: string; createdAt: string }
 
-const TYPE_LABELS: Record<string, string> = {
-  GENERAL_CONTRACTOR: "General Contractor",
-  ARCHITECT: "Architect",
-  DEVELOPER: "Developer",
-  PROPERTY_MANAGER: "Property Manager",
-  END_CLIENT: "End Client",
-  OTHER: "Other",
-};
+const TYPE_LABELS = COMPANY_TYPE_LABELS;
 
 const ACCREDITATION_LABELS: Record<string, string> = {
   NOT_STARTED: "Not Started",

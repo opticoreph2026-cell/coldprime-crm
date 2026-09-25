@@ -3,12 +3,37 @@
 
 export const COMPANY_TYPES = [
   "GENERAL_CONTRACTOR",
-  "ARCHITECT",
-  "DEVELOPER",
-  "PROPERTY_MANAGER",
-  "END_CLIENT",
+  "MEPF_CONSULTANT",
+  "PROPERTY_DEVELOPER",
+  "FACILITY_MANAGER",
+  "BUILDING_OWNER",
+  "HEALTHCARE",
+  "HOSPITALITY",
+  "EDUCATION",
+  "RETAIL_MALL",
+  "INDUSTRIAL",
+  "FOOD_BEVERAGE",
+  "GOVERNMENT",
+  "DATA_CENTER",
   "OTHER",
 ] as const;
+
+export const COMPANY_TYPE_LABELS: Record<string, string> = {
+  GENERAL_CONTRACTOR: "General Contractor",
+  MEPF_CONSULTANT: "MEPF Consultant",
+  PROPERTY_DEVELOPER: "Property Developer",
+  FACILITY_MANAGER: "Facility Manager",
+  BUILDING_OWNER: "Building Owner",
+  HEALTHCARE: "Healthcare",
+  HOSPITALITY: "Hospitality",
+  EDUCATION: "Education",
+  RETAIL_MALL: "Retail / Mall",
+  INDUSTRIAL: "Industrial",
+  FOOD_BEVERAGE: "Food & Beverage",
+  GOVERNMENT: "Government",
+  DATA_CENTER: "Data Center",
+  OTHER: "Other",
+};
 
 export const ACCREDITATION_STATUSES = [
   "NOT_STARTED",
