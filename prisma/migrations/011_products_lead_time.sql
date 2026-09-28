@@ -28,4 +28,4 @@ ALTER TABLE "products"
   FOREIGN KEY ("branch_id") REFERENCES "branches"("id")
   ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE "vendor_materials" ADD COLUMN "lead_time_days" INTEGER;
+ALTER TABLE "vendor_materials" ADD COLUMN "leadTimeDays" INTEGER;
