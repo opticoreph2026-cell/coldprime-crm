@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { reportNoteSchema } from "@/lib/validations/report";
-import { mondayOf, startOfDayPH } from "@/lib/dates";
+import { mondayOf, startOfDayPH, toISODate } from "@/lib/dates";
 
 export async function PUT(request: Request) {
   try {
@@ -49,7 +49,10 @@ export async function PUT(request: Request) {
       update: data,
     });
 
-    return NextResponse.json(note);
+    return NextResponse.json({
+      ...note,
+      weekStart: toISODate(weekStartAt),
+    });
   } catch (error) {
     console.error("Error saving report note:", error);
     return NextResponse.json({ error: "Failed to save note" }, { status: 500 });
