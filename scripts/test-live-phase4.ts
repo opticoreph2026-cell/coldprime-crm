@@ -125,9 +125,11 @@ async function main() {
     ok(vendImp.status === 400, "vendors import unknown vendorId blocked (400)", vendImp.body?.error);
 
     // --- P4.6 users route follows active branch ---------------------------
+    // Clear any active branch left over from an earlier session first.
+    await j(admin, "/api/auth/switch-branch", { method: "POST", body: JSON.stringify({ branchId: null }) });
     const allUsers = await j(admin, "/api/users");
     const allEmails: string[] = (allUsers.body?.data || []).map((u: { email: string }) => u.email);
-    ok(allUsers.status === 200 && allEmails.includes("manila-staff@coldprime.ph"),
+    ok(allUsers.status === 200 && allEmails.includes("manila-staff@coldprime.ph") && allEmails.includes("cebu-staff@coldprime.ph"),
       "GET /api/users (no active branch) shows all branches", `count=${allEmails.length}`);
 
     await j(admin, "/api/auth/switch-branch", { method: "POST", body: JSON.stringify({ branchId: "branch_manila" }) });

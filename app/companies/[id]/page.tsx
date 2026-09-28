@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { DOCUMENT_CATEGORIES, COMPANY_TYPE_LABELS } from "@/lib/enums";
-import type { Company, Document } from "@/lib/types";
+import type { Company, Document, EmailLog } from "@/lib/types";
 import { ErrorBanner, ConfirmDialog } from "@/components/ui";
 
-type Tab = "overview" | "accreditation" | "contacts" | "leads" | "projects" | "activities" | "documents";
+type Tab = "overview" | "accreditation" | "contacts" | "leads" | "projects" | "activities" | "documents" | "emails";
 
 const TYPE_LABELS = COMPANY_TYPE_LABELS;
 
@@ -43,6 +43,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "projects", label: "Projects" },
   { key: "activities", label: "Activities" },
   { key: "documents", label: "Documents" },
+  { key: "emails", label: "Emails" },
 ];
 
 export default function CompanyDetailPage() {
@@ -56,6 +57,8 @@ export default function CompanyDetailPage() {
   const [accredConfirm, setAccredConfirm] = useState<{ status: string; message: string } | null>(null);
   const [docDelete, setDocDelete] = useState<{ id: string; name: string } | null>(null);
   const [docError, setDocError] = useState("");
+  const [emails, setEmails] = useState<EmailLog[]>([]);
+  const [emailsLoaded, setEmailsLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -70,6 +73,19 @@ export default function CompanyDetailPage() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (activeTab !== "emails" || emailsLoaded || !company) return;
+    const set = new Set<string>();
+    if (company.email) set.add(company.email.toLowerCase());
+    for (const c of company.contacts) if (c.email) set.add(c.email.toLowerCase());
+    if (set.size === 0) { setEmailsLoaded(true); return; }
+    fetch(`/api/emails/logs?to=${[...set].map(encodeURIComponent).join(",")}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (Array.isArray(d?.data)) setEmails(d.data); })
+      .catch(() => { /* keep empty */ })
+      .finally(() => setEmailsLoaded(true));
+  }, [activeTab, emailsLoaded, company]);
 
   const setAccreditation = async (status: string) => {
     setSaving(true);
@@ -289,6 +305,34 @@ export default function CompanyDetailPage() {
                     <td><a href={d.fileUrl} target="_blank" rel="noreferrer" style={{ color: "#1e40af" }}>{d.fileName}</a></td>
                     <td>{new Date(d.createdAt).toLocaleDateString("en-PH")}</td>
                     <td><button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDocDelete({ id: d.id, name: d.fileName })}>Delete</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {activeTab === "emails" && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
+          {!emailsLoaded ? (
+            <p style={{ color: "#94a3b8" }}>Loading emails…</p>
+          ) : emails.length === 0 ? (
+            <p style={{ color: "#94a3b8" }}>No emails sent to this company or its contacts yet.</p>
+          ) : (
+            <table>
+              <thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>
+              <tbody>
+                {emails.map((m) => (
+                  <tr key={m.id}>
+                    <td>{new Date(m.sentAt).toLocaleDateString("en-PH")}</td>
+                    <td>{m.toName ? `${m.toName} · ` : ""}{m.toEmail}</td>
+                    <td>{m.subject}</td>
+                    <td>
+                      <span className={`badge ${m.status === "SENT" ? "badge-green" : m.status === "FAILED" ? "badge-red" : "badge-yellow"}`}>
+                        {m.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

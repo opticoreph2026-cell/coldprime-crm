@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client/client";
 import { parseExcelFile, mergeImportData } from "@/lib/excel/import";
 import { requireAuth, requireBranchId } from "@/lib/branch";
+import { parseOr400 } from "@/lib/validations";
+import { importActionSchema, fdString } from "@/lib/validations/import";
 
 const ALLOWED_EXTENSIONS = [".xlsx", ".xls"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -24,7 +26,10 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const action = formData.get("action") as string || "preview";
+
+    const fieldParsed = parseOr400(importActionSchema, { action: fdString(formData, "action") || "preview" });
+    if (!fieldParsed.ok) return fieldParsed.response;
+    const action = fieldParsed.data.action;
 
     if (!file) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });

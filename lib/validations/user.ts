@@ -18,3 +18,15 @@ export const userUpdateSchema = z.object({
   isActive: z.boolean().optional(),
   password: z.string().min(8, "Password must be at least 8 characters").max(200).optional(),
 });
+
+export const profileUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(150),
+  phone: z.union([z.string().trim().max(30), z.null()]).optional(),
+  signatureEmail: z
+    .union([z.literal(""), z.email("Invalid email address"), z.null()])
+    .optional(),
+});
+
+export const branchSwitchSchema = z.object({
+  branchId: z.union([z.string().max(50), z.literal(""), z.null()]).optional(),
+});

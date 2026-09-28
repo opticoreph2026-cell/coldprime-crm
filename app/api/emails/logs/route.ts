@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const wantDeleted = searchParams.get("deleted") === "true";
     const status = searchParams.get("status") || "";
     const search = searchParams.get("search") || "";
+    const to = searchParams.get("to") || "";
 
     // "Deleted emails" filter is admin-only (Phase 3).
     if (wantDeleted) {
@@ -24,7 +25,11 @@ export async function GET(request: Request) {
     const where: Record<string, unknown> = { ...branchFilter };
     where.deletedAt = wantDeleted ? { not: null } : null;
     if (status) where.status = status;
-    if (search) {
+    if (to) {
+      const emails = to.split(",").map((e) => e.trim()).filter(Boolean);
+      if (emails.length === 0) return NextResponse.json({ data: [], deletedFilter: wantDeleted });
+      where.toEmail = { in: emails };
+    } else if (search) {
       where.OR = [
         { toEmail: { contains: search, mode: "insensitive" } },
         { subject: { contains: search, mode: "insensitive" } },

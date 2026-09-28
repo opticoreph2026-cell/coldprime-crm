@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 import { parsePriceList, PriceRow } from "@/lib/price-list";
+import { parseOr400 } from "@/lib/validations";
+import { importActionSchema, fdString } from "@/lib/validations/import";
 
 const ALLOWED_EXTENSIONS = [".csv", ".txt", ".xlsx", ".xls"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -24,7 +26,10 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const action = formData.get("action") as string | null || "preview";
+
+    const fieldParsed = parseOr400(importActionSchema, { action: fdString(formData, "action") || "preview" });
+    if (!fieldParsed.ok) return fieldParsed.response;
+    const action = fieldParsed.data.action;
 
     if (!file) return NextResponse.json({ error: "File is required" }, { status: 400 });
     const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();

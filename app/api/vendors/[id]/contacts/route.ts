@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       where: { id },
       select: { branchId: true },
     });
-    if (!vendor || vendor.branchId !== branchFilter.branchId) {
+    if (!vendor || (branchFilter.branchId && vendor.branchId !== branchFilter.branchId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -45,7 +45,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       where: { id },
       select: { branchId: true },
     });
-    if (!vendor || vendor.branchId !== branchFilter.branchId) {
+    if (!vendor || (branchFilter.branchId && vendor.branchId !== branchFilter.branchId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -63,7 +63,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
 
-    await logAudit({ branchId: branchFilter.branchId, action: "CREATE", entity: "vendor_contact", entityId: contact.id, details: { vendorId: id, name: `${firstName} ${lastName || ""}` } });
+    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "CREATE", entity: "vendor_contact", entityId: contact.id, details: { vendorId: id, name: `${firstName} ${lastName || ""}` } });
 
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/branch";
+import { parseOr400, readJson } from "@/lib/validations";
+import { profileUpdateSchema } from "@/lib/validations/user";
 
 export async function GET() {
   try {
@@ -31,14 +33,11 @@ export async function PUT(request: Request) {
     let session;
     try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
 
-    const body = await request.json();
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
-    const signatureEmail = typeof body.signatureEmail === "string" ? body.signatureEmail.trim() : "";
-
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    }
+    const parsed = parseOr400(profileUpdateSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const name = parsed.data.name;
+    const phone = parsed.data.phone ?? "";
+    const signatureEmail = parsed.data.signatureEmail ?? "";
 
     const user = await prisma.user.update({
       where: { id: session.user.id as string },

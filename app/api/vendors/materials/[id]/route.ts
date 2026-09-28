@@ -21,7 +21,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       where: { id },
       include: { vendor: { select: { branchId: true } } },
     });
-    if (!material || material.vendor.branchId !== branchFilter.branchId) {
+    if (!material || (branchFilter.branchId && material.vendor.branchId !== branchFilter.branchId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -46,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
     });
 
-    await logAudit({ branchId: branchFilter.branchId, action: "UPDATE", entity: "vendor_material", entityId: material.id, details: { itemName } });
+    await logAudit({ branchId: branchFilter.branchId ?? material.vendor.branchId, action: "UPDATE", entity: "vendor_material", entityId: material.id, details: { itemName } });
 
     return NextResponse.json((await viewerCanSeeCost()) ? updated : stripCost(updated));
   } catch (error) {
@@ -65,12 +65,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       where: { id },
       include: { vendor: { select: { branchId: true } } },
     });
-    if (!material || material.vendor.branchId !== branchFilter.branchId) {
+    if (!material || (branchFilter.branchId && material.vendor.branchId !== branchFilter.branchId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     await prisma.vendorMaterial.delete({ where: { id } });
-    await logAudit({ branchId: branchFilter.branchId, action: "DELETE", entity: "vendor_material", entityId: id });
+    await logAudit({ branchId: branchFilter.branchId ?? material.vendor.branchId, action: "DELETE", entity: "vendor_material", entityId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

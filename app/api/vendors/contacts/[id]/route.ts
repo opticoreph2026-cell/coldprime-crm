@@ -9,7 +9,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
-    const { id } = await params;
+        const { id } = await params;
     const parsed = parseOr400(vendorContactUpdateSchema, await readJson(request));
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
@@ -19,7 +19,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       where: { id },
       include: { vendor: { select: { branchId: true } } },
     });
-    if (!contact || contact.vendor.branchId !== branchFilter.branchId) {
+    if (!contact || (branchFilter.branchId && contact.vendor.branchId !== branchFilter.branchId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -37,7 +37,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
     });
 
-    await logAudit({ branchId: branchFilter.branchId, action: "UPDATE", entity: "vendor_contact", entityId: contact.id, details: { name: `${updated.firstName} ${updated.lastName || ""}` } });
+    await logAudit({ branchId: branchFilter.branchId ?? contact.vendor.branchId, action: "UPDATE", entity: "vendor_contact", entityId: contact.id, details: { name: `${updated.firstName} ${updated.lastName || ""}` } });
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -50,18 +50,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   try {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
-    const { id } = await params;
+        const { id } = await params;
 
     const contact = await prisma.vendorContact.findUnique({
       where: { id },
       include: { vendor: { select: { branchId: true } } },
     });
-    if (!contact || contact.vendor.branchId !== branchFilter.branchId) {
+    if (!contact || (branchFilter.branchId && contact.vendor.branchId !== branchFilter.branchId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     await prisma.vendorContact.delete({ where: { id } });
-    await logAudit({ branchId: branchFilter.branchId, action: "DELETE", entity: "vendor_contact", entityId: id });
+    await logAudit({ branchId: branchFilter.branchId ?? contact.vendor.branchId, action: "DELETE", entity: "vendor_contact", entityId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

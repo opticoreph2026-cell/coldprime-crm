@@ -5,6 +5,8 @@ import { sendEmail, fillTemplate, logEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit";
 import { ensureOptOutLine, evaluateEmailGuard } from "@/lib/email/guard";
 import { startOfDayPH, addDaysISO, todayPH } from "@/lib/dates";
+import { parseOr400, readJson } from "@/lib/validations";
+import { emailSendSchema } from "@/lib/validations/email";
 
 export async function POST(request: Request) {
   let toEmail = "";
@@ -13,29 +15,24 @@ export async function POST(request: Request) {
   let templateId: string | undefined;
   let cc = "";
   let ccName = "";
+  let logBranchId: string | undefined;
 
   let session;
   let branchFilter;
   try {
     try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     branchFilter = await getBranchFilter();
-    const body = await request.json();
-    toEmail = body.toEmail || "";
-    toName = body.toName || null;
-    templateId = body.templateId;
-    subject = body.subject || "";
-    const bodyContent = body.body || "";
-    const fromName = body.fromName;
-    const companyName = body.companyName;
-    cc = body.cc || "";
-    ccName = body.ccName || "";
-
-    if (!toEmail) {
-      return NextResponse.json({ error: "Recipient email is required" }, { status: 400 });
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) {
-      return NextResponse.json({ error: "Invalid recipient email address" }, { status: 400 });
-    }
+    const parsed = parseOr400(emailSendSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    toEmail = parsed.data.toEmail;
+    toName = parsed.data.toName ?? null;
+    templateId = parsed.data.templateId ?? undefined;
+    subject = parsed.data.subject ?? "";
+    const bodyContent = parsed.data.body ?? "";
+    const fromName = parsed.data.fromName;
+    const companyName = parsed.data.companyName;
+    cc = parsed.data.cc || "";
+    ccName = parsed.data.ccName || "";
 
     let finalSubject = subject || "";
     let finalBody = bodyContent || "";
@@ -111,20 +108,31 @@ export async function POST(request: Request) {
       toName: toName || undefined,
       subject: finalSubject,
       body: finalBody,
-      fromName: fromName,
+      fromName: fromName || undefined,
       cc: cc || undefined,
       ccName: ccName || undefined,
     });
 
+    // Resolve a concrete branch for EmailLog/audit: active branch, else the
+    // recipient's company branch, else the sender's home branch (all-branches view).
+    logBranchId = branchFilter.branchId;
+    if (!logBranchId) {
+      const recipient = await prisma.company.findFirst({
+        where: { OR: [{ email: toEmail }, { contacts: { some: { email: toEmail } } }] },
+        select: { branchId: true },
+      });
+      logBranchId = recipient?.branchId ?? session.user.branchId ?? undefined;
+    }
+
     try {
-      await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName || null, finalSubject, "SENT", null, { messageId: result.id, cc });
+      if (logBranchId) await logEmail(logBranchId, templateId || null, session.user.id!, toEmail, toName || null, finalSubject, "SENT", null, { messageId: result.id, cc });
     } catch (logErr) {
       console.error("Email sent but logging failed:", logErr);
     }
 
     try {
-      if (branchFilter.branchId) {
-        await logAudit({ userId: session.user.id, branchId: branchFilter.branchId, action: "CREATE", entity: "email", details: { companyId: null, companyName: companyName || null, label: finalSubject } });
+      if (logBranchId) {
+        await logAudit({ userId: session.user.id, branchId: logBranchId, action: "CREATE", entity: "email", details: { companyId: null, companyName: companyName || null, label: finalSubject } });
       }
     } catch (auditErr) {
       console.error("Email audit failed:", auditErr);
@@ -189,8 +197,9 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to send email";
     console.error("Error sending email:", error);
-    if (session && branchFilter) {
-      try { await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName, subject, "FAILED", msg); } catch {}
+    if (session) {
+      const failBranch = logBranchId ?? branchFilter?.branchId;
+      try { if (failBranch) await logEmail(failBranch, templateId || null, session.user.id!, toEmail, toName, subject, "FAILED", msg); } catch {}
     }
     return NextResponse.json({ error: msg }, { status: 500 });
   }

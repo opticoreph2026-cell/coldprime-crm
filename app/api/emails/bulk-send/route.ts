@@ -5,6 +5,8 @@ import { sendEmail, logEmail } from "@/lib/email";
 import { dailyEmailCap, ensureOptOutLine, findUnknownTags } from "@/lib/email/guard";
 import { addDaysISO, startOfDayPH, todayPH } from "@/lib/dates";
 import { logAudit } from "@/lib/audit";
+import { parseOr400, readJson } from "@/lib/validations";
+import { emailBulkSendSchema } from "@/lib/validations/email";
 
 export const maxDuration = 30;
 
@@ -24,18 +26,16 @@ export async function POST(request: Request) {
     try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     branchFilter = await getBranchFilter();
 
-    const body = await request.json();
-    const subject: string = body.subject || "";
-    const bodyContent: string = body.body || "";
-    const companyIds: string[] = Array.isArray(body.companyIds) ? body.companyIds : [];
-    const skipAlreadySent: boolean = Boolean(body.skipAlreadySent);
-    const senderName: string = typeof body.senderName === "string" ? body.senderName.trim() : "";
-    const cc: string | undefined = typeof body.cc === "string" && body.cc.trim() ? body.cc.trim() : undefined;
-    const ccName: string | undefined = typeof body.ccName === "string" && body.ccName.trim() ? body.ccName.trim() : undefined;
+    const parsed = parseOr400(emailBulkSendSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const subject: string = parsed.data.subject;
+    const bodyContent: string = parsed.data.body;
+    const companyIds: string[] = parsed.data.companyIds;
+    const skipAlreadySent: boolean = parsed.data.skipAlreadySent ?? false;
+    const senderName: string = parsed.data.senderName ?? "";
+    const cc: string | undefined = parsed.data.cc || undefined;
+    const ccName: string | undefined = parsed.data.ccName || undefined;
 
-    if (!subject.trim() || !bodyContent.trim()) {
-      return NextResponse.json({ error: "Subject and body are required" }, { status: 400 });
-    }
     // Unknown merge tags must block sending (bulk sends only fill {{companyName}}).
     const unknownTags = findUnknownTags(subject, bodyContent);
     if (unknownTags.length > 0) {
@@ -43,9 +43,6 @@ export async function POST(request: Request) {
         { error: `Unknown merge tag${unknownTags.length > 1 ? "s" : ""}: ${unknownTags.map((t) => `{{${t}}}`).join(", ")}` },
         { status: 400 }
       );
-    }
-    if (companyIds.length === 0) {
-      return NextResponse.json({ error: "No companies selected" }, { status: 400 });
     }
 
     const companies = await prisma.company.findMany({

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseOr400, readJson } from "@/lib/validations";
+import { branchSwitchSchema } from "@/lib/validations/user";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +15,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only Head Admin can switch branches" }, { status: 403 });
     }
 
-    const { branchId } = await request.json();
+    const parsed = parseOr400(branchSwitchSchema, await readJson(request));
+    if (!parsed.ok) return parsed.response;
+    const branchId = parsed.data.branchId || null;
 
     if (branchId) {
       const branch = await prisma.branch.findUnique({ where: { id: branchId } });
