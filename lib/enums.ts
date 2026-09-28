@@ -51,9 +51,9 @@ export const LEAD_TYPES = [
 
 // Pipeline stages per lead type (seeded as status_definitions with type "lead")
 export const LEAD_TYPE_STAGES: Record<string, string[]> = {
-  ACCREDITATION: ["New", "Contacted", "Documents Submitted", "Under Review", "Accredited", "Rejected"],
-  PROJECT_BID: ["New", "Contacted", "Quotation Sent", "Negotiation", "Won", "Lost"],
-  DESIGN_PARTNERSHIP: ["New", "Contacted", "Technical Discussion", "Proposal Sent", "Confirmed", "Inactive"],
+  ACCREDITATION: ["New", "Contacted", "Documents Submitted", "Under Review", "Accredited", "Rejected", "On Hold", "Nurture"],
+  PROJECT_BID: ["New", "Contacted", "Quotation Sent", "Negotiation", "Won", "Lost", "On Hold", "Nurture"],
+  DESIGN_PARTNERSHIP: ["New", "Contacted", "Technical Discussion", "Proposal Sent", "Confirmed", "Inactive", "On Hold", "Nurture"],
 };
 
 export const DOCUMENT_CATEGORIES = [

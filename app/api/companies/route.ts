@@ -46,8 +46,8 @@ export async function GET(request: Request) {
     else if (outreach) where.outreachStatus = outreach;
     if (industry) where.industry = industry;
     if (source) where.source = source;
-    if (type) where.type = type as CompanyType;
-    if (accreditation) where.accreditationStatus = accreditation as AccreditationStatus;
+    if (type && isCompanyType(type)) where.type = type as CompanyType;
+    if (accreditation && isAccreditationStatus(accreditation)) where.accreditationStatus = accreditation as AccreditationStatus;
 
     const [companies, total] = await Promise.all([
       prisma.company.findMany({

@@ -54,10 +54,7 @@ export function Sidebar({ children }: { children: ReactNode }) {
       fetch("/api/branches")
         .then((r) => r.json())
         .then((res) => setBranches(res.data || []))
-        .catch(() => setBranches([
-          { id: "branch_cebu", name: "Cebu Office" },
-          { id: "branch_manila", name: "Manila Office" },
-        ]));
+        .catch(() => setBranches([]));
     }
   }, [isHeadAdmin]);
 

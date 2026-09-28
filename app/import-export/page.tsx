@@ -105,6 +105,11 @@ export default function ImportExportPage() {
             {preview.sheets.map((sheet) => (
               <div key={sheet.name} style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9" }}>
                 <div style={{ fontWeight: 500, marginBottom: 4 }}>{sheet.name} — {sheet.totalRows} rows</div>
+                {sheet.headers.length > 0 && (
+                  <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginBottom: 4 }}>
+                    Columns: {sheet.headers.join(", ")}
+                  </div>
+                )}
                 {sheet.duplicates.length > 0 && (
                   <div style={{ fontSize: "0.75rem", color: "#c2410c" }}>
                     {sheet.duplicates.length} duplicate rows: {sheet.duplicates.slice(0, 5).join(", ")}{sheet.duplicates.length > 5 ? "..." : ""}

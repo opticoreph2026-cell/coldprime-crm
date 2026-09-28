@@ -107,6 +107,7 @@ async function main() {
     "New", "Contacted", "Documents Submitted", "Under Review", "Accredited",
     "Rejected", "Quotation Sent", "Negotiation", "Won", "Lost",
     "Technical Discussion", "Proposal Sent", "Confirmed", "Inactive",
+    "On Hold", "Nurture",
   ];
 
   const allStatuses = [

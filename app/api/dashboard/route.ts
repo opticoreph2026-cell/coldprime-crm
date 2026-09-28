@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
+import { addDaysISO, currentWeekRange, mondayOf, startOfDayPH, todayPH } from "@/lib/dates";
 
 export async function GET() {
   try {
     try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+    // Manila calendar boundaries (never mutate a shared Date - lib/dates helpers).
+    const today = todayPH();
+    const startOfToday = startOfDayPH(today);
+    const startOfTomorrow = startOfDayPH(addDaysISO(today, 1));
+    const startOfMonth = startOfDayPH(`${today.slice(0, 7)}-01`);
+    const weekStart = startOfDayPH(currentWeekRange().from);
+    const nextWeekStart = startOfDayPH(addDaysISO(mondayOf(today), 7));
 
     const [
       totalCompanies,
@@ -23,7 +27,9 @@ export async function GET() {
       overdueFollowUps,
       followUpsDueToday,
       activitiesThisMonth,
+      activitiesThisWeek,
       newLeadsThisMonth,
+      newLeadsThisWeek,
       projectsByStatus,
       pipelineByStatus,
       accreditationsPending,
@@ -36,7 +42,7 @@ export async function GET() {
       prisma.contact.count({ where: branchFilter }),
       prisma.lead.count({ where: branchFilter }),
       prisma.project.count({ where: branchFilter }),
-      prisma.lead.count({ where: { ...branchFilter, status: { notIn: ["Completed", "Cancelled", "Declined"] } } }),
+      prisma.lead.count({ where: { ...branchFilter, status: { notIn: ["Won", "Lost"] } } }),
       prisma.project.count({ where: { ...branchFilter, status: { notIn: ["Completed", "Cancelled"] } } }),
       prisma.activity.count({
         where: {
@@ -59,8 +65,14 @@ export async function GET() {
       prisma.activity.count({
         where: { ...branchFilter, date: { gte: startOfMonth } },
       }),
+      prisma.activity.count({
+        where: { ...branchFilter, date: { gte: weekStart, lt: nextWeekStart } },
+      }),
       prisma.lead.count({
         where: { ...branchFilter, dateAdded: { gte: startOfMonth } },
+      }),
+      prisma.lead.count({
+        where: { ...branchFilter, dateAdded: { gte: weekStart, lt: nextWeekStart } },
       }),
       prisma.project.groupBy({
         by: ["status"],
@@ -70,7 +82,7 @@ export async function GET() {
       }),
       prisma.lead.groupBy({
         by: ["status"],
-        where: { ...branchFilter, status: { notIn: ["Completed", "Cancelled", "Declined"] } },
+        where: { ...branchFilter, status: { notIn: ["Won", "Lost"] } },
         _count: true,
         _sum: { estimatedValue: true },
       }),
@@ -106,7 +118,9 @@ export async function GET() {
       overdueFollowUps,
       followUpsDueToday,
       activitiesThisMonth,
+      activitiesThisWeek,
       newLeadsThisMonth,
+      newLeadsThisWeek,
       accreditationsPending,
       totalActivities,
       totalVendors,

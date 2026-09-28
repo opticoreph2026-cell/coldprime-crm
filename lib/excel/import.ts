@@ -66,6 +66,28 @@ function normalizeStatus(value: unknown): string {
   return str;
 }
 
+// Read a data row's actual cell values, keyed by the sheet's header row
+// (falls back to the column letter when a header cell is empty). This is what
+// populates ImportRow.rawData so the preview can show real headers.
+function readRawRow(
+  sheet: XLSX.WorkSheet,
+  rowIdx: number,
+  headerRowIdx: number
+): Record<string, unknown> {
+  const raw: Record<string, unknown> = {};
+  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = sheet[XLSX.utils.encode_cell({ c, r: rowIdx })];
+    if (!cell || cell.v === undefined || cell.v === "") continue;
+    const colLetter = XLSX.utils.encode_col(c);
+    const headerCell = sheet[XLSX.utils.encode_cell({ c, r: headerRowIdx })];
+    let key = String(headerCell?.v ?? "").trim() || colLetter;
+    if (key in raw) key = `${key} (${colLetter})`;
+    raw[key] = cell.v;
+  }
+  return raw;
+}
+
 // Map the Customer sheet (master company list)
 function mapCustomerSheet(
   sheet: XLSX.WorkSheet,
@@ -75,7 +97,7 @@ function mapCustomerSheet(
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Customer sheet: Row 3 has headers
-  // A=Date, B=Customer, C=Industry, D=Email, E=Contact Number,
+  const headerRow = range.s.r + 2;  // A=Date, B=Customer, C=Industry, D=Email, E=Contact Number,
   // F=Address, G=Website, H=Contact Person, I=Position, J=Number,
   // K=Status, L=Date, M=Remarks
   for (let r = range.s.r + 3; r <= range.e.r; r++) {
@@ -103,7 +125,7 @@ function mapCustomerSheet(
       remarks: String(get("M") || "").trim() || undefined,
       date: parseDate(get("A")),
       secondDate: parseDate(get("L")),
-      rawData: {},
+      rawData: readRawRow(sheet, r, headerRow),
     });
   }
   return rows;
@@ -118,6 +140,7 @@ function mapXedesSheet(
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Xedes: Row 1 has headers
+  const headerRow = range.s.r;
   // A=Date, B=Customer, C=Industry, D=Email, E=Contact No.,
   // F=Address, G=Contact Person, H=Position, I=Remarks
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
@@ -143,7 +166,7 @@ function mapXedesSheet(
       remarks: undefined,
       date: parseDate(get("A")),
       secondDate: undefined,
-      rawData: {},
+      rawData: readRawRow(sheet, r, headerRow),
     });
   }
   return rows;
@@ -158,6 +181,7 @@ function mapRaizaSheet(
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Raiza: Row 1 has headers
+  const headerRow = range.s.r;
   // A=Company, B=Email, C=Number, D=Status, E=Remarks, F=Date
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
     const get = (col: string) => {
@@ -178,7 +202,7 @@ function mapRaizaSheet(
       remarks: String(get("E") || "").trim() || undefined,
       date: parseDate(get("F")),
       secondDate: undefined,
-      rawData: {},
+      rawData: readRawRow(sheet, r, headerRow),
     });
   }
   return rows;
@@ -193,6 +217,7 @@ function mapEllaineSheet(
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Ellaine & Nhecel: Row 2 has headers (Row 1 is "CONTACT INFO" header)
+  const headerRow = range.s.r + 1;
   // A=Date, B=Company Name/Brands, C=Business Type, D=Email,
   // E=Contact Number, F=Address, G=Website, H=Status, I=Remarks
   for (let r = range.s.r + 2; r <= range.e.r; r++) {
@@ -217,7 +242,7 @@ function mapEllaineSheet(
       remarks: String(get("I") || "").trim() || undefined,
       date: parseDate(get("A")),
       secondDate: undefined,
-      rawData: {},
+      rawData: readRawRow(sheet, r, headerRow),
     });
   }
   return rows;
@@ -232,6 +257,7 @@ function mapSheet6(
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Sheet6: A=Business, B=Industry, C=Contact Number
+  const headerRow = range.s.r;
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
     const get = (col: string) => {
       const cell = sheet[`${col}${r + 1}`];
@@ -247,7 +273,7 @@ function mapSheet6(
       company: String(company).trim(),
       industry: String(get("B") || "").trim() || undefined,
       mobile1: normalizePhone(get("C")),
-      rawData: {},
+      rawData: readRawRow(sheet, r, headerRow),
     });
   }
   return rows;
@@ -280,20 +306,9 @@ export function parseExcelFile(buffer: Buffer, filename: string): ImportPreview 
     const duplicates: number[] = [];
     const errors: { row: number; reason: string }[] = [];
 
+    const headerSet = new Set<string>();
     for (const row of rows) {
-      row.rawData = {
-        company: row.company || "",
-        industry: row.industry || "",
-        email: row.email || "",
-        mobile1: row.mobile1 || "",
-        landline1: row.landline1 || "",
-        address: row.address || "",
-        website: row.website || "",
-        contactPerson: row.contactPerson || "",
-        position: row.position || "",
-        status: row.status || "",
-        remarks: row.remarks || "",
-      };
+      for (const key of Object.keys(row.rawData)) headerSet.add(key);
 
       const normalized = row.company?.toLowerCase().trim();
       if (normalized && globalSeenCompanies.has(normalized)) {
@@ -311,7 +326,7 @@ export function parseExcelFile(buffer: Buffer, filename: string): ImportPreview 
 
     sheets.push({
       name: sheetName,
-      headers: Object.keys(rows[0]?.rawData || {}),
+      headers: Array.from(headerSet),
       totalRows: rows.length,
       rows,
       duplicates,

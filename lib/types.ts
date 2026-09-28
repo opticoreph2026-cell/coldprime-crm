@@ -285,7 +285,9 @@ export interface DashboardStats {
   overdueFollowUps: number;
   followUpsDueToday: number;
   activitiesThisMonth: number;
+  activitiesThisWeek: number;
   newLeadsThisMonth: number;
+  newLeadsThisWeek: number;
   accreditationsPending: number;
   totalActivities: number;
   totalVendors: number;
@@ -313,6 +315,7 @@ export interface ImportPreview {
   errorRows: number;
   sheets: {
     name: string;
+    headers: string[];
     totalRows: number;
     duplicates: number[];
     errors: { row: number; reason: string }[];

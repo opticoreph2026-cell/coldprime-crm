@@ -51,6 +51,11 @@ export async function POST(request: Request) {
       select: { id: true, name: true },
     });
     const byName = new Map(vendors.map((v) => [v.name.toLowerCase().trim(), v.id]));
+    const vendorIds = new Set(vendors.map((v) => v.id));
+    // Cross-branch guard: an explicit vendorId must belong to the caller's branch.
+    if (vendorId && !vendorIds.has(vendorId)) {
+      return NextResponse.json({ error: "Vendor not found in your branch" }, { status: 400 });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const parsed = await parsePriceList(buffer, file.name);

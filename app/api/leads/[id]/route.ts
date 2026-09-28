@@ -54,6 +54,19 @@ export async function PUT(
     if (body.status !== undefined && !(await isValidStatus(existing.branchId, "lead", body.status))) {
       return NextResponse.json({ error: `Invalid status: ${body.status}` }, { status: 400 });
     }
+    // Cross-branch guard: company/contact updates must stay in the lead's branch.
+    if (body.companyId) {
+      const company = await prisma.company.findFirst({ where: { id: body.companyId }, select: { branchId: true } });
+      if (!company || company.branchId !== existing.branchId) {
+        return NextResponse.json({ error: "Company not found in your branch" }, { status: 400 });
+      }
+    }
+    if (body.contactId) {
+      const contact = await prisma.contact.findFirst({ where: { id: body.contactId }, select: { branchId: true } });
+      if (!contact || contact.branchId !== existing.branchId) {
+        return NextResponse.json({ error: "Contact not found in your branch" }, { status: 400 });
+      }
+    }
 
     const statusChanged = body.status !== undefined && body.status !== existing.status;
 
@@ -63,6 +76,8 @@ export async function PUT(
         ...(body.type !== undefined && { type: body.type as LeadType }),
         ...(body.status !== undefined && { status: body.status }),
         ...(body.priority !== undefined && { priority: body.priority }),
+        ...(body.companyId !== undefined && { companyId: body.companyId || null }),
+        ...(body.contactId !== undefined && { contactId: body.contactId || null }),
         ...(body.lastContactDate !== undefined && { lastContactDate: body.lastContactDate ? new Date(body.lastContactDate) : null }),
         ...(body.nextFollowUp !== undefined && { nextFollowUp: body.nextFollowUp ? new Date(body.nextFollowUp) : null }),
         ...(body.notes !== undefined && { notes: body.notes?.trim() || null }),

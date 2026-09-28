@@ -38,6 +38,7 @@ export default function CompaniesPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [accrFilter, setAccrFilter] = useState("");
   const [outreachFilter, setOutreachFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -92,6 +93,7 @@ export default function CompaniesPage() {
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
       if (typeFilter) params.set("type", typeFilter);
+      if (accrFilter) params.set("accreditation", accrFilter);
       if (outreachFilter) params.set("outreach", outreachFilter);
       const res = await fetch(`/api/companies?${params}`);
       const data = await res.json();
@@ -108,7 +110,7 @@ export default function CompaniesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, statusFilter, outreachFilter, typeFilter]);
+  }, [page, debouncedSearch, statusFilter, outreachFilter, typeFilter, accrFilter]);
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
@@ -308,6 +310,11 @@ export default function CompaniesPage() {
           <option value="">All Types</option>
           {COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
         </select>
+        <select value={accrFilter} onChange={(e) => { setAccrFilter(e.target.value); setPage(1); }} title="Accreditation status">
+          <option value="">All Accreditation</option>
+          <option value="NOT_STARTED">Not started</option>
+          {Object.keys(ACCREDITATION_LABELS).map((k) => <option key={k} value={k}>{ACCREDITATION_LABELS[k]}</option>)}
+        </select>
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
           {statuses.map((s) => <option key={s}>{s}</option>)}
@@ -326,7 +333,7 @@ export default function CompaniesPage() {
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
           Unable to load companies. Check that a branch is selected and try again.
         </div>
-      ) : !loading && companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !outreachFilter ? (
+      ) : !loading && companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !accrFilter && !outreachFilter ? (
         <EmptyState message="No companies yet — use + Add Company to create the first one." />
       ) : (
         <table>

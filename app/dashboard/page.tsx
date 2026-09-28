@@ -99,6 +99,7 @@ export default function DashboardPage() {
     { label: "Follow-Ups Due Today", value: stats.followUpsDueToday, color: stats.followUpsDueToday > 0 ? "#c2410c" : "#15803d", sub: stats.overdueFollowUps > 0 ? `${stats.overdueFollowUps} overdue` : "on track", subColor: stats.overdueFollowUps > 0 ? "#dc2626" : undefined },
     { label: "Accreditations Pending", value: stats.accreditationsPending, color: "#7c3aed", sub: "docs submitted / under review" },
     { label: "Upcoming Follow-Ups", value: stats.upcomingFollowUps, color: "#0f766e", sub: "next 7 days" },
+    { label: "This Week", value: stats.activitiesThisWeek, color: "#0e7490", sub: `${stats.newLeadsThisWeek} new leads since Monday` },
     { label: "Total Companies", value: stats.totalCompanies, color: "#334155" },
     { label: "Total Contacts", value: stats.totalContacts, color: "#334155" },
     { label: "Active Leads", value: stats.activeLeads, color: "#334155" },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/branch";
+import { getBranchFilter, requireRole } from "@/lib/branch";
 import bcrypt from "bcryptjs";
 import { parseOr400, readJson } from "@/lib/validations";
 import { userCreateSchema } from "@/lib/validations/user";
@@ -18,7 +18,11 @@ export async function GET() {
       throw error;
     }
 
-    const where: { branchId?: string | null } = {};
+    // Consistent with getBranchFilter(): a HEAD_ADMIN with an active branch
+    // selected sees only that branch (all branches when none is selected);
+    // a BRANCH_ADMIN is always pinned to their own branch.
+    const branchFilter = await getBranchFilter();
+    const where: { branchId?: string | null } = { ...branchFilter };
     if (session.user.role === "BRANCH_ADMIN") {
       where.branchId = session.user.branchId;
     }
