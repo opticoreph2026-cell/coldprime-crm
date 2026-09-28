@@ -18,6 +18,8 @@ function ComposeContent() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [senderStatus, setSenderStatus] = useState<{ freeMailWarning: string | null; sentToday: number; dailyCap: number; remaining: number } | null>(null);
   const [paramsApplied, setParamsApplied] = useState(false);
 
   useEffect(() => {
@@ -25,6 +27,10 @@ function ComposeContent() {
       .then((r) => r.json())
       .then((res) => setTemplates(res.data || []))
       .catch(console.error);
+    fetch("/api/emails/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res) => { if (res && !res.error) setSenderStatus(res); })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -70,6 +76,7 @@ function ComposeContent() {
       });
       const data = await res.json();
       if (res.ok) {
+        setWarnings(data.warnings || []);
         setSent(true);
         setToEmail("");
         setToName("");
@@ -90,9 +97,17 @@ function ComposeContent() {
 
   if (sent) {
     return (
-      <div style={{ padding: 40, textAlign: "center", color: "#22c55e" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-        <h2 style={{ fontSize: 24, fontWeight: 700 }}>Email Sent Successfully!</h2>
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16, color: "#22c55e" }}>✅</div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a" }}>Email Sent Successfully!</h2>
+        {warnings.length > 0 && (
+          <div style={{ maxWidth: 640, margin: "16px auto 0", background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", padding: 12, borderRadius: 8, textAlign: "left", fontSize: 13 }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Sent, but {warnings.length} deliverability warning{warnings.length > 1 ? "s" : ""}:</div>
+            <ul style={{ margin: "0 0 0 18px", lineHeight: 1.6 }}>
+              {warnings.map((w, i) => (<li key={i}>{w}</li>))}
+            </ul>
+          </div>
+        )}
         <button
           onClick={() => router.push("/emails")}
           style={{
@@ -122,6 +137,18 @@ function ComposeContent() {
       {error && (
         <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16 }}>
           {error}
+        </div>
+      )}
+
+      {senderStatus?.freeMailWarning && (
+        <div style={{ background: "#fffbeb", color: "#92400e", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fde68a", fontSize: 13 }}>
+          ⚠️ {senderStatus.freeMailWarning}
+        </div>
+      )}
+
+      {senderStatus && (
+        <div style={{ background: "#f8fafc", color: "#475569", padding: "8px 12px", borderRadius: 8, marginBottom: 16, fontSize: 12, border: "1px solid #e2e8f0" }}>
+          Daily send limit: {senderStatus.sentToday}/{senderStatus.dailyCap} sent today &bull; {senderStatus.remaining} remaining
         </div>
       )}
 

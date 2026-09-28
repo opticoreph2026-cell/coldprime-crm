@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { sendEmail, logEmail } from "@/lib/email";
+import { dailyEmailCap, ensureOptOutLine, findUnknownTags } from "@/lib/email/guard";
+import { addDaysISO, startOfDayPH, todayPH } from "@/lib/dates";
 import { logAudit } from "@/lib/audit";
 
 export const maxDuration = 30;
@@ -34,6 +36,14 @@ export async function POST(request: Request) {
     if (!subject.trim() || !bodyContent.trim()) {
       return NextResponse.json({ error: "Subject and body are required" }, { status: 400 });
     }
+    // Unknown merge tags must block sending (bulk sends only fill {{companyName}}).
+    const unknownTags = findUnknownTags(subject, bodyContent);
+    if (unknownTags.length > 0) {
+      return NextResponse.json(
+        { error: `Unknown merge tag${unknownTags.length > 1 ? "s" : ""}: ${unknownTags.map((t) => `{{${t}}}`).join(", ")}` },
+        { status: 400 }
+      );
+    }
     if (companyIds.length === 0) {
       return NextResponse.json({ error: "No companies selected" }, { status: 400 });
     }
@@ -49,7 +59,6 @@ export async function POST(request: Request) {
 
     let targets = companies;
     let skipped = 0;
-
     if (skipAlreadySent) {
       const already = await prisma.emailLog.findMany({
         where: {
@@ -66,12 +75,55 @@ export async function POST(request: Request) {
       skipped = before - targets.length;
     }
 
-    const batch = targets.slice(0, MAX_PER_REQUEST);
+    // Rule 1: never email an opted-out contact (matched by recipient address).
+    const optedOut = await prisma.contact.findMany({
+      where: { ...branchFilter, emailOptOut: true, email: { in: companies.map((c) => c.email!) } },
+      select: { email: true },
+    });
+    const optOutSet = new Set(optedOut.map((c) => (c.email || "").toLowerCase()));
+    if (optOutSet.size > 0) {
+      const before = targets.length;
+      targets = targets.filter((c) => c.email && !optOutSet.has(c.email.toLowerCase()));
+      skipped += before - targets.length;
+    }
+
+    // Rule 5: no second email to the same address within 7 days.
+    const sevenDaysAgo = startOfDayPH(addDaysISO(todayPH(), -7));
+    const recentLogs = await prisma.emailLog.findMany({
+      where: { status: "SENT", sentAt: { gte: sevenDaysAgo }, toEmail: { in: targets.map((c) => c.email!) } },
+      select: { toEmail: true },
+    });
+    const recentSet = new Set(recentLogs.map((l) => l.toEmail.toLowerCase()));
+    if (recentSet.size > 0) {
+      const before = targets.length;
+      targets = targets.filter((c) => c.email && !recentSet.has(c.email.toLowerCase()));
+      skipped += before - targets.length;
+    }
+
+    if (targets.length === 0) {
+      return NextResponse.json(
+        { error: `All selected recipients were skipped (${skipped} opted out or emailed within 7 days)` },
+        { status: 400 }
+      );
+    }
+
+    // Rule 4: daily cap per user — never start a batch that would exceed it.
+    const todayStart = startOfDayPH(todayPH());
+    const sentToday = await prisma.emailLog.count({
+      where: { fromUserId: session.user.id!, status: "SENT", sentAt: { gte: todayStart } },
+    });
+    const cap = dailyEmailCap();
+    const remaining = cap - sentToday;
+    if (remaining <= 0) {
+      return NextResponse.json({ error: `Daily send limit reached (${cap} emails today). Try again tomorrow.` }, { status: 403 });
+    }
+
+    const batch = targets.slice(0, Math.min(MAX_PER_REQUEST, remaining));
     let sent = 0;
     let failed = 0;
 
     for (const company of batch) {
-      const personalized = personalize(bodyContent, company.name);
+      const personalized = ensureOptOutLine(personalize(bodyContent, company.name));
       try {
         const result = await sendEmail({
           to: company.email!,

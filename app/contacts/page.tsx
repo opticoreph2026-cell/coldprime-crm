@@ -69,6 +69,26 @@ export default function ContactsPage() {
     fetchContacts();
   };
 
+  const handleOptOut = async (c: Contact) => {
+    if (!c.email) return;
+    setError("");
+    try {
+      const res = await fetch("/api/emails/opt-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: c.email, undo: c.emailOptOut || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to update opt-out");
+        return;
+      }
+      fetchContacts();
+    } catch {
+      setError("Failed to update opt-out");
+    }
+  };
+
   return (
     <div className="page">
       <PageHeader
@@ -130,11 +150,27 @@ export default function ContactsPage() {
                 <td style={{ fontWeight: 500 }}>{c.firstName} {c.lastName || ""}</td>
                 <td>{c.company.name}</td>
                 <td>{c.position || "-"}</td>
-                <td>{c.email || "-"}</td>
+                <td>
+                  {c.email || "-"}
+                  {c.emailOptOut && (
+                    <span title={`Opted out ${c.emailOptOutAt ? new Date(c.emailOptOutAt).toLocaleString() : ""}`} style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca", padding: "1px 6px", borderRadius: 999, whiteSpace: "nowrap" }}>
+                      OPTED OUT
+                    </span>
+                  )}
+                </td>
                 <td style={{ whiteSpace: "nowrap" }}>{c.mobile || "-"}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{c.landline || "-"}</td>
                 <td>
                   <button className="btn btn-ghost" onClick={() => handleEdit(c)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => handleOptOut(c)}
+                    disabled={!c.email}
+                    title={c.email ? (c.emailOptOut ? "Undo opt-out (admins only)" : `Mark ${c.email} as opted out`) : "No email address"}
+                    style={{ padding: "0.25rem 0.5rem", color: c.emailOptOut ? "#166534" : "#c2410c" }}
+                  >
+                    {c.emailOptOut ? "Undo opt-out" : "Opt out"}
+                  </button>
                   <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: c.id, name: `${c.firstName} ${c.lastName || ""}`.trim() })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
                 </td>
               </tr>

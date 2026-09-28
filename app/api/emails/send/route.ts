@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { sendEmail, fillTemplate, logEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit";
+import { ensureOptOutLine, evaluateEmailGuard } from "@/lib/email/guard";
+import { startOfDayPH, addDaysISO, todayPH } from "@/lib/dates";
 
 export async function POST(request: Request) {
   let toEmail = "";
@@ -65,6 +67,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email body is required" }, { status: 400 });
     }
 
+    // --- Anti-spam guardrails (lib/email/guard.ts, Phase 3) ----------------
+    const contact = await prisma.contact.findFirst({
+      where: { ...branchFilter, email: { equals: toEmail, mode: "insensitive" } },
+      select: { id: true, firstName: true, emailOptOut: true },
+    });
+    const sevenDaysAgo = startOfDayPH(addDaysISO(todayPH(), -7));
+    const todayStart = startOfDayPH(todayPH());
+    const toEmailMatch = { equals: toEmail, mode: "insensitive" as const };
+    const [sentLast7Days, sentAllTime, sentToday] = await Promise.all([
+      prisma.emailLog.count({ where: { toEmail: toEmailMatch, status: "SENT", sentAt: { gte: sevenDaysAgo } } }),
+      prisma.emailLog.count({ where: { toEmail: toEmailMatch, status: "SENT" } }),
+      prisma.emailLog.count({ where: { fromUserId: session.user.id!, status: "SENT", sentAt: { gte: todayStart } } }),
+    ]);
+
+    const rawTemplate = templateId
+      ? await prisma.emailTemplate.findFirst({ where: { id: templateId, isActive: true }, select: { subject: true, body: true } })
+      : null;
+
+    const guard = evaluateEmailGuard({
+      toEmail,
+      toName,
+      subject: finalSubject,
+      rawSubject: rawTemplate?.subject,
+      rawBody: rawTemplate ? (bodyContent || rawTemplate.body) : bodyContent,
+      body: finalBody,
+      fromEmail: process.env.GMAIL_USER,
+      contactOptOut: contact?.emailOptOut || false,
+      extraRecipients: cc ? 1 : 0,
+      sentLast7Days,
+      sentAllTime,
+      sentToday,
+    });
+    if (guard.blocked) {
+      return NextResponse.json({ error: guard.blocked }, { status: 403 });
+    }
+
+    // Rule 2: plain opt-out line rides along with every send.
+    finalBody = ensureOptOutLine(finalBody);
+
     const result = await sendEmail({
       to: toEmail,
       toName: toName || undefined,
@@ -110,7 +151,41 @@ export async function POST(request: Request) {
       console.error("Failed to update outreach status:", updErr);
     }
 
-    return NextResponse.json({ success: true, message: "Email sent", data: result });
+    // Rule 5b: two follow-ups reached -> park the lead on Nurture.
+    if (guard.nurture && contact) {
+      try {
+        const nurtureLeads = await prisma.lead.findMany({
+          where: {
+            status: { notIn: ["Won", "Lost", "Nurture"] },
+            OR: [
+              { contactId: contact.id },
+              { company: { email: { equals: toEmail, mode: "insensitive" } } },
+            ],
+          },
+          select: { id: true, status: true, branchId: true },
+        });
+        for (const lead of nurtureLeads) {
+          await prisma.lead.update({ where: { id: lead.id }, data: { status: "Nurture" } });
+          await logAudit({
+            userId: session.user.id,
+            branchId: lead.branchId,
+            action: "STATUS_CHANGE",
+            entity: "lead",
+            entityId: lead.id,
+            details: { from: lead.status, to: "Nurture", label: `auto after 2 follow-ups to ${toEmail}` },
+          });
+        }
+      } catch (nurtureErr) {
+        console.error("Nurture update failed:", nurtureErr);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Email sent",
+      data: result,
+      warnings: guard.warnings,
+    });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to send email";
     console.error("Error sending email:", error);

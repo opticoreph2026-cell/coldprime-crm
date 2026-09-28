@@ -247,6 +247,20 @@ async function main() {
     }
   }
 
+  // Seed the approved email template library (master instructions Phase 3)
+  const { APPROVED_TEMPLATES: approvedTemplates } = await import("../lib/email/templates");
+
+  for (const branch of [cebuBranch, manilaBranch]) {
+    for (const t of approvedTemplates) {
+      await prisma.emailTemplate.upsert({
+        where: { branchId_name: { branchId: branch.id, name: t.name } },
+        update: {},
+        create: { branchId: branch.id, name: t.name, subject: t.subject, body: t.body, category: t.category },
+      });
+    }
+  }
+  console.log(`Email templates seeded: ${approvedTemplates.length} per branch`);
+
   console.log(`Seeded companies and contacts for both branches`);
   console.log("Seeding complete!");
 }

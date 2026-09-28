@@ -4,7 +4,6 @@
    - staff: unitPrice stripped from responses, cost writes/import -> 403
    Usage: npx tsx scripts/test-live-products.ts [baseUrl] */
 import "dotenv/config";
-import fs from "node:fs";
 
 const BASE = process.argv[2] || "https://coldprime-crm.vercel.app";
 

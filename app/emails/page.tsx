@@ -27,6 +27,14 @@ Sales Engineer, Coldprime Enterprises Corporation
 
 const BATCH_SIZE = 10;
 
+interface EmailStatus {
+  senderEmail: string | null;
+  freeMailWarning: string | null;
+  dailyCap: number;
+  sentToday: number;
+  remaining: number;
+}
+
 export default function EmailsPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -75,6 +83,10 @@ export default function EmailsPage() {
   const [editBody, setEditBody] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [delLog, setDelLog] = useState<EmailLog | null>(null);
+  const [deletingLog, setDeletingLog] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -101,9 +113,11 @@ export default function EmailsPage() {
       fetch("/api/emails/templates").then((r) => r.json()),
       fetch("/api/emails").then((r) => r.json()),
       fetch("/api/emails/logs").then((r) => r.json()),
+      fetch("/api/emails/status").then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ])
-      .then(([tplRes, recRes, logRes]) => {
+      .then(([tplRes, recRes, logRes, statusRes]) => {
         setTemplates(tplRes.data || []);
+        if (statusRes && !statusRes.error) setEmailStatus(statusRes);
         const recData = recRes.contacts || [];
         const compData = recRes.companies || [];
         const allRecipients: Recipient[] = [
@@ -208,6 +222,65 @@ export default function EmailsPage() {
       else setViewLog({ key: log.id, loading: false, data: null, error: data.error || "Failed to load message" });
     } catch {
       setViewLog({ key: log.id, loading: false, data: null, error: "Failed to load message" });
+    }
+  };
+
+  const loadLogs = async (deleted: boolean) => {
+    try {
+      const res = await fetch(`/api/emails/logs${deleted ? "?deleted=true" : ""}`);
+      const data = await res.json();
+      if (res.ok) setLogs(data.data || []);
+      else setError(data.error || "Failed to load sent history");
+    } catch {
+      setError("Failed to load sent history");
+    }
+  };
+
+  const toggleShowDeleted = () => {
+    const next = !showDeleted;
+    setShowDeleted(next);
+    loadLogs(next);
+  };
+
+  const handleOptOut = async (log: EmailLog) => {
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch("/api/emails/opt-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: log.toEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) setNotice(`Marked ${log.toEmail} as opted out. No further emails will be sent to this address.`);
+      else setError(data.error || "Failed to mark as opted out");
+    } catch {
+      setError("Failed to mark as opted out");
+    }
+  };
+
+  const handleDeleteLog = async () => {
+    if (!delLog) return;
+    setDeletingLog(true);
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch(
+        `/api/emails/${encodeURIComponent(delLog.id)}${showDeleted ? "?purge=true" : ""}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setNotice(showDeleted ? `Purged "${delLog.subject}".` : `Deleted "${delLog.subject}" from Sent History (kept for audit).`);
+        setDelLog(null);
+        await loadLogs(showDeleted);
+      } else {
+        setError(data.error || "Failed to delete email");
+      }
+    } catch {
+      setError("Failed to delete email");
+    } finally {
+      setDeletingLog(false);
     }
   };
 
@@ -512,6 +585,25 @@ export default function EmailsPage() {
           {notice}
         </div>
       )}
+
+      {emailStatus?.freeMailWarning && (
+        <div style={{ background: "#fffbeb", color: "#92400e", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fde68a", fontSize: 13 }}>
+          ⚠️ {emailStatus.freeMailWarning}
+        </div>
+      )}
+
+      <details style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13 }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+          📋 Sending setup checklist (owner action)
+          {emailStatus ? ` — today: ${emailStatus.sentToday}/${emailStatus.dailyCap} sent, ${emailStatus.remaining} remaining` : ""}
+        </summary>
+        <ul style={{ margin: "8px 0 0 18px", color: "#475569", lineHeight: 1.7 }}>
+          <li>Send from an address on the company&apos;s own domain (confirm: <code>coldprimecorporation.com</code> for email vs <code>coldprimecorp.com</code> for the website).</li>
+          <li>Configure SPF, DKIM and DMARC records for that domain before sending volume.</li>
+          <li>Warm the address up gradually — the daily cap per user is enforced in code (default 30, set <code>EMAIL_DAILY_CAP</code> to change).</li>
+          <li>The company profile PDF (~44 MB) exceeds Gmail&apos;s 25 MB limit — compress it or share it as a link.</li>
+        </ul>
+      </details>
 
       <div className="page-scroll">
       {activeTab === "bulk" && (
@@ -1093,9 +1185,18 @@ export default function EmailsPage() {
 
       {activeTab === "sent" && (
         <div>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Sent Emails ({logs.length})</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600 }}>
+              {showDeleted ? "Deleted Emails" : "Sent Emails"} ({logs.length})
+            </h2>
+            <button onClick={toggleShowDeleted} style={btnStyle(showDeleted ? "#1e40af" : "#f1f5f9", showDeleted ? "#fff" : "#1e40af", "#e2e8f0")}>
+              {showDeleted ? "↩ Back to sent history" : "🗑 Deleted emails"}
+            </button>
+          </div>
           {logs.length === 0 ? (
-            <p style={{ color: "#94a3b8", fontSize: 14 }}>No emails sent yet. Compose one to get started.</p>
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>
+              {showDeleted ? "No deleted emails." : "No emails sent yet. Compose one to get started."}
+            </p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {logs.map((log) => (
@@ -1128,11 +1229,19 @@ export default function EmailsPage() {
                       >
                         {log.status}
                       </span>
-                      {log.status === "SENT" && (
+                      {log.status === "SENT" && !showDeleted && (
                         <button onClick={() => viewSentLog(log)} style={btnStyle("#f1f5f9", "#1e40af", "#e2e8f0")}>
                           {viewLog?.key === log.id && viewLog.loading ? "Loading…" : viewLog?.key === log.id && viewLog.data ? "Hide" : "👁 View"}
                         </button>
                       )}
+                      {!showDeleted && (
+                        <button onClick={() => handleOptOut(log)} title={`Mark ${log.toEmail} as opted out`} style={btnStyle("#fff7ed", "#c2410c", "#fed7aa")}>
+                          🚫 Opt out
+                        </button>
+                      )}
+                      <button onClick={() => setDelLog(log)} style={btnStyle("#fef2f2", "#dc2626", "#fecaca")}>
+                        {showDeleted ? "🔥 Purge" : "🗑 Delete"}
+                      </button>
                     </div>
                   </div>
                   {log.errorCode && (
@@ -1187,6 +1296,21 @@ export default function EmailsPage() {
         message={`Delete template "${tplDelete?.name}"? This cannot be undone.`}
         onCancel={() => setTplDelete(null)}
         onConfirm={handleDeleteTemplate}
+      />
+
+      <ConfirmDialog
+        open={delLog !== null}
+        title={showDeleted ? "Purge email permanently" : "Delete email"}
+        message={
+          showDeleted
+            ? `Permanently purge "${delLog?.subject}"? The row is removed from the database entirely.`
+            : `Delete "${delLog?.subject}" from Sent History? It is hidden from the UI but kept for audit and opt-out history.`
+        }
+        confirmLabel={showDeleted ? "Purge" : "Delete"}
+        danger
+        busy={deletingLog}
+        onCancel={() => setDelLog(null)}
+        onConfirm={handleDeleteLog}
       />
     </div>
   );

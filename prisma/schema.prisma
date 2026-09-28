@@ -149,6 +149,8 @@ model Contact {
   mobile            String?
   landline          String?
   contactPreference String?
+  emailOptOut       Boolean    @default(false) @map("email_opt_out")
+  emailOptOutAt     DateTime?  @map("email_opt_out_at")
   status            String     @default("Active")
   notes             String?
   createdAt         DateTime   @default(now()) @map("created_at")
@@ -370,6 +372,7 @@ model EmailLog {
   subject    String
   status     EmailStatus    @default(PENDING)
   sentAt     DateTime       @default(now()) @map("sent_at")
+  deletedAt  DateTime?      @map("deleted_at")
   errorCode  String?        @map("error_code")
   metadata   Json?
   createdAt  DateTime       @default(now()) @map("created_at")

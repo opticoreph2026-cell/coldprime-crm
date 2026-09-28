@@ -117,6 +117,8 @@ export interface Contact {
   landline: string | null;
   notes: string | null;
   status: string;
+  emailOptOut?: boolean;
+  emailOptOutAt?: string | null;
   company: EntityRef;
 }
 

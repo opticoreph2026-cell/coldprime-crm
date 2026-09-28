@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { emailTemplateUpdateSchema } from "@/lib/validations/email-template";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -56,14 +57,30 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session;
+    try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
     const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    await prisma.emailTemplate.updateMany({
+    const template = await prisma.emailTemplate.findFirst({
       where: { id, branchId: branchFilter.branchId },
-      data: { isActive: false },
+      select: { id: true, name: true, branchId: true },
+    });
+    if (!template) return NextResponse.json({ error: "Template not found" }, { status: 404 });
+
+    // Real hard delete (master instructions Phase 3). Sent-log rows keep
+    // their history but lose the template reference instead of blocking the
+    // delete (or orphaning), so unlink them first.
+    await prisma.emailLog.updateMany({ where: { templateId: id }, data: { templateId: null } });
+    await prisma.emailTemplate.delete({ where: { id } });
+    await logAudit({
+      userId: session.user.id,
+      branchId: template.branchId,
+      action: "DELETE",
+      entity: "template",
+      entityId: id,
+      details: { label: template.name },
     });
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
