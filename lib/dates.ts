@@ -163,3 +163,17 @@ export function formatPH(
 ): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: PH_TZ, ...opts }).format(date);
 }
+
+/** "expired" | "expiring" (within 14 days) | "ok" | "none" (no date set). */
+export type PriceValidity = "expired" | "expiring" | "ok" | "none";
+
+export function priceValidity(dateStr?: string | null, today = todayPH()): PriceValidity {
+  if (!dateStr) return "none";
+  const iso = dateStr.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "none";
+  const dayMs = 86_400_000;
+  const diff = Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / dayMs);
+  if (diff < 0) return "expired";
+  if (diff <= 14) return "expiring";
+  return "ok";
+}

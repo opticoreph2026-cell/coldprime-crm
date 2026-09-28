@@ -165,7 +165,24 @@ export interface VendorMaterial {
   unitPrice?: number;
   currency: string;
   priceValidUntil?: string;
+  leadTimeDays?: number | null;
   notes?: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  category?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  unit?: string | null;
+  sellPrice?: number | string | null;
+  currency: string;
+  isActive: boolean;
+  priceValidUntil?: string | null;
+  leadTimeDays?: number | null;
+  notes?: string | null;
+  createdAt?: string;
 }
 
 export interface Vendor {

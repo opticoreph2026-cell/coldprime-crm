@@ -4,6 +4,7 @@ import {
   currentWeekRange,
   endOfDayPH,
   mondayOf,
+  priceValidity,
   rangeDays,
   splitIntoWeeks,
   startOfDayPH,
@@ -98,5 +99,14 @@ describe("date helpers (Asia/Manila)", () => {
     expect(addDaysISO("2026-09-30", 1)).toBe("2026-10-01");
     expect(addDaysISO("2026-12-31", 1)).toBe("2027-01-01");
     expect(addDaysISO("2026-03-01", -1)).toBe("2026-02-28");
+  });
+
+  it("priceValidity flags expired and soon-expiring prices", () => {
+    expect(priceValidity("2026-01-15", "2026-09-28")).toBe("expired");
+    expect(priceValidity("2026-10-05", "2026-09-28")).toBe("expiring"); // 7 days
+    expect(priceValidity("2026-10-12", "2026-09-28")).toBe("expiring"); // exactly 14 days
+    expect(priceValidity("2026-10-13", "2026-09-28")).toBe("ok"); // 15 days
+    expect(priceValidity(null, "2026-09-28")).toBe("none");
+    expect(priceValidity("not-a-date")).toBe("none");
   });
 });

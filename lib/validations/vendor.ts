@@ -39,6 +39,7 @@ export const vendorMaterialCreateSchema = z.object({
   unitPrice: optNumber(),
   currency: z.string().max(10).optional(),
   priceValidUntil: optDate(),
+  leadTimeDays: optNumber(),
   notes: optString(5000),
 });
 

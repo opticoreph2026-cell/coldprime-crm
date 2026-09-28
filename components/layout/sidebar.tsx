@@ -17,6 +17,7 @@ const navItems = [
   { href: "/reports", label: "Reports", icon: "📈" },
   { href: "/import-export", label: "Import / Export", icon: "📥" },
   { href: "/vendors", label: "Vendors", icon: "🔧" },
+  { href: "/products", label: "Products", icon: "📦" },
 ];
 
 const adminNavItems = [

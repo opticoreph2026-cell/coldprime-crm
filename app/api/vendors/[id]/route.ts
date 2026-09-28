@@ -5,6 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { parseOr400, readJson } from "@/lib/validations";
 import { vendorUpdateSchema } from "@/lib/validations/vendor";
 import { isForeignKeyError } from "@/lib/prisma-error";
+import { stripCost, viewerCanSeeCost } from "@/lib/cost";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(vendor);
+    return NextResponse.json((await viewerCanSeeCost()) ? vendor : stripCost(vendor));
   } catch (error) {
     console.error("Error fetching vendor:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

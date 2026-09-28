@@ -4,6 +4,8 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 import { parseOr400, readJson } from "@/lib/validations";
 import { vendorMaterialUpdateSchema } from "@/lib/validations/vendor";
+import { toLeadTimeDays } from "@/lib/validations/product";
+import { stripCost, viewerCanSeeCost } from "@/lib/cost";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,7 +15,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const parsed = parseOr400(vendorMaterialUpdateSchema, await readJson(request));
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
-    const { itemName, category, brand, model, unit, unitPrice, currency, priceValidUntil, notes } = body;
+    const { itemName, category, brand, model, unit, unitPrice, currency, priceValidUntil, leadTimeDays, notes } = body;
 
     const material = await prisma.vendorMaterial.findUnique({
       where: { id },
@@ -21,6 +23,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     });
     if (!material || material.vendor.branchId !== branchFilter.branchId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Cost prices are a restricted field (company policy, lib/cost.ts).
+    if (unitPrice && !(await viewerCanSeeCost())) {
+      return NextResponse.json({ error: "Cost prices are restricted" }, { status: 403 });
     }
 
     const updated = await prisma.vendorMaterial.update({
@@ -34,13 +41,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         unitPrice: unitPrice ? Number(unitPrice) : material.unitPrice,
         currency: currency || material.currency,
         priceValidUntil: priceValidUntil ? new Date(priceValidUntil) : material.priceValidUntil,
+        leadTimeDays: leadTimeDays !== undefined ? toLeadTimeDays(leadTimeDays) : material.leadTimeDays,
         notes: notes?.trim() || material.notes,
       },
     });
 
     await logAudit({ branchId: branchFilter.branchId, action: "UPDATE", entity: "vendor_material", entityId: material.id, details: { itemName } });
 
-    return NextResponse.json(updated);
+    return NextResponse.json((await viewerCanSeeCost()) ? updated : stripCost(updated));
   } catch (error) {
     console.error("Error updating vendor material:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

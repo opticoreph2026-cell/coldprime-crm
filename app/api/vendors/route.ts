@@ -5,6 +5,7 @@ import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { logAudit } from "@/lib/audit";
 import { parseOr400, readJson } from "@/lib/validations";
 import { vendorCreateSchema } from "@/lib/validations/vendor";
+import { stripCost, viewerCanSeeCost } from "@/lib/cost";
 
 export async function GET(request: Request) {
   try {
@@ -41,7 +42,10 @@ export async function GET(request: Request) {
       prisma.vendor.count({ where }),
     ]);
 
-    return NextResponse.json({ data: vendors, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+    return NextResponse.json({
+      data: (await viewerCanSeeCost()) ? vendors : stripCost(vendors),
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     console.error("Error fetching vendors:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

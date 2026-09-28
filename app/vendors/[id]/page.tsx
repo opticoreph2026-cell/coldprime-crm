@@ -1,21 +1,42 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import type { Vendor, VendorContact, VendorMaterial, Document } from "@/lib/types";
 import { DOCUMENT_CATEGORIES } from "@/lib/enums";
+import { priceValidity } from "@/lib/dates";
 import { PageHeader, ErrorBanner, EmptyState, Modal, ConfirmDialog, Badge } from "@/components/ui";
 
 type Tab = "contacts" | "materials" | "documents";
 type DeleteTarget = { kind: "contact" | "material" | "document"; id: string; name: string };
 
 const emptyContact = { firstName: "", lastName: "", position: "", email: "", mobile: "" };
-const emptyMaterial = { itemName: "", category: "", brand: "", model: "", unit: "", unitPrice: "", priceValidUntil: "" };
+const emptyMaterial = { itemName: "", category: "", brand: "", model: "", unit: "", unitPrice: "", priceValidUntil: "", leadTimeDays: "" };
 const emptyDoc = { category: "Product Data Sheet", fileName: "", fileUrl: "" };
+
+interface ImportPreview {
+  rows: Record<string, unknown>[];
+  duplicateRows: number[];
+  errors: { row: number; reason: string }[];
+  total: number;
+}
+
+function ValidityBadge({ value }: { value?: string | null }) {
+  const state = priceValidity(value);
+  if (state === "none") return <span style={{ color: "#94a3b8" }}>—</span>;
+  if (state === "expired") return <Badge color="red">Expired</Badge>;
+  if (state === "expiring") return <Badge color="yellow">Expiring</Badge>;
+  return <span style={{ whiteSpace: "nowrap" }}>{String(value).slice(0, 10)}</span>;
+}
 
 export default function VendorDetailPage() {
   const { id } = useParams();
+  const { data: session } = useSession();
+  // Client-side mirror of lib/cost.ts canViewVendorCost() (server enforces it).
+  const canSeeCost = session?.user?.role === "BRANCH_ADMIN" || session?.user?.role === "HEAD_ADMIN";
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [contacts, setContacts] = useState<VendorContact[]>([]);
   const [materials, setMaterials] = useState<VendorMaterial[]>([]);
@@ -32,6 +53,10 @@ export default function VendorDetailPage() {
   const [docModal, setDocModal] = useState(false);
   const [docForm, setDocForm] = useState(emptyDoc);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -85,7 +110,9 @@ export default function VendorDetailPage() {
     setMaterialForm(m
       ? {
           itemName: m.itemName, category: m.category || "", brand: m.brand || "", model: m.model || "",
-          unit: m.unit || "", unitPrice: String(m.unitPrice ?? ""), priceValidUntil: m.priceValidUntil ? String(m.priceValidUntil).slice(0, 10) : "",
+          unit: m.unit || "", unitPrice: m.unitPrice !== undefined && m.unitPrice !== null ? String(m.unitPrice) : "",
+          priceValidUntil: m.priceValidUntil ? String(m.priceValidUntil).slice(0, 10) : "",
+          leadTimeDays: m.leadTimeDays !== undefined && m.leadTimeDays !== null ? String(m.leadTimeDays) : "",
         }
       : emptyMaterial);
     setMaterialModal({ open: true, id: m?.id || null });
@@ -131,6 +158,37 @@ export default function VendorDetailPage() {
         load();
       }
     } finally { setBusy(false); }
+  };
+
+  const runImport = async (action: "preview" | "import") => {
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      toast.error("Choose a CSV or Excel file first");
+      return;
+    }
+    setImporting(true);
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      fd.set("action", action);
+      fd.set("vendorId", String(id));
+      const res = await fetch("/api/vendors/import", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Import failed (${res.status})`);
+      if (action === "preview") {
+        setPreview({ rows: data.rows || [], duplicateRows: data.duplicateRows || [], errors: data.errors || [], total: data.total || 0 });
+      } else {
+        toast.success(`Imported ${data.imported} items (${data.skipped} skipped as duplicates)`);
+        setPreview(null);
+        setImportOpen(false);
+        if (fileRef.current) fileRef.current.value = "";
+        load();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -215,7 +273,10 @@ export default function VendorDetailPage() {
 
       {activeTab === "materials" && (
         <div>
-          <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={() => openMaterial()}>+ Add Material</button>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            <button className="btn btn-primary" onClick={() => openMaterial()}>+ Add Material</button>
+            <button className="btn btn-secondary" onClick={() => { setPreview(null); setImportOpen(true); }}>Import Price List</button>
+          </div>
           {materials.length === 0 ? (
             <EmptyState message="No materials listed — use + Add Material to add the first item." />
           ) : (
@@ -223,8 +284,8 @@ export default function VendorDetailPage() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
                 <thead>
                   <tr style={{ background: "#f8fafc" }}>
-                    {["Item", "Category", "Brand", "Model", "Unit", "Unit Price", "Valid Until", ""].map((h, i) => (
-                      <th key={i} style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                    {["Item", "Category", "Brand", "Model", "Unit", ...(canSeeCost ? ["Unit Price"] : []), "Lead Time", "Valid Until", ""].map((h, i) => (
+                      <th key={i} style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -236,8 +297,13 @@ export default function VendorDetailPage() {
                       <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.brand || "-"}</td>
                       <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.model || "-"}</td>
                       <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.unit || "-"}</td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>{m.unitPrice} {m.currency}</td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.priceValidUntil ? new Date(m.priceValidUntil).toLocaleDateString() : "-"}</td>
+                      {canSeeCost && (
+                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>{m.unitPrice ?? "-"} {m.currency}</td>
+                      )}
+                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
+                        {m.leadTimeDays !== null && m.leadTimeDays !== undefined ? `${m.leadTimeDays} days` : "-"}
+                      </td>
+                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}><ValidityBadge value={m.priceValidUntil} /></td>
                       <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
                         <button className="btn btn-ghost" style={{ padding: "0.15rem 0.4rem" }} onClick={() => openMaterial(m)}>Edit</button>
                         <button className="btn btn-ghost" style={{ padding: "0.15rem 0.4rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ kind: "material", id: m.id, name: m.itemName })}>Delete</button>
@@ -293,7 +359,10 @@ export default function VendorDetailPage() {
           <div><label style={labelStyle}>Brand</label><input style={inputStyle} value={materialForm.brand} onChange={(e) => setMaterialForm({ ...materialForm, brand: e.target.value })} /></div>
           <div><label style={labelStyle}>Model</label><input style={inputStyle} value={materialForm.model} onChange={(e) => setMaterialForm({ ...materialForm, model: e.target.value })} /></div>
           <div><label style={labelStyle}>Unit</label><input style={inputStyle} value={materialForm.unit} onChange={(e) => setMaterialForm({ ...materialForm, unit: e.target.value })} placeholder="pcs, box, roll..." /></div>
-          <div><label style={labelStyle}>Unit Price</label><input type="number" step="0.01" min="0" style={inputStyle} value={materialForm.unitPrice} onChange={(e) => setMaterialForm({ ...materialForm, unitPrice: e.target.value })} /></div>
+          {canSeeCost && (
+            <div><label style={labelStyle}>Unit Price (cost)</label><input type="number" step="0.01" min="0" style={inputStyle} value={materialForm.unitPrice} onChange={(e) => setMaterialForm({ ...materialForm, unitPrice: e.target.value })} /></div>
+          )}
+          <div><label style={labelStyle}>Lead Time (days)</label><input type="number" min="0" style={inputStyle} value={materialForm.leadTimeDays} onChange={(e) => setMaterialForm({ ...materialForm, leadTimeDays: e.target.value })} /></div>
           <div><label style={labelStyle}>Price Valid Until</label><input type="date" style={inputStyle} value={materialForm.priceValidUntil} onChange={(e) => setMaterialForm({ ...materialForm, priceValidUntil: e.target.value })} /></div>
           <div style={{ gridColumn: "span 2", display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
             <button type="button" className="btn btn-secondary" onClick={() => setMaterialModal({ open: false, id: null })} disabled={busy}>Cancel</button>
@@ -317,6 +386,60 @@ export default function VendorDetailPage() {
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : "Add"}</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={importOpen} title="Import price list" onClose={() => { setImportOpen(false); setPreview(null); }} width={720}>
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ fontSize: "0.8125rem", color: "#64748b" }}>
+            Upload a CSV or Excel file with columns like Item Name, Category, Brand, Model, Unit, Unit Price,
+            Valid Until, Lead Time. Every row is added to this vendor. Duplicates on (vendor, brand, model) are skipped.
+          </div>
+          <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={() => setPreview(null)} />
+          {!preview ? (
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="btn btn-secondary" onClick={() => setImportOpen(false)} disabled={importing}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => runImport("preview")} disabled={importing}>
+                {importing ? "Reading…" : "Preview"}
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: "0.8125rem", fontWeight: 600 }}>
+                {preview.total} rows — {preview.duplicateRows.length} duplicate{preview.duplicateRows.length === 1 ? "" : "s"}, {preview.errors.length} invalid
+              </div>
+              <div style={{ maxHeight: 260, overflowY: "auto", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
+                  <tbody>
+                    {preview.rows.slice(0, 100).map((r, i) => (
+                      <tr key={i} style={{ background: preview.duplicateRows.includes(i) ? "#fef2f2" : undefined }}>
+                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", color: "#94a3b8", width: 36 }}>{i + 1}</td>
+                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{String(r.itemName || "")}</td>
+                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9" }}>{String(r.brand || "")} {String(r.model || "")}</td>
+                        {canSeeCost && (
+                          <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", textAlign: "right" }}>{r.price !== undefined && r.price !== null ? String(r.price) : ""}</td>
+                        )}
+                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9" }}>
+                          {preview.duplicateRows.includes(i) ? <Badge color="red">dup</Badge> : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {preview.errors.length > 0 && (
+                <div style={{ fontSize: "0.75rem", color: "#dc2626" }}>
+                  {preview.errors.slice(0, 5).map((e, i) => <div key={i}>Row {e.row}: {e.reason}</div>)}
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button className="btn btn-secondary" onClick={() => setPreview(null)} disabled={importing}>Back</button>
+                <button className="btn btn-primary" onClick={() => runImport("import")} disabled={importing || preview.rows.length === 0}>
+                  {importing ? "Importing…" : `Import ${preview.rows.length - preview.duplicateRows.length} items`}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </Modal>
 
       <ConfirmDialog
