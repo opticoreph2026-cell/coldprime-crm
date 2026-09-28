@@ -156,8 +156,8 @@ export default function ImportExportPage() {
           <a href="/api/export?type=activities" className="btn btn-secondary" style={{ textDecoration: "none" }}>
             📞 Export Activity Report
           </a>
-          <a href="/api/reports" className="btn btn-secondary" style={{ textDecoration: "none" }}>
-            📄 Weekly Accomplishment (PDF)
+          <a href="/reports" className="btn btn-secondary" style={{ textDecoration: "none" }}>
+            📈 Weekly Accomplishment Report
           </a>
         </div>
       </div>

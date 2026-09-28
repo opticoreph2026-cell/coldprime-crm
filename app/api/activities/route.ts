@@ -4,6 +4,7 @@ import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { activityCreateSchema } from "@/lib/validations/activity";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
     const parsed = parseOr400(activityCreateSchema, await readJson(request));
@@ -89,9 +90,11 @@ export async function POST(request: Request) {
     }
 
     // Verify all referenced entities belong to the caller's branch
+    let companyName: string | null = null;
     if (companyId) {
-      const c = await prisma.company.findFirst({ where: { id: companyId, branchId }, select: { id: true } });
+      const c = await prisma.company.findFirst({ where: { id: companyId, branchId }, select: { id: true, name: true } });
       if (!c) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+      companyName = c.name;
     }
     if (projectId) {
       const p = await prisma.project.findFirst({ where: { id: projectId, branchId }, select: { id: true } });
@@ -111,7 +114,8 @@ export async function POST(request: Request) {
         type,
         date: date ? new Date(date) : new Date(),
         time: time?.trim() || null,
-        performedBy: performedBy?.trim() || null,
+        performedBy: performedBy?.trim() || session.user.name || null,
+        performedById: session.user.id,
         contactPerson: contactPerson?.trim() || null,
         description: description?.trim() || null,
         result: result?.trim() || null,
@@ -120,6 +124,8 @@ export async function POST(request: Request) {
         notes: notes?.trim() || null,
       },
     });
+
+    await logAudit({ userId: session.user.id, branchId, action: "CREATE", entity: "activity", entityId: activity.id, details: { companyId: companyId || null, companyName, label: type } });
 
     return NextResponse.json(activity, { status: 201 });
   } catch (error) {

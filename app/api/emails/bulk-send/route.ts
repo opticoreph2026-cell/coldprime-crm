@@ -123,9 +123,9 @@ export async function POST(request: Request) {
       await logAudit({
         userId: session.user.id,
         branchId: auditBranchId,
-        action: "BULK_SEND",
-        entity: "Email",
-        details: { subject, sent, failed, skipped, requested: companyIds.length, cc },
+        action: "CREATE",
+        entity: "email",
+        details: { via: "bulk_send", subject, sent, failed, skipped, requested: companyIds.length, cc },
       });
     }
 

@@ -4,6 +4,7 @@ import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { contactCreateSchema } from "@/lib/validations/contact";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
     const parsed = parseOr400(contactCreateSchema, await readJson(request));
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
 
     const company = await prisma.company.findFirst({
       where: { id: companyId, branchId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
     if (!company) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
@@ -87,6 +88,9 @@ export async function POST(request: Request) {
         notes: notes?.trim() || null,
       },
     });
+
+    const label = `${contact.firstName}${contact.lastName ? " " + contact.lastName : ""}`;
+    await logAudit({ userId: session.user.id, branchId, action: "CREATE", entity: "contact", entityId: contact.id, details: { companyId, companyName: company.name, label } });
 
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {

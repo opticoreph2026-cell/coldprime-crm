@@ -67,7 +67,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       include: { branch: { select: { id: true, name: true, slug: true } } },
     });
 
-    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "UPDATE", entity: "Vendor", entityId: vendor.id, details: { name: updated.name } });
+    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "UPDATE", entity: "vendor", entityId: vendor.id, details: { name: updated.name } });
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -89,7 +89,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     await prisma.vendor.delete({ where: { id } });
-    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "DELETE", entity: "Vendor", entityId: id });
+    await logAudit({ branchId: branchFilter.branchId ?? vendor.branchId, action: "DELETE", entity: "vendor", entityId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

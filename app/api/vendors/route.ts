@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       include: { branch: { select: { id: true, name: true, slug: true } } },
     });
 
-    await logAudit({ branchId, action: "CREATE", entity: "Vendor", entityId: vendor.id, details: { name: vendor.name, category } });
+    await logAudit({ branchId, action: "CREATE", entity: "vendor", entityId: vendor.id, details: { name: vendor.name, category } });
 
     return NextResponse.json(vendor, { status: 201 });
   } catch (error) {

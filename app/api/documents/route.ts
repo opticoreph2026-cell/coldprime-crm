@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await logAudit({ branchId, action: "CREATE", entity: "Document", entityId: document.id, details: { fileName, category } });
+    await logAudit({ branchId, action: "CREATE", entity: "document", entityId: document.id, details: { fileName, category } });
 
     return NextResponse.json(document, { status: 201 });
   } catch (error) {

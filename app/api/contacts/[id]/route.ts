@@ -4,6 +4,7 @@ import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { contactUpdateSchema } from "@/lib/validations/contact";
 import { isForeignKeyError } from "@/lib/prisma-error";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   request: Request,
@@ -30,7 +31,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
@@ -54,6 +55,8 @@ export async function PUT(
         ...(body.notes !== undefined && { notes: body.notes?.trim() || null }),
       },
     });
+    const label = `${contact.firstName}${contact.lastName ? " " + contact.lastName : ""}`;
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "UPDATE", entity: "contact", entityId: id, details: { companyId: existing.companyId, label } });
     return NextResponse.json(contact);
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
@@ -65,7 +68,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
@@ -73,6 +76,8 @@ export async function DELETE(
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await prisma.contact.delete({ where: { id } });
+    const delLabel = `${existing.firstName}${existing.lastName ? " " + existing.lastName : ""}`;
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "DELETE", entity: "contact", entityId: id, details: { companyId: existing.companyId, label: delLabel } });
     return NextResponse.json({ success: true });
   } catch (error) {
     if (isForeignKeyError(error)) {

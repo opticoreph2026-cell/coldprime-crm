@@ -81,7 +81,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
     const parsed = parseOr400(companyCreateSchema, await readJson(request));
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await logAudit({ branchId, action: "CREATE", entity: "Company", entityId: company.id, details: { name: name.trim(), industry } });
+    await logAudit({ userId: session.user.id, branchId, action: "CREATE", entity: "company", entityId: company.id, details: { companyId: company.id, companyName: company.name, label: company.name } });
 
     return NextResponse.json(company, { status: 201 });
   } catch (error) {

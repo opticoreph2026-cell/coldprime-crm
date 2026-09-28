@@ -16,7 +16,7 @@ export async function DELETE(
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await prisma.document.delete({ where: { id } });
-    await logAudit({ branchId: existing.branchId, action: "DELETE", entity: "Document", entityId: id, details: { fileName: existing.fileName } });
+    await logAudit({ branchId: existing.branchId, action: "DELETE", entity: "document", entityId: id, details: { fileName: existing.fileName } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting document:", error);

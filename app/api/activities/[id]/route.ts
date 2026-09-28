@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { activityUpdateSchema } from "@/lib/validations/activity";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   request: Request,
@@ -29,7 +30,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
@@ -54,6 +55,7 @@ export async function PUT(
         ...(body.notes !== undefined && { notes: body.notes }),
       },
     });
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "UPDATE", entity: "activity", entityId: id, details: { companyId: existing.companyId, label: activity.type } });
     return NextResponse.json(activity);
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
@@ -65,7 +67,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
@@ -73,6 +75,7 @@ export async function DELETE(
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await prisma.activity.delete({ where: { id } });
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "DELETE", entity: "activity", entityId: id, details: { companyId: existing.companyId, label: existing.type } });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });

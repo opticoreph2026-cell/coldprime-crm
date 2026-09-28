@@ -14,6 +14,7 @@ const navItems = [
   { href: "/activities", label: "Activities", icon: "📞" },
   { href: "/emails", label: "Emails", icon: "✉️" },
   { href: "/email-templates", label: "Email Templates", icon: "📝" },
+  { href: "/reports", label: "Reports", icon: "📈" },
   { href: "/import-export", label: "Import / Export", icon: "📥" },
   { href: "/vendors", label: "Vendors", icon: "🔧" },
 ];

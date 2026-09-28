@@ -7,6 +7,7 @@ import { isCompanyType, isAccreditationStatus } from "@/lib/enums";
 import { parseOr400, readJson } from "@/lib/validations";
 import { companyUpdateSchema } from "@/lib/validations/company";
 import { isForeignKeyError } from "@/lib/prisma-error";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   request: Request,
@@ -44,7 +45,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
@@ -113,6 +114,12 @@ export async function PUT(
       },
     });
 
+    const label = company.name;
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "UPDATE", entity: "company", entityId: id, details: { companyId: id, companyName: company.name, label } });
+    if (accreditationStatus !== undefined && accreditationStatus !== existing.accreditationStatus) {
+      await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "STATUS_CHANGE", entity: "company", entityId: id, details: { from: existing.accreditationStatus, to: accreditationStatus, companyId: id, companyName: existing.name, label: "Accreditation status" } });
+    }
+
     return NextResponse.json(company);
   } catch (error) {
     console.error("Error updating company:", error);
@@ -125,7 +132,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
@@ -133,6 +140,7 @@ export async function DELETE(
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await prisma.company.delete({ where: { id } });
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "DELETE", entity: "company", entityId: id, details: { companyId: id, companyName: existing.name, label: existing.name } });
     return NextResponse.json({ success: true });
   } catch (error) {
     if (isForeignKeyError(error)) {

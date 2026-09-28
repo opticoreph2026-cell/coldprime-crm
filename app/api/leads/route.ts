@@ -6,6 +6,7 @@ import { isValidStatus } from "@/lib/status";
 import { isLeadType } from "@/lib/enums";
 import { parseOr400, readJson } from "@/lib/validations";
 import { leadCreateSchema } from "@/lib/validations/lead";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
     const parsed = parseOr400(leadCreateSchema, await readJson(request));
@@ -72,14 +73,16 @@ export async function POST(request: Request) {
     }
 
     // Verify company belongs to same branch
+    let companyName: string | null = null;
     if (companyId) {
       const company = await prisma.company.findUnique({
         where: { id: companyId },
-        select: { branchId: true },
+        select: { branchId: true, name: true },
       });
       if (!company || company.branchId !== branchId) {
         return NextResponse.json({ error: "Company not found in your branch" }, { status: 400 });
       }
+      companyName = company.name;
     }
 
     // Verify contact belongs to same branch
@@ -108,6 +111,9 @@ export async function POST(request: Request) {
         notes: notes?.trim() || null,
       },
     });
+
+    const leadLabel = companyName || "Lead";
+    await logAudit({ userId: session.user.id, branchId, action: "CREATE", entity: "lead", entityId: lead.id, details: { companyId: companyId || null, companyName, label: leadLabel } });
 
     return NextResponse.json(lead, { status: 201 });
   } catch (error) {

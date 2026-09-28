@@ -38,7 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
     });
 
-    await logAudit({ branchId: branchFilter.branchId, action: "UPDATE", entity: "VendorMaterial", entityId: material.id, details: { itemName } });
+    await logAudit({ branchId: branchFilter.branchId, action: "UPDATE", entity: "vendor_material", entityId: material.id, details: { itemName } });
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -62,7 +62,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     await prisma.vendorMaterial.delete({ where: { id } });
-    await logAudit({ branchId: branchFilter.branchId, action: "DELETE", entity: "VendorMaterial", entityId: id });
+    await logAudit({ branchId: branchFilter.branchId, action: "DELETE", entity: "vendor_material", entityId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

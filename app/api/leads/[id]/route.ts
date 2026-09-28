@@ -7,6 +7,7 @@ import { isLeadType } from "@/lib/enums";
 import { parseOr400, readJson } from "@/lib/validations";
 import { leadUpdateSchema } from "@/lib/validations/lead";
 import { isForeignKeyError } from "@/lib/prisma-error";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   request: Request,
@@ -36,11 +37,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
-    const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter } });
+    const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter }, include: { company: { select: { name: true } } } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const parsed = parseOr400(leadUpdateSchema, await readJson(request));
@@ -53,6 +54,8 @@ export async function PUT(
     if (body.status !== undefined && !(await isValidStatus(existing.branchId, "lead", body.status))) {
       return NextResponse.json({ error: `Invalid status: ${body.status}` }, { status: 400 });
     }
+
+    const statusChanged = body.status !== undefined && body.status !== existing.status;
 
     const lead = await prisma.lead.update({
       where: { id },
@@ -67,6 +70,13 @@ export async function PUT(
         ...(body.estimatedValue !== undefined && { estimatedValue: body.estimatedValue ? Number(body.estimatedValue) : null }),
       },
     });
+
+    const leadLabel = existing.company?.name || "Lead";
+    const auditBase = { userId: session.user.id, branchId: existing.branchId, entity: "lead" as const, entityId: id, details: { companyId: existing.companyId, companyName: existing.company?.name || null, label: leadLabel } };
+    await logAudit({ ...auditBase, action: "UPDATE" });
+    if (statusChanged) {
+      await logAudit({ ...auditBase, action: "STATUS_CHANGE", details: { ...auditBase.details, from: existing.status, to: lead.status } });
+    }
     return NextResponse.json(lead);
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
@@ -78,14 +88,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchFilter = await getBranchFilter();
 
     const { id } = await params;
-    const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter } });
+    const existing = await prisma.lead.findFirst({ where: { id, ...branchFilter }, include: { company: { select: { name: true } } } });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await prisma.lead.delete({ where: { id } });
+    await logAudit({ userId: session.user.id, branchId: existing.branchId, action: "DELETE", entity: "lead", entityId: id, details: { companyId: existing.companyId, companyName: existing.company?.name || null, label: existing.company?.name || "Lead" } });
     return NextResponse.json({ success: true });
   } catch (error) {
     if (isForeignKeyError(error)) {

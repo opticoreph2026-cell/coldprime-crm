@@ -63,7 +63,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
 
-    await logAudit({ branchId: branchFilter.branchId, action: "CREATE", entity: "VendorContact", entityId: contact.id, details: { vendorId: id, name: `${firstName} ${lastName || ""}` } });
+    await logAudit({ branchId: branchFilter.branchId, action: "CREATE", entity: "vendor_contact", entityId: contact.id, details: { vendorId: id, name: `${firstName} ${lastName || ""}` } });
 
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {

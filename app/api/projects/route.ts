@@ -4,6 +4,7 @@ import { Prisma } from "@/lib/prisma/client/client";
 import { getBranchFilter, requireAuth, requireBranchId } from "@/lib/branch";
 import { parseOr400, readJson } from "@/lib/validations";
 import { projectCreateSchema } from "@/lib/validations/project";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    try { await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    let session; try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
     const branchId = await requireBranchId();
 
     const parsed = parseOr400(projectCreateSchema, await readJson(request));
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     // Verify company belongs to same branch
     const company = await prisma.company.findUnique({
       where: { id: companyId },
-      select: { branchId: true },
+      select: { branchId: true, name: true },
     });
     if (!company || company.branchId !== branchId) {
       return NextResponse.json({ error: "Company not found in your branch" }, { status: 400 });
@@ -114,6 +115,8 @@ export async function POST(request: Request) {
         company: { select: { id: true, name: true } },
       },
     });
+
+    await logAudit({ userId: session.user.id, branchId, action: "CREATE", entity: "project", entityId: project.id, details: { companyId, companyName: company.name, label: project.projectName } });
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

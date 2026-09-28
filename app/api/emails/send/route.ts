@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBranchFilter, requireAuth } from "@/lib/branch";
 import { sendEmail, fillTemplate, logEmail } from "@/lib/email";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(request: Request) {
   let toEmail = "";
@@ -78,6 +79,14 @@ export async function POST(request: Request) {
       await logEmail(branchFilter.branchId!, templateId || null, session.user.id!, toEmail, toName || null, finalSubject, "SENT", null, { messageId: result.id, cc });
     } catch (logErr) {
       console.error("Email sent but logging failed:", logErr);
+    }
+
+    try {
+      if (branchFilter.branchId) {
+        await logAudit({ userId: session.user.id, branchId: branchFilter.branchId, action: "CREATE", entity: "email", details: { companyId: null, companyName: companyName || null, label: finalSubject } });
+      }
+    } catch (auditErr) {
+      console.error("Email audit failed:", auditErr);
     }
 
     try {
