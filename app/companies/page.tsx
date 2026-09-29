@@ -232,64 +232,64 @@ export default function CompaniesPage() {
         />
 
         {replyMsg && (
-          <div style={{ background: replyMsg.ok ? "#dcfce7" : "#fef2f2", color: replyMsg.ok ? "#166534" : "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: `1px solid ${replyMsg.ok ? "#bbf7d0" : "#fecaca"}` }}>
+          <div className={`${`mb-4 ${replyMsg.ok ? "bg-green-100 text-green-800" : "bg-red-50 text-red-600"}`} p-3 rounded-lg`} style={{ border: `1px solid ${replyMsg.ok ? "#bbf7d0" : "#fecaca"}` }}>
             {replyMsg.text}
           </div>
         )}
 
         {apiError && (
-          <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca" }}>
+          <div className="bg-red-50 text-red-600 mb-4 border border-red-200 p-3 rounded-lg">
             ⚠️ {apiError} — Please ensure you have a branch selected in the sidebar.
           </div>
         )}
 
       <Modal open={showForm} title={editingId ? "Edit Company" : "New Company"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="grid grid-cols-2 gap-4">
             <div><label style={labelStyle}>Company Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><label style={labelStyle}>Client Type</label><select style={inputStyle} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
             <div><label style={labelStyle}>Industry</label><select style={inputStyle} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{(industryList.includes(form.industry) ? industryList : [form.industry, ...industryList]).map((i) => <option key={i}>{i}</option>)}</select></div>
             <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             <div><label style={labelStyle}>Website</label><input style={inputStyle} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Address</label><input style={inputStyle} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div className="col-span-2"><label style={labelStyle}>Address</label><input style={inputStyle} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
 
             {/* Mobile Numbers */}
-            <div style={{ gridColumn: "span 2" }}>
+            <div className="col-span-2">
               <label style={{ ...labelStyle, marginBottom: 8, display: "block" }}>Mobile Numbers</label>
               {mobiles.map((val, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                  <input style={{ flex: 1 }} value={val} onChange={(e) => updateMobile(i, e.target.value)} placeholder="0917-123-4567" />
+                <div key={i} className="flex gap-2 mb-1.5">
+                  <input className="flex-1" value={val} onChange={(e) => updateMobile(i, e.target.value)} placeholder="0917-123-4567" />
                   {mobiles.length > 1 && (
-                    <button type="button" onClick={() => removeMobile(i)} style={{ padding: "0.25rem 0.5rem", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 4, cursor: "pointer", fontSize: "0.875rem" }}>✕</button>
+                    <button type="button" onClick={() => removeMobile(i)} className="px-2 py-1 bg-red-100 text-red-600 cursor-pointer text-sm border-0 rounded">✕</button>
                   )}
                 </div>
               ))}
               {mobiles.length < 3 && (
-                <button type="button" onClick={addMobile} style={{ padding: "0.25rem 0.75rem", background: "#eff6ff", color: "#1e40af", border: "1px dashed #93c5fd", borderRadius: 4, cursor: "pointer", fontSize: "0.75rem" }}>+ Add Mobile</button>
+                <button type="button" onClick={addMobile} className="px-3 py-1 bg-[#eff6ff] text-blue-800 border border-dashed border-blue-300 cursor-pointer text-xs rounded">+ Add Mobile</button>
               )}
             </div>
 
             {/* Landline Numbers */}
-            <div style={{ gridColumn: "span 2" }}>
+            <div className="col-span-2">
               <label style={{ ...labelStyle, marginBottom: 8, display: "block" }}>Landline Numbers</label>
               {landlines.map((val, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                  <input style={{ flex: 1 }} value={val} onChange={(e) => updateLandline(i, e.target.value)} placeholder="(032) 123-4567" />
+                <div key={i} className="flex gap-2 mb-1.5">
+                  <input className="flex-1" value={val} onChange={(e) => updateLandline(i, e.target.value)} placeholder="(032) 123-4567" />
                   {landlines.length > 1 && (
-                    <button type="button" onClick={() => removeLandline(i)} style={{ padding: "0.25rem 0.5rem", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 4, cursor: "pointer", fontSize: "0.875rem" }}>✕</button>
+                    <button type="button" onClick={() => removeLandline(i)} className="px-2 py-1 bg-red-100 text-red-600 cursor-pointer text-sm border-0 rounded">✕</button>
                   )}
                 </div>
               ))}
               {landlines.length < 3 && (
-                <button type="button" onClick={addLandline} style={{ padding: "0.25rem 0.75rem", background: "#eff6ff", color: "#1e40af", border: "1px dashed #93c5fd", borderRadius: 4, cursor: "pointer", fontSize: "0.75rem" }}>+ Add Landline</button>
+                <button type="button" onClick={addLandline} className="px-3 py-1 bg-[#eff6ff] text-blue-800 border border-dashed border-blue-300 cursor-pointer text-xs rounded">+ Add Landline</button>
               )}
             </div>
 
             <div><label style={labelStyle}>Status</label><select style={inputStyle} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
             <div><label style={labelStyle}>Source</label><input style={inputStyle} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Notes</label><textarea rows={2} style={inputStyle} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div className="col-span-2"><label style={labelStyle}>Notes</label><textarea rows={2} style={inputStyle} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
@@ -304,7 +304,7 @@ export default function CompaniesPage() {
         onConfirm={handleDelete}
       />
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="flex gap-3 mb-4 flex-wrap">
         <SearchInput placeholder="Search companies..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
         <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}>
           <option value="">All Types</option>
@@ -330,7 +330,7 @@ export default function CompaniesPage() {
 
       <div className="page-scroll">
       {apiError ? (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
+        <div className="bg-white border border-slate-200 text-center text-slate-400 rounded-lg p-8">
           Unable to load companies. Check that a branch is selected and try again.
         </div>
       ) : !loading && companies.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !accrFilter && !outreachFilter ? (
@@ -356,20 +356,20 @@ export default function CompaniesPage() {
           <tbody>
             {companies.map((c) => (
               <tr key={c.id}>
-                <td style={{ fontWeight: 500 }}>
-                  <a href={`/companies/${c.id}`} style={{ color: "#1e40af", textDecoration: "none" }}>{c.name}</a>
+                <td className="font-medium">
+                  <a href={`/companies/${c.id}`} className="text-blue-800 no-underline">{c.name}</a>
                 </td>
                 <td><span className="badge badge-gray">{TYPE_LABELS[c.type] || c.type}</span></td>
                 <td>{c.industry}</td>
                 <td>{c.email || "-"}</td>
-                <td style={{ whiteSpace: "nowrap" }}>{phoneLabel(c)}</td>
-                <td style={{ whiteSpace: "nowrap" }}>{landlineLabel(c)}</td>
+                <td className="whitespace-nowrap">{phoneLabel(c)}</td>
+                <td className="whitespace-nowrap">{landlineLabel(c)}</td>
                 <td><span className={`badge badge-${c.status === "Active" ? "green" : c.status === "Inactive" ? "gray" : "blue"}`}>{c.status}</span></td>
                 <td>
                   {c.accreditationStatus && c.accreditationStatus !== "NOT_STARTED" ? (
                     <span className={`badge ${ACCREDITATION_BADGE[c.accreditationStatus] || "badge-gray"}`}>{ACCREDITATION_LABELS[c.accreditationStatus] || c.accreditationStatus}</span>
                   ) : (
-                    <span style={{ color: "#cbd5e1" }}>—</span>
+                    <span className="text-slate-300">—</span>
                   )}
                 </td>
                 <td>
@@ -381,14 +381,14 @@ export default function CompaniesPage() {
                       {c.outreachStatus}
                     </span>
                   ) : (
-                    <span style={{ color: "#cbd5e1" }}>—</span>
+                    <span className="text-slate-300">—</span>
                   )}
                 </td>
                 <td>{c.contacts.length}</td>
                 <td>{c.projects.length}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => handleEdit(c)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
-                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: c.id, name: c.name })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost px-2 py-1" onClick={() => handleEdit(c)}>Edit</button>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: c.id, name: c.name })}>Delete</button>
                 </td>
               </tr>
             ))}

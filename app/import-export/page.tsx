@@ -65,23 +65,22 @@ export default function ImportExportPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 24 }}>Import / Export</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Import / Export</h1>
 
       <ErrorBanner message={error} />
 
       {/* IMPORT SECTION */}
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, marginBottom: 24 }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>Import from Excel</h2>
-        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: 12 }}>
+      <div className="bg-white border border-slate-200 mb-6 rounded-lg p-6">
+        <h2 className="text-base font-semibold mb-4">Import from Excel</h2>
+        <p className="text-sm text-slate-500 mb-3">
           Select an Excel workbook (.xlsx/.xls) to import. The system will parse all relevant sheets, merge duplicates, and create company records.
         </p>
-        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+        <div className="flex gap-3 mb-4 flex-wrap">
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls"
-            style={{ flex: 1 }}
+            accept=".xlsx,.xls" className="flex-1"
             onChange={handleFileChange}
           />
           <button className="btn btn-secondary" onClick={handlePreview} disabled={loading || !selectedFile}>
@@ -90,11 +89,11 @@ export default function ImportExportPage() {
         </div>
 
         {preview && (
-          <div style={{ border: "1px solid #e2e8f0", borderRadius: 6, overflow: "hidden" }}>
-            <div style={{ background: "#f8fafc", padding: "12px 16px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="border border-slate-200 overflow-hidden rounded-md">
+            <div className="bg-slate-50 px-4 py-3 border-b border-b-slate-200 flex justify-between items-center">
               <div>
                 <strong>{preview.filename}</strong>
-                <span style={{ marginLeft: 12, color: "#64748b", fontSize: "0.875rem" }}>
+                <span className="ml-3 text-slate-500 text-sm">
                   {preview.validRows} valid / {preview.duplicateRows} duplicates / {preview.errorRows} errors (from {preview.totalRows} total)
                 </span>
               </div>
@@ -103,24 +102,24 @@ export default function ImportExportPage() {
               </button>
             </div>
             {preview.sheets.map((sheet) => (
-              <div key={sheet.name} style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                <div style={{ fontWeight: 500, marginBottom: 4 }}>{sheet.name} — {sheet.totalRows} rows</div>
+              <div key={sheet.name} className="px-4 py-3 border-b border-b-slate-100">
+                <div className="font-medium mb-1">{sheet.name} — {sheet.totalRows} rows</div>
                 {sheet.headers.length > 0 && (
-                  <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginBottom: 4 }}>
+                  <div className="text-slate-400 mb-1 text-[11.2px]">
                     Columns: {sheet.headers.join(", ")}
                   </div>
                 )}
                 {sheet.duplicates.length > 0 && (
-                  <div style={{ fontSize: "0.75rem", color: "#c2410c" }}>
+                  <div className="text-xs text-orange-700">
                     {sheet.duplicates.length} duplicate rows: {sheet.duplicates.slice(0, 5).join(", ")}{sheet.duplicates.length > 5 ? "..." : ""}
                   </div>
                 )}
                 {sheet.errors.length > 0 && (
-                  <div style={{ fontSize: "0.75rem", color: "#dc2626" }}>
+                  <div className="text-xs text-red-600">
                     {sheet.errors.length} errors: {sheet.errors.slice(0, 3).map((e) => `Row ${e.row}: ${e.reason}`).join("; ")}
                   </div>
                 )}
-                <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: 4 }}>
+                <div className="text-xs text-slate-500 mt-1">
                   Sample: {sheet.rows.slice(0, 3).map((r) => r.company).filter(Boolean).join(", ")}
                 </div>
               </div>
@@ -129,15 +128,15 @@ export default function ImportExportPage() {
         )}
 
         {result && (
-          <div style={{ border: "1px solid #dcfce7", background: "#f0fdf4", borderRadius: 6, padding: 16 }}>
-            <div style={{ fontWeight: 600, color: "#166534", marginBottom: 8 }}>Import Complete</div>
+          <div className="border border-green-100 bg-green-50 rounded-md p-4">
+            <div className="font-semibold text-green-800 mb-2">Import Complete</div>
             <div>Imported: {result.imported} companies</div>
             <div>Skipped (duplicates): {result.skipped}</div>
             {result.errors.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ color: "#dc2626", fontWeight: 500 }}>Errors:</div>
+              <div className="mt-2">
+                <div className="text-red-600 font-medium">Errors:</div>
                 {result.errors.map((e, i) => (
-                  <div key={i} style={{ fontSize: "0.75rem" }}>{e.company}: {e.reason}</div>
+                  <div key={i} className="text-xs">{e.company}: {e.reason}</div>
                 ))}
               </div>
             )}
@@ -146,22 +145,22 @@ export default function ImportExportPage() {
       </div>
 
       {/* EXPORT SECTION */}
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>Export to Excel</h2>
-        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: 16 }}>
+      <div className="bg-white border border-slate-200 rounded-lg p-6">
+        <h2 className="text-base font-semibold mb-4">Export to Excel</h2>
+        <p className="text-sm text-slate-500 mb-4">
           Generate professionally formatted Excel files from CRM data.
         </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <a href="/api/export?type=customers" className="btn btn-primary" style={{ textDecoration: "none" }}>
+        <div className="flex gap-3 flex-wrap">
+          <a href="/api/export?type=customers" className="btn btn-primary no-underline">
             📊 Export Customer Database
           </a>
-          <a href="/api/export?type=projects" className="btn btn-secondary" style={{ textDecoration: "none" }}>
+          <a href="/api/export?type=projects" className="btn btn-secondary no-underline">
             📋 Export Project Report
           </a>
-          <a href="/api/export?type=activities" className="btn btn-secondary" style={{ textDecoration: "none" }}>
+          <a href="/api/export?type=activities" className="btn btn-secondary no-underline">
             📞 Export Activity Report
           </a>
-          <a href="/reports" className="btn btn-secondary" style={{ textDecoration: "none" }}>
+          <a href="/reports" className="btn btn-secondary no-underline">
             📈 Weekly Accomplishment Report
           </a>
         </div>

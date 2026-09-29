@@ -97,30 +97,19 @@ function ComposeContent() {
 
   if (sent) {
     return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16, color: "#22c55e" }}>✅</div>
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a" }}>Email Sent Successfully!</h2>
+      <div className="text-center p-10">
+        <div className="text-5xl mb-4 text-green-500">✅</div>
+        <h2 className="text-2xl font-bold text-slate-900">Email Sent Successfully!</h2>
         {warnings.length > 0 && (
-          <div style={{ maxWidth: 640, margin: "16px auto 0", background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", padding: 12, borderRadius: 8, textAlign: "left", fontSize: 13 }}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>Sent, but {warnings.length} deliverability warning{warnings.length > 1 ? "s" : ""}:</div>
-            <ul style={{ margin: "0 0 0 18px", lineHeight: 1.6 }}>
+          <div className="bg-amber-50 border border-yellow-200 text-amber-800 text-left text-[13px] max-w-160 p-3 rounded-lg mb-0 mx-auto mt-4">
+            <div className="font-bold mb-1.5">Sent, but {warnings.length} deliverability warning{warnings.length > 1 ? "s" : ""}:</div>
+            <ul className="leading-[1.6] mr-[18px] mb-0 ml-0 mt-0">
               {warnings.map((w, i) => (<li key={i}>{w}</li>))}
             </ul>
           </div>
         )}
         <button
-          onClick={() => router.push("/emails")}
-          style={{
-            marginTop: 16,
-            padding: "10px 24px",
-            background: "#1e40af",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            fontSize: 14,
-            fontWeight: 600,
-          }}
+          onClick={() => router.push("/emails")} className="mt-4 px-6 py-2.5 bg-blue-800 text-white cursor-pointer text-sm font-semibold border-0 rounded-md"
         >
           Back to Emails
         </button>
@@ -129,66 +118,50 @@ function ComposeContent() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 24 }}>
+    <div className="p-6 max-w-[900px] mx-auto my-0">
+      <h1 className="text-2xl font-bold text-slate-900 mb-6">
         ✉️ Compose Email
       </h1>
 
       {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+        <div className="bg-red-50 text-red-600 mb-4 p-3 rounded-lg">
           {error}
         </div>
       )}
 
       {senderStatus?.freeMailWarning && (
-        <div style={{ background: "#fffbeb", color: "#92400e", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fde68a", fontSize: 13 }}>
+        <div className="bg-amber-50 text-amber-800 mb-4 border border-yellow-200 text-[13px] p-3 rounded-lg">
           ⚠️ {senderStatus.freeMailWarning}
         </div>
       )}
 
       {senderStatus && (
-        <div style={{ background: "#f8fafc", color: "#475569", padding: "8px 12px", borderRadius: 8, marginBottom: 16, fontSize: 12, border: "1px solid #e2e8f0" }}>
+        <div className="bg-slate-50 text-slate-600 px-3 py-2 mb-4 text-xs border border-slate-200 rounded-lg">
           Daily send limit: {senderStatus.sentToday}/{senderStatus.dailyCap} sent today &bull; {senderStatus.remaining} remaining
         </div>
       )}
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>To</label>
+      <div className="mb-4">
+        <label className="block text-[13px] font-semibold mb-1">To</label>
         <input
           type="email"
           value={toEmail}
           onChange={(e) => setToEmail(e.target.value)}
-          placeholder="recipient@email.com"
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: 6,
-            fontSize: 14,
-            boxSizing: "border-box",
-          }}
+          placeholder="recipient@email.com" className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md box-border"
         />
-        {toName && <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{toName}</div>}
+        {toName && <div className="text-xs text-slate-500 mt-1">{toName}</div>}
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>CC</label>
+      <div className="mb-4">
+        <label className="block text-[13px] font-semibold mb-1">CC</label>
         <input
           type="email"
           value={cc}
           onChange={(e) => setCc(e.target.value)}
-          placeholder="cc@example.com"
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: 6,
-            fontSize: 14,
-            boxSizing: "border-box",
-          }}
+          placeholder="cc@example.com" className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md box-border"
         />
         {cc && (
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+          <div className="text-xs text-slate-500 mt-1">
             {ccName && <span>{ccName} &lt;</span>}
             {cc}
             {ccName && <span>&gt;</span>}
@@ -196,26 +169,18 @@ function ComposeContent() {
         )}
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Subject</label>
+      <div className="mb-4">
+        <label className="block text-[13px] font-semibold mb-1">Subject</label>
         <input
           type="text"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          placeholder="Email subject"
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: 6,
-            fontSize: 14,
-            boxSizing: "border-box",
-          }}
+          placeholder="Email subject" className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md box-border"
         />
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Template</label>
+      <div className="mb-4">
+        <label className="block text-[13px] font-semibold mb-1">Template</label>
         <select
           value={selectedTemplate?.id || ""}
           onChange={(e) => {
@@ -227,15 +192,7 @@ function ComposeContent() {
             } else {
               setSelectedTemplate(null);
             }
-          }}
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: 6,
-            fontSize: 14,
-            boxSizing: "border-box",
-          }}
+          }} className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md box-border"
         >
           <option value="">Select a template...</option>
           {templates.map((tpl) => (
@@ -246,38 +203,19 @@ function ComposeContent() {
         </select>
       </div>
 
-      <div style={{ marginBottom: 24 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Body</label>
+      <div className="mb-6">
+        <label className="block text-[13px] font-semibold mb-1">Body</label>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={12}
-          placeholder="Email body..."
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: 6,
-            fontSize: 14,
-            boxSizing: "border-box",
-            fontFamily: "monospace",
-          }}
+          placeholder="Email body..." className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md box-border font-mono"
         />
       </div>
 
       <button
         onClick={handleSend}
-        disabled={sending}
-        style={{
-          padding: "10px 32px",
-          background: sending ? "#94a3b8" : "#1e40af",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          cursor: sending ? "not-allowed" : "pointer",
-          fontSize: 14,
-          fontWeight: 700,
-        }}
+        disabled={sending} className={`${`${`px-8 py-2.5 text-white text-sm font-bold ${sending ? "bg-slate-400 cursor-not-allowed" : "bg-blue-800 cursor-pointer"}`} border-0`} rounded-md`}
       >
         {sending ? "Sending..." : "Send Email"}
       </button>
@@ -287,7 +225,7 @@ function ComposeContent() {
 
 export default function ComposePage() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading...</div>}>
+    <Suspense fallback={<div className="text-center text-slate-400 p-10">Loading...</div>}>
       <ComposeContent />
     </Suspense>
   );

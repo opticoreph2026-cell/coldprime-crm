@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
+    <div className="text-center text-slate-400 p-10">
       Loading composer...
     </div>
   );

@@ -148,14 +148,14 @@ export default function StatusesAdminPage() {
     return (
       <div className="page">
         <PageHeader title="Statuses" subtitle="Pipeline statuses & dropdown values" />
-        <p style={{ color: "#94a3b8" }}>Loading…</p>
+        <p className="text-slate-400">Loading…</p>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div style={{ padding: 24 }}>
+      <div className="p-6">
         <PageHeader title="Statuses" subtitle="Pipeline statuses & dropdown values" />
         <ErrorBanner message="Only administrators can manage statuses. Please ask a branch or head admin." />
       </div>
@@ -180,7 +180,7 @@ export default function StatusesAdminPage() {
       <ErrorBanner message={error} />
       <NoticeBanner message={notice} />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="flex gap-2 mb-4 flex-wrap">
         {TYPES.map((t) => (
           <button
             key={t.type}
@@ -192,41 +192,35 @@ export default function StatusesAdminPage() {
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: 16, marginBottom: 16, fontSize: "0.8rem", color: "#64748b" }}>
+      <div className="flex gap-4 mb-4 text-slate-500 text-[12.8px]">
         <span>{activeCount} active</span>
         <span>{inactiveCount} inactive</span>
-        <span style={{ marginLeft: "auto" }}>Inactive values stay visible on existing records but leave the dropdowns.</span>
+        <span className="ml-auto">Inactive values stay visible on existing records but leave the dropdowns.</span>
       </div>
 
       <div className="page-scroll">
       {loading ? (
-        <p style={{ color: "#94a3b8" }}>Loading statuses…</p>
+        <p className="text-slate-400">Loading statuses…</p>
       ) : rows.length === 0 ? (
         <EmptyState message={`No ${meta.label.toLowerCase()} yet — use + Add ${meta.singular} to create the first one.`} />
       ) : (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+        <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
           {rows.map((row, i) => (
             <div
-              key={row.id}
-              style={{
-                display: "flex", alignItems: "center", gap: 12, padding: "10px 16px",
-                borderTop: i === 0 ? "none" : "1px solid #f1f5f9",
-                background: row.isActive ? "#fff" : "#f8fafc",
-                opacity: row.isActive ? 1 : 0.75,
-              }}
+              key={row.id} className={`${`flex items-center gap-3 px-4 py-2.5 ${row.isActive ? "bg-white opacity-100" : "bg-slate-50 opacity-75"}`} ${i === 0 ? "border-t-0" : "border-t border-t-slate-100"}`}
             >
-              <span style={{ width: 24, color: "#94a3b8", fontSize: "0.75rem", textAlign: "right" }}>{i + 1}</span>
-              <span style={{ flex: 1, fontWeight: 500, fontSize: "0.875rem", color: row.isActive ? "#0f172a" : "#64748b", textDecoration: row.isActive ? "none" : "line-through" }}>
+              <span className="text-slate-400 text-xs text-right w-6">{i + 1}</span>
+              <span className={`flex-1 font-medium text-sm ${row.isActive ? "text-slate-900 no-underline" : "text-slate-500 line-through"}`}>
                 {row.name}
               </span>
               <Badge color={row.isActive ? "green" : "gray"}>{row.isActive ? "Active" : "Inactive"}</Badge>
-              <button className="btn btn-ghost" disabled={i === 0} onClick={() => move(i, -1)} style={{ padding: "0.25rem 0.5rem", opacity: i === 0 ? 0.3 : 1 }} title="Move up">↑</button>
-              <button className="btn btn-ghost" disabled={i === rows.length - 1} onClick={() => move(i, 1)} style={{ padding: "0.25rem 0.5rem", opacity: i === rows.length - 1 ? 0.3 : 1 }} title="Move down">↓</button>
-              <button className="btn btn-ghost" onClick={() => { setEditing(row); setEditName(row.name); setError(""); }} style={{ padding: "0.25rem 0.5rem" }}>Rename</button>
+              <button className={`btn btn-ghost px-2 py-1 ${i === 0 ? "opacity-30" : "opacity-100"}`} disabled={i === 0} onClick={() => move(i, -1)} title="Move up">↑</button>
+              <button className={`btn btn-ghost px-2 py-1 ${i === rows.length - 1 ? "opacity-30" : "opacity-100"}`} disabled={i === rows.length - 1} onClick={() => move(i, 1)} title="Move down">↓</button>
+              <button className="btn btn-ghost px-2 py-1" onClick={() => { setEditing(row); setEditName(row.name); setError(""); }}>Rename</button>
               {row.isActive ? (
-                <button className="btn btn-ghost" onClick={() => setDeactivating(row)} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Deactivate</button>
+                <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeactivating(row)}>Deactivate</button>
               ) : (
-                <button className="btn btn-ghost" onClick={() => handleSetActive(row, true)} style={{ padding: "0.25rem 0.5rem", color: "#166534" }}>Restore</button>
+                <button className="btn btn-ghost px-2 py-1 text-green-800" onClick={() => handleSetActive(row, true)}>Restore</button>
               )}
             </div>
           ))}
@@ -236,9 +230,9 @@ export default function StatusesAdminPage() {
 
       <Modal open={showAdd} title={`Add ${meta.singular}`} onClose={() => setShowAdd(false)} width={420}>
         <form onSubmit={handleAdd}>
-          <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Name *</label>
-          <input autoFocus required value={addName} onChange={(e) => setAddName(e.target.value)} placeholder={`e.g. Qualified`} style={{ width: "100%" }} />
-          <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <label className="text-xs font-medium block mb-1">Name *</label>
+          <input autoFocus required value={addName} onChange={(e) => setAddName(e.target.value)} placeholder={`e.g. Qualified`} className="w-full" />
+          <div className="mt-4 flex gap-2 justify-end">
             <button type="button" className="btn btn-secondary" onClick={() => setShowAdd(false)} disabled={busy}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Adding…" : "Add"}</button>
           </div>
@@ -247,12 +241,12 @@ export default function StatusesAdminPage() {
 
       <Modal open={editing !== null} title={`Rename ${meta.singular}`} onClose={() => setEditing(null)} width={420}>
         <form onSubmit={handleRename}>
-          <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Name *</label>
-          <input autoFocus required value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: "100%" }} />
-          <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: 8 }}>
+          <label className="text-xs font-medium block mb-1">Name *</label>
+          <input autoFocus required value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full" />
+          <p className="text-xs text-slate-500 mt-2">
             Existing records using this value will be updated to the new name.
           </p>
-          <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <div className="mt-4 flex gap-2 justify-end">
             <button type="button" className="btn btn-secondary" onClick={() => setEditing(null)} disabled={busy}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : "Rename"}</button>
           </div>

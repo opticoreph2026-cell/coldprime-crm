@@ -202,22 +202,21 @@ export default function ReportsPage() {
         {error && <ErrorBanner message={error} />}
 
         {/* Controls */}
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        <div className="bg-white border border-slate-200 mb-5 rounded-[10px] p-4">
+          <div className="flex gap-2 flex-wrap mb-3">
             {PRESETS.map((p) => (
               <button
                 key={p.id}
-                className={preset === p.id ? "btn btn-secondary" : "btn btn-ghost"}
-                style={{ fontSize: "0.8125rem", padding: "5px 12px" }}
+                className={`${preset === p.id ? "btn btn-secondary" : "btn btn-ghost"} text-[13px] px-3 py-[5px]`}
                 onClick={() => applyPreset(p.id)}
               >
                 {p.label}
               </button>
             ))}
-            <span style={{ alignSelf: "center", fontSize: "0.8125rem", color: "#94a3b8" }}>Custom</span>
+            <span className="self-center text-[13px] text-slate-400">Custom</span>
           </div>
 
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div className="flex gap-4 flex-wrap items-end">
             <div>
               <div style={labelStyle}>From</div>
               <input type="date" value={from} max={to} onChange={(e) => { setFrom(e.target.value); setPreset("custom"); setNoteTouched(false); }} style={inputStyle} />
@@ -245,7 +244,7 @@ export default function ReportsPage() {
                 <div style={{ ...inputStyle, background: "#f1f5f9", color: "#475569" }}>Me</div>
               </div>
             )}
-            {!valid && <span style={{ color: "#dc2626", fontSize: "0.8125rem" }}>&quot;From&quot; must be on or before &quot;To&quot;</span>}
+            {!valid && <span className="text-red-600 text-[13px]">&quot;From&quot; must be on or before &quot;To&quot;</span>}
           </div>
         </div>
 
@@ -254,51 +253,51 @@ export default function ReportsPage() {
         {report && !loading && (
           <>
             {/* Totals */}
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, marginBottom: 12 }}>
+            <div className="bg-white border border-slate-200 mb-5 rounded-[10px] p-4">
+              <div className="font-bold mb-3">
                 Totals{" "}
-                <span style={{ fontWeight: 400, color: "#64748b", fontSize: "0.8125rem" }}>
+                <span className="font-normal text-slate-500 text-[13px]">
                   {report.scope.branchName} | {report.scope.userName || "Everyone"} | {report.range.from} to {report.range.to}
                 </span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
+              <div className="grid grid-cols-[repeat(auto-fill,_minmax(150px,_1fr))] gap-2">
                 {KPI_KEYS.map((k) => (
-                  <div key={k} style={{ background: "#f8fafc", border: "1px solid #eef2f7", borderRadius: 8, padding: "8px 10px" }}>
-                    <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{KPI_LABELS[k]}</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 700, color: report.totals[k] > 0 ? "#1f3864" : "#94a3b8" }}>{report.totals[k]}</div>
+                  <div key={k} className="bg-slate-50 border border-[#eef2f7] px-2.5 py-2 rounded-lg">
+                    <div className="text-slate-500 text-[11.2px]">{KPI_LABELS[k]}</div>
+                    <div className={`${`font-bold ${report.totals[k] > 0 ? "text-[#1f3864]" : "text-slate-400"}`} text-[17.6px]`}>{report.totals[k]}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Week-by-week table */}
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, marginBottom: 12 }}>Week by week</div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem" }}>
+            <div className="bg-white border border-slate-200 mb-5 rounded-[10px] p-4">
+              <div className="font-bold mb-3">Week by week</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[13px] border-collapse">
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left", padding: "8px 10px", borderBottom: "2px solid #e2e8f0", position: "sticky", left: 0, background: "#fff" }}>Week</th>
+                      <th className="text-left px-2.5 py-2 border-b-2 border-b-slate-200 sticky left-0 bg-white">Week</th>
                       {KPI_KEYS.map((k) => (
-                        <th key={k} style={{ textAlign: "right", padding: "8px 10px", borderBottom: "2px solid #e2e8f0", whiteSpace: "nowrap" }}>{KPI_LABELS[k]}</th>
+                        <th key={k} className="text-right px-2.5 py-2 border-b-2 border-b-slate-200 whitespace-nowrap">{KPI_LABELS[k]}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {report.weeks.map((w) => (
                       <tr key={w.label}>
-                        <td style={{ padding: "8px 10px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap", position: "sticky", left: 0, background: "#fff" }}>{w.label}</td>
+                        <td className="px-2.5 py-2 border-b border-b-slate-100 whitespace-nowrap sticky left-0 bg-white">{w.label}</td>
                         {KPI_KEYS.map((k) => (
-                          <td key={k} style={{ textAlign: "right", padding: "8px 10px", borderBottom: "1px solid #f1f5f9", color: w.kpis[k] > 0 ? "#1f3864" : "#cbd5e1", fontWeight: w.kpis[k] > 0 ? 600 : 400 }}>
+                          <td key={k} className={`text-right px-2.5 py-2 border-b border-b-slate-100 ${w.kpis[k] > 0 ? "text-[#1f3864] font-semibold" : "text-slate-300 font-normal"}`}>
                             {w.kpis[k]}
                           </td>
                         ))}
                       </tr>
                     ))}
-                    <tr style={{ background: "#f8fafc" }}>
-                      <td style={{ padding: "8px 10px", fontWeight: 700, position: "sticky", left: 0, background: "#f8fafc" }}>TOTAL</td>
+                    <tr className="bg-slate-50">
+                      <td className="px-2.5 py-2 font-bold sticky left-0 bg-slate-50">TOTAL</td>
                       {KPI_KEYS.map((k) => (
-                        <td key={k} style={{ textAlign: "right", padding: "8px 10px", fontWeight: 700 }}>{report.totals[k]}</td>
+                        <td key={k} className="text-right px-2.5 py-2 font-bold">{report.totals[k]}</td>
                       ))}
                     </tr>
                   </tbody>
@@ -308,13 +307,13 @@ export default function ReportsPage() {
 
             {/* Weekly note (single-week ranges only) */}
             {singleWeek && (
-              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Weekly note</div>
-                <div style={{ fontSize: "0.8125rem", color: "#64748b", marginBottom: 10 }}>
+              <div className="bg-white border border-slate-200 mb-5 rounded-[10px] p-4">
+                <div className="font-bold mb-1">Weekly note</div>
+                <div className="text-[13px] text-slate-500 mb-2.5">
                   Highlights and blockers for {mondayOf(from)}
                   {report.myNote?.userName ? ` (saved by ${report.myNote.userName})` : ""}
                 </div>
-                <div style={{ display: "grid", gap: 10 }}>
+                <div className="grid gap-2.5">
                   <div>
                     <div style={labelStyle}>Highlights</div>
                     <textarea
@@ -345,14 +344,14 @@ export default function ReportsPage() {
             )}
 
             {/* Limitations */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
+            <div className="mb-6">
+              <div className="flex gap-1.5 items-center mb-2">
                 <Badge color="yellow">Note</Badge>
-                <span style={{ fontSize: "0.8125rem", fontWeight: 600 }}>Data limitations</span>
+                <span className="text-[13px] font-semibold">Data limitations</span>
               </div>
-              <ul style={{ margin: 0, paddingLeft: 18, color: "#64748b", fontSize: "0.8125rem" }}>
+              <ul className="pl-[18px] text-slate-500 text-[13px] m-0">
                 {report.limitations.map((l) => (
-                  <li key={l} style={{ marginBottom: 4 }}>{l}</li>
+                  <li key={l} className="mb-1">{l}</li>
                 ))}
               </ul>
             </div>

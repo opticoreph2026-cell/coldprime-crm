@@ -26,10 +26,10 @@ interface ImportPreview {
 
 function ValidityBadge({ value }: { value?: string | null }) {
   const state = priceValidity(value);
-  if (state === "none") return <span style={{ color: "#94a3b8" }}>—</span>;
+  if (state === "none") return <span className="text-slate-400">—</span>;
   if (state === "expired") return <Badge color="red">Expired</Badge>;
   if (state === "expiring") return <Badge color="yellow">Expiring</Badge>;
-  return <span style={{ whiteSpace: "nowrap" }}>{String(value).slice(0, 10)}</span>;
+  return <span className="whitespace-nowrap">{String(value).slice(0, 10)}</span>;
 }
 
 export default function VendorDetailPage() {
@@ -204,8 +204,8 @@ export default function VendorDetailPage() {
     } finally { setBusy(false); }
   };
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading vendor...</div>;
-  if (!vendor) return <div style={{ padding: 24 }}>{error && <ErrorBanner message={error} />}</div>;
+  if (loading) return <div className="text-center text-slate-400 p-10">Loading vendor...</div>;
+  if (!vendor) return <div className="p-6">{error && <ErrorBanner message={error} />}</div>;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "contacts", label: `Contacts (${contacts.length})` },
@@ -231,16 +231,11 @@ export default function VendorDetailPage() {
 
       <ErrorBanner message={error} />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div className="flex gap-2 mb-5">
         {tabs.map((t) => (
           <button
             key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            style={{
-              padding: "8px 16px", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600, fontSize: "0.85rem",
-              background: activeTab === t.key ? "#1e40af" : "#e2e8f0",
-              color: activeTab === t.key ? "#fff" : "#0f172a",
-            }}
+            onClick={() => setActiveTab(t.key)} className={`${`${`px-4 py-2 cursor-pointer font-semibold ${activeTab === t.key ? "bg-blue-800 text-white" : "bg-slate-200 text-slate-900"}`} border-0`} rounded-md text-[13.6px]`}
           >
             {t.label}
           </button>
@@ -250,20 +245,20 @@ export default function VendorDetailPage() {
       <div className="page-scroll">
       {activeTab === "contacts" && (
         <div>
-          <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={() => openContact()}>+ Add Contact</button>
+          <button className="btn btn-primary mb-4" onClick={() => openContact()}>+ Add Contact</button>
           {contacts.length === 0 ? (
             <EmptyState message="No contacts yet — use + Add Contact to add the first one." />
           ) : (
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+            <div className="bg-white border border-slate-200 rounded-lg">
               {contacts.map((c, i) => (
-                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid #f1f5f9" }}>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontWeight: 600 }}>{c.firstName} {c.lastName || ""}</span>
-                    {c.position && <span style={{ color: "#64748b", marginLeft: 8 }}>{c.position}</span>}
-                    <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{[c.email, c.mobile].filter(Boolean).join(" • ") || "—"}</div>
+                <div key={c.id} className={`flex items-center gap-3 px-4 py-2.5 ${i === 0 ? "border-t-0" : "border-t border-t-slate-100"}`}>
+                  <div className="flex-1">
+                    <span className="font-semibold">{c.firstName} {c.lastName || ""}</span>
+                    {c.position && <span className="text-slate-500 ml-2">{c.position}</span>}
+                    <div className="text-xs text-slate-500">{[c.email, c.mobile].filter(Boolean).join(" • ") || "—"}</div>
                   </div>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => openContact(c)}>Edit</button>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ kind: "contact", id: c.id, name: `${c.firstName} ${c.lastName || ""}`.trim() })}>Delete</button>
+                  <button className="btn btn-ghost px-2 py-1" onClick={() => openContact(c)}>Edit</button>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ kind: "contact", id: c.id, name: `${c.firstName} ${c.lastName || ""}`.trim() })}>Delete</button>
                 </div>
               ))}
             </div>
@@ -273,40 +268,40 @@ export default function VendorDetailPage() {
 
       {activeTab === "materials" && (
         <div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <div className="flex gap-2 mb-4">
             <button className="btn btn-primary" onClick={() => openMaterial()}>+ Add Material</button>
             <button className="btn btn-secondary" onClick={() => { setPreview(null); setImportOpen(true); }}>Import Price List</button>
           </div>
           {materials.length === 0 ? (
             <EmptyState message="No materials listed — use + Add Material to add the first item." />
           ) : (
-            <div style={{ overflowX: "auto", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+            <div className="overflow-x-auto bg-white border border-slate-200 rounded-lg">
+              <table className="w-full border-collapse text-[13.6px]">
                 <thead>
-                  <tr style={{ background: "#f8fafc" }}>
+                  <tr className="bg-slate-50">
                     {["Item", "Category", "Brand", "Model", "Unit", ...(canSeeCost ? ["Unit Price"] : []), "Lead Time", "Valid Until", ""].map((h, i) => (
-                      <th key={i} style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
+                      <th key={i} className="px-3 py-2 text-left border-b border-b-slate-200 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {materials.map((m) => (
                     <tr key={m.id}>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{m.itemName}</td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.category || "-"}</td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.brand || "-"}</td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.model || "-"}</td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.unit || "-"}</td>
+                      <td className="px-3 py-2 border-b border-b-slate-100 font-semibold">{m.itemName}</td>
+                      <td className="px-3 py-2 border-b border-b-slate-100">{m.category || "-"}</td>
+                      <td className="px-3 py-2 border-b border-b-slate-100">{m.brand || "-"}</td>
+                      <td className="px-3 py-2 border-b border-b-slate-100">{m.model || "-"}</td>
+                      <td className="px-3 py-2 border-b border-b-slate-100">{m.unit || "-"}</td>
                       {canSeeCost && (
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>{m.unitPrice ?? "-"} {m.currency}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">{m.unitPrice ?? "-"} {m.currency}</td>
                       )}
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
+                      <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">
                         {m.leadTimeDays !== null && m.leadTimeDays !== undefined ? `${m.leadTimeDays} days` : "-"}
                       </td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}><ValidityBadge value={m.priceValidUntil} /></td>
-                      <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
-                        <button className="btn btn-ghost" style={{ padding: "0.15rem 0.4rem" }} onClick={() => openMaterial(m)}>Edit</button>
-                        <button className="btn btn-ghost" style={{ padding: "0.15rem 0.4rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ kind: "material", id: m.id, name: m.itemName })}>Delete</button>
+                      <td className="px-3 py-2 border-b border-b-slate-100"><ValidityBadge value={m.priceValidUntil} /></td>
+                      <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">
+                        <button className="btn btn-ghost px-[6.4px] py-[2.4px]" onClick={() => openMaterial(m)}>Edit</button>
+                        <button className="btn btn-ghost px-[6.4px] py-[2.4px] text-red-600" onClick={() => setDeleteTarget({ kind: "material", id: m.id, name: m.itemName })}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -319,17 +314,17 @@ export default function VendorDetailPage() {
 
       {activeTab === "documents" && (
         <div>
-          <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={() => { setDocForm(emptyDoc); setError(""); setDocModal(true); }}>+ Add Document</button>
+          <button className="btn btn-primary mb-4" onClick={() => { setDocForm(emptyDoc); setError(""); setDocModal(true); }}>+ Add Document</button>
           {docs.length === 0 ? (
             <EmptyState message="No documents yet." />
           ) : (
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+            <div className="bg-white border border-slate-200 rounded-lg">
               {docs.map((d, i) => (
-                <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid #f1f5f9" }}>
+                <div key={d.id} className={`flex items-center gap-3 px-4 py-2.5 ${i === 0 ? "border-t-0" : "border-t border-t-slate-100"}`}>
                   <Badge color="blue">{d.category}</Badge>
-                  <a href={d.fileUrl} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: "0.85rem", color: "#1e40af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.fileName}</a>
-                  <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{new Date(d.createdAt).toLocaleDateString()}</span>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ kind: "document", id: d.id, name: d.fileName })}>Delete</button>
+                  <a href={d.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap text-[13.6px]">{d.fileName}</a>
+                  <span className="text-slate-400 text-[11.52px]">{new Date(d.createdAt).toLocaleDateString()}</span>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ kind: "document", id: d.id, name: d.fileName })}>Delete</button>
                 </div>
               ))}
             </div>
@@ -339,13 +334,13 @@ export default function VendorDetailPage() {
       </div>
 
       <Modal open={contactModal.open} title={contactModal.id ? "Edit Contact" : "Add Contact"} onClose={() => setContactModal({ open: false, id: null })} width={520}>
-        <form onSubmit={saveContact} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <form onSubmit={saveContact} className="grid grid-cols-2 gap-3">
           <div><label style={labelStyle}>First Name *</label><input required style={inputStyle} value={contactForm.firstName} onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })} /></div>
           <div><label style={labelStyle}>Last Name</label><input style={inputStyle} value={contactForm.lastName} onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })} /></div>
           <div><label style={labelStyle}>Position</label><input style={inputStyle} value={contactForm.position} onChange={(e) => setContactForm({ ...contactForm, position: e.target.value })} /></div>
           <div><label style={labelStyle}>Mobile</label><input style={inputStyle} value={contactForm.mobile} onChange={(e) => setContactForm({ ...contactForm, mobile: e.target.value })} /></div>
-          <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} /></div>
-          <div style={{ gridColumn: "span 2", display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+          <div className="col-span-2"><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} /></div>
+          <div className="col-span-2 flex gap-2 justify-end mt-1">
             <button type="button" className="btn btn-secondary" onClick={() => setContactModal({ open: false, id: null })} disabled={busy}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : contactModal.id ? "Update" : "Add"}</button>
           </div>
@@ -353,8 +348,8 @@ export default function VendorDetailPage() {
       </Modal>
 
       <Modal open={materialModal.open} title={materialModal.id ? "Edit Material" : "Add Material"} onClose={() => setMaterialModal({ open: false, id: null })} width={560}>
-        <form onSubmit={saveMaterial} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Item Name *</label><input required style={inputStyle} value={materialForm.itemName} onChange={(e) => setMaterialForm({ ...materialForm, itemName: e.target.value })} /></div>
+        <form onSubmit={saveMaterial} className="grid grid-cols-2 gap-3">
+          <div className="col-span-2"><label style={labelStyle}>Item Name *</label><input required style={inputStyle} value={materialForm.itemName} onChange={(e) => setMaterialForm({ ...materialForm, itemName: e.target.value })} /></div>
           <div><label style={labelStyle}>Category</label><input style={inputStyle} value={materialForm.category} onChange={(e) => setMaterialForm({ ...materialForm, category: e.target.value })} /></div>
           <div><label style={labelStyle}>Brand</label><input style={inputStyle} value={materialForm.brand} onChange={(e) => setMaterialForm({ ...materialForm, brand: e.target.value })} /></div>
           <div><label style={labelStyle}>Model</label><input style={inputStyle} value={materialForm.model} onChange={(e) => setMaterialForm({ ...materialForm, model: e.target.value })} /></div>
@@ -364,7 +359,7 @@ export default function VendorDetailPage() {
           )}
           <div><label style={labelStyle}>Lead Time (days)</label><input type="number" min="0" style={inputStyle} value={materialForm.leadTimeDays} onChange={(e) => setMaterialForm({ ...materialForm, leadTimeDays: e.target.value })} /></div>
           <div><label style={labelStyle}>Price Valid Until</label><input type="date" style={inputStyle} value={materialForm.priceValidUntil} onChange={(e) => setMaterialForm({ ...materialForm, priceValidUntil: e.target.value })} /></div>
-          <div style={{ gridColumn: "span 2", display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+          <div className="col-span-2 flex gap-2 justify-end mt-1">
             <button type="button" className="btn btn-secondary" onClick={() => setMaterialModal({ open: false, id: null })} disabled={busy}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : materialModal.id ? "Update" : "Add"}</button>
           </div>
@@ -372,7 +367,7 @@ export default function VendorDetailPage() {
       </Modal>
 
       <Modal open={docModal} title="Add Document" onClose={() => setDocModal(false)} width={520}>
-        <form onSubmit={saveDoc} style={{ display: "grid", gap: 12 }}>
+        <form onSubmit={saveDoc} className="grid gap-3">
           <div>
             <label style={labelStyle}>Category *</label>
             <select style={inputStyle} value={docForm.category} onChange={(e) => setDocForm({ ...docForm, category: e.target.value })}>
@@ -381,7 +376,7 @@ export default function VendorDetailPage() {
           </div>
           <div><label style={labelStyle}>File Name *</label><input required style={inputStyle} value={docForm.fileName} onChange={(e) => setDocForm({ ...docForm, fileName: e.target.value })} /></div>
           <div><label style={labelStyle}>File URL *</label><input required type="url" style={inputStyle} value={docForm.fileUrl} onChange={(e) => setDocForm({ ...docForm, fileUrl: e.target.value })} placeholder="https://..." /></div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+          <div className="flex gap-2 justify-end mt-1">
             <button type="button" className="btn btn-secondary" onClick={() => setDocModal(false)} disabled={busy}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : "Add"}</button>
           </div>
@@ -389,14 +384,14 @@ export default function VendorDetailPage() {
       </Modal>
 
       <Modal open={importOpen} title="Import price list" onClose={() => { setImportOpen(false); setPreview(null); }} width={720}>
-        <div style={{ display: "grid", gap: 12 }}>
-          <div style={{ fontSize: "0.8125rem", color: "#64748b" }}>
+        <div className="grid gap-3">
+          <div className="text-[13px] text-slate-500">
             Upload a CSV or Excel file with columns like Item Name, Category, Brand, Model, Unit, Unit Price,
             Valid Until, Lead Time. Every row is added to this vendor. Duplicates on (vendor, brand, model) are skipped.
           </div>
           <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={() => setPreview(null)} />
           {!preview ? (
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <div className="flex justify-end gap-2">
               <button className="btn btn-secondary" onClick={() => setImportOpen(false)} disabled={importing}>Cancel</button>
               <button className="btn btn-primary" onClick={() => runImport("preview")} disabled={importing}>
                 {importing ? "Reading…" : "Preview"}
@@ -404,21 +399,21 @@ export default function VendorDetailPage() {
             </div>
           ) : (
             <>
-              <div style={{ fontSize: "0.8125rem", fontWeight: 600 }}>
+              <div className="text-[13px] font-semibold">
                 {preview.total} rows — {preview.duplicateRows.length} duplicate{preview.duplicateRows.length === 1 ? "" : "s"}, {preview.errors.length} invalid
               </div>
-              <div style={{ maxHeight: 260, overflowY: "auto", border: "1px solid #e2e8f0", borderRadius: 6 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
+              <div className="overflow-y-auto border border-slate-200 max-h-[260px] rounded-md">
+                <table className="w-full text-xs border-collapse">
                   <tbody>
                     {preview.rows.slice(0, 100).map((r, i) => (
-                      <tr key={i} style={{ background: preview.duplicateRows.includes(i) ? "#fef2f2" : undefined }}>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", color: "#94a3b8", width: 36 }}>{i + 1}</td>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{String(r.itemName || "")}</td>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9" }}>{String(r.brand || "")} {String(r.model || "")}</td>
+                      <tr key={i} className={`${preview.duplicateRows.includes(i) ? "bg-red-50" : ""}`}>
+                        <td className="px-2 py-1 border-b border-b-slate-100 text-slate-400 w-9">{i + 1}</td>
+                        <td className="px-2 py-1 border-b border-b-slate-100 font-semibold">{String(r.itemName || "")}</td>
+                        <td className="px-2 py-1 border-b border-b-slate-100">{String(r.brand || "")} {String(r.model || "")}</td>
                         {canSeeCost && (
-                          <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", textAlign: "right" }}>{r.price !== undefined && r.price !== null ? String(r.price) : ""}</td>
+                          <td className="px-2 py-1 border-b border-b-slate-100 text-right">{r.price !== undefined && r.price !== null ? String(r.price) : ""}</td>
                         )}
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9" }}>
+                        <td className="px-2 py-1 border-b border-b-slate-100">
                           {preview.duplicateRows.includes(i) ? <Badge color="red">dup</Badge> : null}
                         </td>
                       </tr>
@@ -427,11 +422,11 @@ export default function VendorDetailPage() {
                 </table>
               </div>
               {preview.errors.length > 0 && (
-                <div style={{ fontSize: "0.75rem", color: "#dc2626" }}>
+                <div className="text-xs text-red-600">
                   {preview.errors.slice(0, 5).map((e, i) => <div key={i}>Row {e.row}: {e.reason}</div>)}
                 </div>
               )}
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <div className="flex justify-end gap-2">
                 <button className="btn btn-secondary" onClick={() => setPreview(null)} disabled={importing}>Back</button>
                 <button className="btn btn-primary" onClick={() => runImport("import")} disabled={importing || preview.rows.length === 0}>
                   {importing ? "Importing…" : `Import ${preview.rows.length - preview.duplicateRows.length} items`}

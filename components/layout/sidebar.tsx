@@ -79,64 +79,54 @@ export function Sidebar({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div className="flex h-screen overflow-hidden">
       {isMobile && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 52, background: "#0f172a", color: "#fff", display: "flex", alignItems: "center", gap: 12, padding: "0 16px", zIndex: 45 }}>
+        <div className="fixed top-0 left-0 right-0 bg-slate-900 text-white flex items-center gap-3 z-[45] h-[52px] px-4 py-0">
           <button
             onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-            style={{ background: "transparent", border: "none", color: "#fff", fontSize: "1.25rem", cursor: "pointer", padding: "0 4px" }}
+            aria-label="Open menu" className="bg-transparent text-white text-xl cursor-pointer border-0 px-1 py-0"
           >
             ☰
           </button>
           <div>
-            <div style={{ fontSize: "0.9rem", fontWeight: 700, lineHeight: 1.1 }}>COLDPRIME</div>
-            <div style={{ fontSize: "0.6rem", color: "#94a3b8" }}>{user?.branchName || "All Branches"}</div>
+            <div className="font-bold leading-[1.1] text-[14.4px]">COLDPRIME</div>
+            <div className="text-slate-400 text-[9.6px]">{user?.branchName || "All Branches"}</div>
           </div>
         </div>
       )}
 
       {isMobile && mobileOpen && (
         <div
-          onClick={() => setMobileOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", zIndex: 48 }}
+          onClick={() => setMobileOpen(false)} className="fixed inset-0 bg-[rgba(15,23,42,0.5)] z-[48]"
         />
       )}
 
       {(!isMobile || mobileOpen) && (
       <aside
-        style={{
-          width: 240,
-          background: "#0f172a",
-          color: "#e2e8f0",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0,
-          ...(isMobile
+        className="w-[240px] bg-slate-900 text-slate-200 flex flex-col shrink-0"
+        style={ isMobile
             ? { position: "fixed" as const, top: 0, left: 0, bottom: 0, zIndex: 49, overflowY: "auto" as const }
-            : {}),
-        }}
+            : {} }
       >
         {isMobile && (
-          <div style={{ display: "flex", justifyContent: "flex-end", padding: "0.5rem 0.75rem 0" }}>
+          <div className="flex justify-end pb-0 px-3 pt-2">
             <button
               onClick={() => setMobileOpen(false)}
-              aria-label="Close menu"
-              style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.25rem", cursor: "pointer" }}
+              aria-label="Close menu" className="bg-transparent text-slate-400 text-xl cursor-pointer border-0"
             >
               ✕
             </button>
           </div>
         )}
-        <div style={{ padding: "1.25rem 1rem", borderBottom: "1px solid #1e293b" }}>
-          <div style={{ fontSize: "1rem", fontWeight: 700, color: "#fff" }}>
+        <div className="px-4 py-5 border-b border-b-slate-800">
+          <div className="text-base font-bold text-white">
             COLDPRIME
           </div>
-          <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: 2 }}>
+          <div className="text-slate-400 mt-0.5 text-[11.2px]">
             Enterprises Corporation
           </div>
           {user && (
-            <div style={{ fontSize: "0.7rem", color: "#3b82f6", marginTop: 4, fontWeight: 500 }}>
+            <div className="text-blue-500 mt-1 font-medium text-[11.2px]">
               {user.branchName || "All Branches"}
             </div>
           )}
@@ -144,24 +134,14 @@ export function Sidebar({ children }: { children: ReactNode }) {
 
         {/* Branch Switcher for HEAD_ADMIN */}
         {isHeadAdmin && (
-          <div style={{ padding: "0.5rem 1rem", borderBottom: "1px solid #1e293b" }}>
-            <label style={{ fontSize: "0.65rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div className="px-4 py-2 border-b border-b-slate-800">
+            <label className="text-slate-500 uppercase tracking-wider text-[10.4px]">
               Active Branch
             </label>
             <select
               value={user?.activeBranchId || ""}
               onChange={(e) => handleBranchSwitch(e.target.value)}
-              disabled={switching}
-              style={{
-                width: "100%",
-                marginTop: 4,
-                padding: "0.375rem 0.5rem",
-                background: "#1e293b",
-                color: "#e2e8f0",
-                border: "1px solid #334155",
-                borderRadius: 4,
-                fontSize: "0.75rem",
-              }}
+              disabled={switching} className="w-full mt-1 px-2 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 text-xs rounded"
             >
               <option value="">All Branches</option>
               {branches.map((b) => (
@@ -171,26 +151,13 @@ export function Sidebar({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <nav style={{ padding: "0.5rem", flex: 1 }}>
+        <nav className="p-2 flex-1">
           {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
-                href={item.href}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.625rem",
-                  padding: "0.5rem 0.75rem",
-                  borderRadius: "0.375rem",
-                  fontSize: "0.875rem",
-                  textDecoration: "none",
-                  color: active ? "#fff" : "#94a3b8",
-                  background: active ? "#1e40af" : "transparent",
-                  marginBottom: 2,
-                  transition: "all 0.15s",
-                }}
+                href={item.href} className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm no-underline mb-0.5 transition ${active ? "text-white bg-blue-800" : "text-slate-400 bg-transparent"}`}
               >
                 <span>{item.icon}</span>
                 {item.label}
@@ -199,26 +166,13 @@ export function Sidebar({ children }: { children: ReactNode }) {
           })}
           {canManageUsers && (
             <>
-              <div style={{ height: 1, background: "#1e293b", margin: "0.5rem 0.75rem" }} />
+              <div className="bg-slate-800 mx-3 my-2 h-[1px]" />
               {adminNavItems.map((item) => {
                 const active = pathname.startsWith(item.href);
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.625rem",
-                      padding: "0.5rem 0.75rem",
-                      borderRadius: "0.375rem",
-                      fontSize: "0.875rem",
-                      textDecoration: "none",
-                      color: active ? "#fff" : "#94a3b8",
-                      background: active ? "#1e40af" : "transparent",
-                      marginBottom: 2,
-                      transition: "all 0.15s",
-                    }}
+                    href={item.href} className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm no-underline mb-0.5 transition ${active ? "text-white bg-blue-800" : "text-slate-400 bg-transparent"}`}
                   >
                     <span>{item.icon}</span>
                     {item.label}
@@ -231,44 +185,22 @@ export function Sidebar({ children }: { children: ReactNode }) {
 
         {/* User Info + Logout */}
         {user && (
-          <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid #1e293b" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: 6 }}>
-              <div style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "#1e40af",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                color: "#fff",
-              }}>
+          <div className="px-4 py-3 border-t border-t-slate-800">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="rounded-full bg-blue-800 flex items-center justify-center text-xs font-semibold text-white w-7 h-7">
                 {user.name?.charAt(0) || user.email?.charAt(0) || "?"}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-slate-200 overflow-hidden text-ellipsis whitespace-nowrap">
                   {user.name}
                 </div>
-                <div style={{ fontSize: "0.65rem", color: "#64748b" }}>
+                <div className="text-slate-500 text-[10.4px]">
                   {user.role?.replace("_", " ")}
                 </div>
               </div>
             </div>
             <button
-              onClick={handleLogout}
-              style={{
-                width: "100%",
-                padding: "0.375rem",
-                background: "transparent",
-                color: "#94a3b8",
-                border: "1px solid #334155",
-                borderRadius: 4,
-                fontSize: "0.75rem",
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
+              onClick={handleLogout} className="w-full p-1.5 bg-transparent text-slate-400 border border-slate-700 text-xs cursor-pointer transition rounded"
               onMouseEnter={(e) => { e.currentTarget.style.background = "#1e293b"; e.currentTarget.style.color = "#ef4444"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#94a3b8"; }}
             >
@@ -277,12 +209,12 @@ export function Sidebar({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid #1e293b", fontSize: "0.65rem", color: "#475569" }}>
+        <div className="px-4 py-2 border-t border-t-slate-800 text-slate-600 text-[10.4px]">
           Coldprime CRM v2.0
         </div>
       </aside>
       )}
-      <main style={{ flex: 1, overflow: "auto", paddingTop: isMobile ? 52 : 0 }}>{children}</main>
+      <main className={`flex-1 overflow-auto ${isMobile ? "pt-[52px]" : "pt-0"}`}>{children}</main>
     </div>
   );
 }

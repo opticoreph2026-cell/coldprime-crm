@@ -105,7 +105,7 @@ export default function UsersPage() {
   };
 
   if (!isHeadAdmin && session?.user?.role !== "BRANCH_ADMIN") {
-    return <div style={{ padding: 24 }}>Access denied. Admin only.</div>;
+    return <div className="p-6">Access denied. Admin only.</div>;
   }
 
   return (
@@ -122,15 +122,15 @@ export default function UsersPage() {
 
       <Modal open={showForm} title={editingId ? "Edit User" : "New User"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
-          {error && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "0.75rem 1rem", borderRadius: 6, fontSize: "0.875rem", marginBottom: 16 }}>{error}</div>}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Name *</label><input required style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Email *</label><input type="email" required style={{ width: "100%" }} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>{editingId ? "New Password (leave blank to keep)" : "Password *"}</label><input type="password" style={{ width: "100%" }} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editingId} minLength={8} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Role</label><select style={{ width: "100%" }} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} disabled={!isHeadAdmin}>{ROLES.map((r) => <option key={r} value={r}>{r.replace("_", " ")}</option>)}</select></div>
-            {isHeadAdmin && <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Branch</label><select style={{ width: "100%" }} value={form.branchId} onChange={(e) => setForm({ ...form, branchId: e.target.value })} required>{branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>}
+          {error && <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm mb-4 rounded-md">{error}</div>}
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="text-xs font-medium block mb-1">Name *</label><input required className="w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Email *</label><input type="email" required className="w-full" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">{editingId ? "New Password (leave blank to keep)" : "Password *"}</label><input type="password" className="w-full" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editingId} minLength={8} /></div>
+            <div><label className="text-xs font-medium block mb-1">Role</label><select className="w-full" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} disabled={!isHeadAdmin}>{ROLES.map((r) => <option key={r} value={r}>{r.replace("_", " ")}</option>)}</select></div>
+            {isHeadAdmin && <div><label className="text-xs font-medium block mb-1">Branch</label><select className="w-full" value={form.branchId} onChange={(e) => setForm({ ...form, branchId: e.target.value })} required>{branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>}
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
@@ -149,7 +149,7 @@ export default function UsersPage() {
       {!loading && users.length === 0 && !error ? (
         <EmptyState message="No users yet — use + Add User to create the first one." />
       ) : (
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+      <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
         <table>
           <thead>
             <tr><th>Name</th><th>Email</th><th>Role</th><th>Branch</th><th>Status</th><th>Actions</th></tr>
@@ -157,15 +157,15 @@ export default function UsersPage() {
           <tbody>
             {users.map((u) => (
               <tr key={u.id}>
-                <td style={{ fontWeight: 500 }}>{u.name}</td>
+                <td className="font-medium">{u.name}</td>
                 <td>{u.email}</td>
                 <td><span className={`badge badge-${u.role === "HEAD_ADMIN" ? "purple" : u.role === "BRANCH_ADMIN" ? "blue" : "gray"}`}>{u.role.replace("_", " ")}</span></td>
                 <td>{u.branch?.name || "-"}</td>
                 <td><span className={`badge badge-${u.isActive ? "green" : "red"}`}>{u.isActive ? "Active" : "Inactive"}</span></td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => handleEdit(u)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
-                  <button className="btn btn-ghost" onClick={() => handleToggleActive(u)} style={{ padding: "0.25rem 0.5rem" }}>{u.isActive ? "Deactivate" : "Activate"}</button>
-                  {isHeadAdmin && u.id !== session?.user?.id && <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: u.id, name: u.email })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>}
+                  <button className="btn btn-ghost px-2 py-1" onClick={() => handleEdit(u)}>Edit</button>
+                  <button className="btn btn-ghost px-2 py-1" onClick={() => handleToggleActive(u)}>{u.isActive ? "Deactivate" : "Activate"}</button>
+                  {isHeadAdmin && u.id !== session?.user?.id && <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: u.id, name: u.email })}>Delete</button>}
                 </td>
               </tr>
             ))}

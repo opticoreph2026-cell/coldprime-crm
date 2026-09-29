@@ -93,7 +93,7 @@ export default function VendorsPage() {
 
       {error && <ErrorBanner message={error} />}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+      <div className="flex gap-2 mb-4">
         {(["vendors", "priceList"] as const).map((v) => (
           <button
             key={v}
@@ -107,20 +107,20 @@ export default function VendorsPage() {
 
       <Modal open={showForm} title={editingId ? "Edit Vendor" : "New Vendor"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Name *</label>
-              <input required style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+              <label className="text-xs font-medium block mb-1">Name *</label>
+              <input required className="w-full p-2 border border-slate-200 rounded"
                 value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Category</label>
-              <input style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+              <label className="text-xs font-medium block mb-1">Category</label>
+              <input className="w-full p-2 border border-slate-200 rounded"
                 value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
             </div>
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label>
-              <select style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+              <label className="text-xs font-medium block mb-1">Status</label>
+              <select className="w-full p-2 border border-slate-200 rounded"
                 value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -128,7 +128,7 @@ export default function VendorsPage() {
               </select>
             </div>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }}>
+          <button type="submit" className="btn btn-primary mt-4">
             {editingId ? "Update" : "Create"}
           </button>
         </form>
@@ -142,10 +142,10 @@ export default function VendorsPage() {
         onConfirm={handleDelete}
       />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input placeholder="Search vendors..." style={{ flex: 1, padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+      <div className="flex gap-2 mb-4">
+        <input placeholder="Search vendors..." className="flex-1 p-2 border border-slate-200 rounded"
           value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select style={{ padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+        <select className="p-2 border border-slate-200 rounded"
           value={category} onChange={(e) => setCategory(e.target.value)}>
           <option value="">All Categories</option>
           <option value="Equipment Supplier">Equipment Supplier</option>
@@ -162,33 +162,33 @@ export default function VendorsPage() {
             (v.materials || []).map((m) => ({ vendor: v, m }))
           ).sort((a, b) => a.vendor.name.localeCompare(b.vendor.name) || a.m.itemName.localeCompare(b.m.itemName));
           return (
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflowX: "auto" }}>
+            <div className="bg-white border border-slate-200 overflow-x-auto rounded-lg">
               {rows.length === 0 ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
+                <div className="text-center text-slate-400 p-10">
                   No materials found on this page of vendors. Open a vendor and add items to its Price List.
                 </div>
               ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                <table className="w-full border-collapse text-[13.6px]">
                   <thead>
-                    <tr style={{ background: "#f8fafc" }}>
+                    <tr className="bg-slate-50">
                       {["Vendor", "Item", "Category", "Brand", "Model", "Unit", "Unit Price", "Valid Until"].map((h) => (
-                        <th key={h} style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                        <th key={h} className="px-3 py-2 text-left border-b border-b-slate-200">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map(({ vendor, m }) => (
                       <tr key={m.id}>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
-                          <a href={`/vendors/${vendor.id}`} style={{ color: "#1e40af", fontWeight: 600, textDecoration: "none" }}>{vendor.name}</a>
+                        <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">
+                          <a href={`/vendors/${vendor.id}`} className="text-blue-800 font-semibold no-underline">{vendor.name}</a>
                         </td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{m.itemName}</td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.category || "-"}</td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.brand || "-"}</td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.model || "-"}</td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.unit || "-"}</td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>{m.unitPrice !== undefined ? `${m.unitPrice} ${m.currency}` : "—"}</td>
-                        <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{m.priceValidUntil ? new Date(m.priceValidUntil).toLocaleDateString() : "-"}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100 font-semibold">{m.itemName}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100">{m.category || "-"}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100">{m.brand || "-"}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100">{m.model || "-"}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100">{m.unit || "-"}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">{m.unitPrice !== undefined ? `${m.unitPrice} ${m.currency}` : "—"}</td>
+                        <td className="px-3 py-2 border-b border-b-slate-100">{m.priceValidUntil ? new Date(m.priceValidUntil).toLocaleDateString() : "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -200,22 +200,22 @@ export default function VendorsPage() {
       ) : !loading && vendors.length === 0 && !search && !debouncedSearch && !category && !error ? (
         <EmptyState message="No vendors yet — use + Add Vendor to create the first one." />
       ) : (
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+      <div className="bg-white border border-slate-200 rounded-lg">
         {vendors.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>{loading ? "Loading…" : "No vendors found"}</div>
+          <div className="text-center text-slate-400 p-10">{loading ? "Loading…" : "No vendors found"}</div>
         ) : (
           vendors.map((v) => (
-            <div key={v.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={v.id} className="px-4 py-3 border-b border-b-slate-100 flex justify-between items-center">
               <div>
-                <div style={{ fontWeight: 600 }}>{v.name}</div>
-                <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                <div className="font-semibold">{v.name}</div>
+                <div className="text-xs text-slate-500">
                   {v.category} • {v.contacts.length} contacts • {v.materials.length} materials
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <a href={`/vendors/${v.id}`} className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem", textDecoration: "none" }}>View</a>
-                <button className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem" }} onClick={() => { setEditingId(v.id); setForm({ name: v.name, category: v.category || "", status: v.status }); setShowForm(true); }}>Edit</button>
-                <button className="btn btn-secondary" style={{ padding: "4px 12px", fontSize: "0.75rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ id: v.id, name: v.name })}>Delete</button>
+              <div className="flex gap-2">
+                <a href={`/vendors/${v.id}`} className="btn btn-secondary px-3 py-1 text-xs no-underline">View</a>
+                <button className="btn btn-secondary px-3 py-1 text-xs" onClick={() => { setEditingId(v.id); setForm({ name: v.name, category: v.category || "", status: v.status }); setShowForm(true); }}>Edit</button>
+                <button className="btn btn-secondary px-3 py-1 text-xs text-red-600" onClick={() => setDeleteTarget({ id: v.id, name: v.name })}>Delete</button>
               </div>
             </div>
           ))

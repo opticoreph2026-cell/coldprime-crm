@@ -105,18 +105,18 @@ export default function ContactsPage() {
 
       <Modal open={showForm} title={editingId ? "Edit Contact" : "New Contact"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company *</label><select required style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="text-xs font-medium block mb-1">Company *</label><select required className="w-full" value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>First Name *</label><input required style={{ width: "100%" }} value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Last Name</label><input style={{ width: "100%" }} value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Position</label><input style={{ width: "100%" }} value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Email</label><input type="email" style={{ width: "100%" }} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Mobile</label><input style={{ width: "100%" }} value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} placeholder="0917-123-4567" /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Landline</label><input style={{ width: "100%" }} value={form.landline} onChange={(e) => setForm({ ...form, landline: e.target.value })} placeholder="(032) 123-4567" /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">First Name *</label><input required className="w-full" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Last Name</label><input className="w-full" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Position</label><input className="w-full" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Email</label><input type="email" className="w-full" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Mobile</label><input className="w-full" value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} placeholder="0917-123-4567" /></div>
+            <div><label className="text-xs font-medium block mb-1">Landline</label><input className="w-full" value={form.landline} onChange={(e) => setForm({ ...form, landline: e.target.value })} placeholder="(032) 123-4567" /></div>
+            <div className="col-span-2"><label className="text-xs font-medium block mb-1">Notes</label><textarea rows={2} className="w-full" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
@@ -131,7 +131,7 @@ export default function ContactsPage() {
         onConfirm={handleDelete}
       />
 
-      <div style={{ marginBottom: 16 }}>
+      <div className="mb-4">
         <SearchInput placeholder="Search contacts..." width={400} value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
       </div>
 
@@ -139,7 +139,7 @@ export default function ContactsPage() {
       {!loading && contacts.length === 0 && !search && !debouncedSearch && !error ? (
         <EmptyState message="No contacts yet — use + Add Contact to create the first one." />
       ) : (
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+      <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
         <table>
           <thead>
             <tr><th>Name</th><th>Company</th><th>Position</th><th>Email</th><th>Mobile</th><th>Landline</th><th>Actions</th></tr>
@@ -147,31 +147,30 @@ export default function ContactsPage() {
           <tbody>
             {contacts.map((c) => (
               <tr key={c.id}>
-                <td style={{ fontWeight: 500 }}>{c.firstName} {c.lastName || ""}</td>
+                <td className="font-medium">{c.firstName} {c.lastName || ""}</td>
                 <td>{c.company.name}</td>
                 <td>{c.position || "-"}</td>
                 <td>
                   {c.email || "-"}
                   {c.emailOptOut && (
-                    <span title={`Opted out ${c.emailOptOutAt ? new Date(c.emailOptOutAt).toLocaleString() : ""}`} style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca", padding: "1px 6px", borderRadius: 999, whiteSpace: "nowrap" }}>
+                    <span title={`Opted out ${c.emailOptOutAt ? new Date(c.emailOptOutAt).toLocaleString() : ""}`} className="ml-1.5 text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 px-1.5 py-[1px] whitespace-nowrap rounded-full">
                       OPTED OUT
                     </span>
                   )}
                 </td>
-                <td style={{ whiteSpace: "nowrap" }}>{c.mobile || "-"}</td>
-                <td style={{ whiteSpace: "nowrap" }}>{c.landline || "-"}</td>
+                <td className="whitespace-nowrap">{c.mobile || "-"}</td>
+                <td className="whitespace-nowrap">{c.landline || "-"}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => handleEdit(c)} style={{ padding: "0.25rem 0.5rem" }}>Edit</button>
+                  <button className="btn btn-ghost px-2 py-1" onClick={() => handleEdit(c)}>Edit</button>
                   <button
-                    className="btn btn-ghost"
+                    className={`btn btn-ghost px-2 py-1 ${c.emailOptOut ? "text-green-800" : "text-orange-700"}`}
                     onClick={() => handleOptOut(c)}
                     disabled={!c.email}
                     title={c.email ? (c.emailOptOut ? "Undo opt-out (admins only)" : `Mark ${c.email} as opted out`) : "No email address"}
-                    style={{ padding: "0.25rem 0.5rem", color: c.emailOptOut ? "#166534" : "#c2410c" }}
                   >
                     {c.emailOptOut ? "Undo opt-out" : "Opt out"}
                   </button>
-                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: c.id, name: `${c.firstName} ${c.lastName || ""}`.trim() })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: c.id, name: `${c.firstName} ${c.lastName || ""}`.trim() })}>Delete</button>
                 </td>
               </tr>
             ))}

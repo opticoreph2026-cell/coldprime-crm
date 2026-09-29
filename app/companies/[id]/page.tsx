@@ -130,15 +130,15 @@ export default function CompanyDetailPage() {
     await load();
   };
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading company...</div>;
-  if (error) return <div style={{ padding: 24 }}><div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8 }}>{error}</div></div>;
+  if (loading) return <div className="text-center text-slate-400 p-10">Loading company...</div>;
+  if (error) return <div className="p-6"><div className="bg-red-50 text-red-600 p-3 rounded-lg">{error}</div></div>;
   if (!company) return null;
 
   return (
     <div className="page page-center">
-      <Link href="/companies" style={{ fontSize: "0.875rem", color: "#3b82f6" }}>← Back to Companies</Link>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, marginBottom: 4 }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{company.name}</h1>
+      <Link href="/companies" className="text-sm text-blue-500">← Back to Companies</Link>
+      <div className="flex items-center gap-3 mt-2 mb-1">
+        <h1 className="text-2xl font-bold">{company.name}</h1>
         <span className="badge badge-gray">{TYPE_LABELS[company.type] || company.type}</span>
         {company.accreditationStatus !== "NOT_STARTED" && (
           <span className={`badge ${ACCREDITATION_BADGE[company.accreditationStatus] || "badge-gray"}`}>
@@ -146,16 +146,15 @@ export default function CompanyDetailPage() {
           </span>
         )}
       </div>
-      <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: 20 }}>
+      <p className="text-slate-500 text-sm mb-5">
         {company.industry} • {company.status}{company.outreachStatus ? ` • Outreach: ${company.outreachStatus}` : ""}
       </p>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
+      <div className="flex gap-1.5 mb-6 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            style={{ padding: "8px 14px", background: activeTab === t.key ? "#1e40af" : "#e2e8f0", color: activeTab === t.key ? "#fff" : "#0f172a", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600, fontSize: "0.8125rem" }}
+            onClick={() => setActiveTab(t.key)} className={`${`${`px-3.5 py-2 cursor-pointer font-semibold text-[13px] ${activeTab === t.key ? "bg-blue-800 text-white" : "bg-slate-200 text-slate-900"}`} border-0`} rounded-md`}
           >
             {t.label}{t.key === "contacts" ? ` (${company.contacts.length})` : t.key === "leads" ? ` (${company.leads.length})` : t.key === "projects" ? ` (${company.projects.length})` : t.key === "documents" ? ` (${company.documents.length})` : ""}
           </button>
@@ -164,63 +163,63 @@ export default function CompanyDetailPage() {
 
       <div className="page-scroll">
       {activeTab === "overview" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", rowGap: 10, fontSize: "0.875rem" }}>
-            <span style={{ color: "#64748b" }}>Client Type</span><span>{TYPE_LABELS[company.type] || company.type}</span>
-            <span style={{ color: "#64748b" }}>Industry</span><span>{company.industry}</span>
-            <span style={{ color: "#64748b" }}>Email</span><span>{company.email || "-"}</span>
-            <span style={{ color: "#64748b" }}>Mobile</span><span>{[company.mobile1, company.mobile2, company.mobile3].filter(Boolean).join(", ") || "-"}</span>
-            <span style={{ color: "#64748b" }}>Landline</span><span>{company.landline1 || "-"}</span>
-            <span style={{ color: "#64748b" }}>Address</span><span>{company.address || "-"}</span>
-            <span style={{ color: "#64748b" }}>Website</span><span>{company.website || "-"}</span>
-            <span style={{ color: "#64748b" }}>Source</span><span>{company.source || "-"}</span>
-            <span style={{ color: "#64748b" }}>Status</span><span>{company.status}</span>
-            <span style={{ color: "#64748b" }}>Created</span><span>{new Date(company.createdAt).toLocaleDateString("en-PH")}</span>
-            {company.notes && (<><span style={{ color: "#64748b" }}>Notes</span><span style={{ whiteSpace: "pre-wrap" }}>{company.notes}</span></>)}
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          <div className="grid grid-cols-[160px_1fr] gap-y-2.5 text-sm">
+            <span className="text-slate-500">Client Type</span><span>{TYPE_LABELS[company.type] || company.type}</span>
+            <span className="text-slate-500">Industry</span><span>{company.industry}</span>
+            <span className="text-slate-500">Email</span><span>{company.email || "-"}</span>
+            <span className="text-slate-500">Mobile</span><span>{[company.mobile1, company.mobile2, company.mobile3].filter(Boolean).join(", ") || "-"}</span>
+            <span className="text-slate-500">Landline</span><span>{company.landline1 || "-"}</span>
+            <span className="text-slate-500">Address</span><span>{company.address || "-"}</span>
+            <span className="text-slate-500">Website</span><span>{company.website || "-"}</span>
+            <span className="text-slate-500">Source</span><span>{company.source || "-"}</span>
+            <span className="text-slate-500">Status</span><span>{company.status}</span>
+            <span className="text-slate-500">Created</span><span>{new Date(company.createdAt).toLocaleDateString("en-PH")}</span>
+            {company.notes && (<><span className="text-slate-500">Notes</span><span className="whitespace-pre-wrap">{company.notes}</span></>)}
           </div>
         </div>
       )}
 
       {activeTab === "accreditation" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <span className={`badge ${ACCREDITATION_BADGE[company.accreditationStatus] || "badge-gray"}`} style={{ fontSize: "0.875rem" }}>
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className={`${`badge ${ACCREDITATION_BADGE[company.accreditationStatus] || "badge-gray"}`} text-sm`}>
               {ACCREDITATION_LABELS[company.accreditationStatus] || company.accreditationStatus}
             </span>
-            <span style={{ fontSize: "0.8125rem", color: "#64748b" }}>
+            <span className="text-[13px] text-slate-500">
               {company.accreditationSubmittedAt && `Submitted ${new Date(company.accreditationSubmittedAt).toLocaleDateString("en-PH")}`}
               {company.accreditationSubmittedAt && company.accreditationDecisionAt && " • "}
               {company.accreditationDecisionAt && `Decided ${new Date(company.accreditationDecisionAt).toLocaleDateString("en-PH")}`}
             </span>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="flex gap-2 flex-wrap">
             {ACCREDITATION_ACTIONS.filter((a) => a.to !== company.accreditationStatus).map((a) => (
               <button key={a.to} className="btn btn-secondary" disabled={saving} onClick={() => a.confirm ? setAccredConfirm({ status: a.to, message: a.confirm }) : setAccreditation(a.to)}>
                 {a.label}
               </button>
             ))}
           </div>
-          <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: 12 }}>
+          <p className="text-xs text-slate-400 mt-3">
             Progression: Not Started → Documents Submitted → Under Review → Accredited / Rejected. Timestamps are recorded automatically.
           </p>
         </div>
       )}
 
       {activeTab === "contacts" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
-          {company.contacts.length === 0 ? <p style={{ color: "#94a3b8" }}>No contacts yet.</p> : company.contacts.map((c) => (
-            <div key={c.id} style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
-              <span style={{ fontWeight: 600 }}>{c.firstName} {c.lastName || ""}</span>
-              {c.position && <span style={{ color: "#64748b", marginLeft: 8 }}>{c.position}</span>}
-              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{c.email || "-"} • {c.mobile || "-"}</div>
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          {company.contacts.length === 0 ? <p className="text-slate-400">No contacts yet.</p> : company.contacts.map((c) => (
+            <div key={c.id} className="border-b border-b-slate-100 px-0 py-2.5">
+              <span className="font-semibold">{c.firstName} {c.lastName || ""}</span>
+              {c.position && <span className="text-slate-500 ml-2">{c.position}</span>}
+              <div className="text-xs text-slate-500">{c.email || "-"} • {c.mobile || "-"}</div>
             </div>
           ))}
         </div>
       )}
 
       {activeTab === "leads" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
-          {company.leads.length === 0 ? <p style={{ color: "#94a3b8", padding: 16 }}>No leads yet.</p> : (
+        <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
+          {company.leads.length === 0 ? <p className="text-slate-400 p-4">No leads yet.</p> : (
             <table>
               <thead><tr><th>Added</th><th>Type</th><th>Status</th><th>Priority</th><th>Est. Value</th></tr></thead>
               <tbody>
@@ -240,14 +239,14 @@ export default function CompanyDetailPage() {
       )}
 
       {activeTab === "projects" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
-          {company.projects.length === 0 ? <p style={{ color: "#94a3b8", padding: 16 }}>No projects yet.</p> : (
+        <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
+          {company.projects.length === 0 ? <p className="text-slate-400 p-4">No projects yet.</p> : (
             <table>
               <thead><tr><th>Project</th><th>Location</th><th>Status</th><th>Created</th></tr></thead>
               <tbody>
                 {company.projects.map((p) => (
                   <tr key={p.id}>
-                    <td style={{ fontWeight: 500 }}>{p.projectName}</td>
+                    <td className="font-medium">{p.projectName}</td>
                     <td>{p.projectLocation || "-"}</td>
                     <td>{p.status}</td>
                     <td>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-PH") : "-"}</td>
@@ -260,41 +259,41 @@ export default function CompanyDetailPage() {
       )}
 
       {activeTab === "activities" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
-          {company.activities.length === 0 ? <p style={{ color: "#94a3b8" }}>No activities yet.</p> : company.activities.map((a) => (
-            <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          {company.activities.length === 0 ? <p className="text-slate-400">No activities yet.</p> : company.activities.map((a) => (
+            <div key={a.id} className="border-b border-b-slate-100 px-0 py-2.5">
               <span className="badge badge-blue">{a.type}</span>
-              <span style={{ fontSize: "0.8125rem", color: "#64748b", marginLeft: 8 }}>
+              <span className="text-[13px] text-slate-500 ml-2">
                 {new Date(a.date).toLocaleDateString("en-PH")}{a.performedBy ? ` • ${a.performedBy}` : ""}
               </span>
-              {a.description && <div style={{ fontSize: "0.875rem", marginTop: 4 }}>{a.description}</div>}
+              {a.description && <div className="text-sm mt-1">{a.description}</div>}
             </div>
           ))}
         </div>
       )}
 
       {activeTab === "documents" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr 1fr auto", gap: 8, marginBottom: 16, alignItems: "end" }}>
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          <div className="grid grid-cols-[160px_1fr_1fr_auto] gap-2 mb-4 items-end">
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Category</label>
-              <select style={{ width: "100%" }} value={docForm.category} onChange={(e) => setDocForm({ ...docForm, category: e.target.value })}>
+              <label className="text-xs font-medium block mb-1">Category</label>
+              <select className="w-full" value={docForm.category} onChange={(e) => setDocForm({ ...docForm, category: e.target.value })}>
                 {DOCUMENT_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>File Name</label>
-              <input style={{ width: "100%" }} value={docForm.fileName} onChange={(e) => setDocForm({ ...docForm, fileName: e.target.value })} placeholder="Company-Profile-2026.pdf" />
+              <label className="text-xs font-medium block mb-1">File Name</label>
+              <input className="w-full" value={docForm.fileName} onChange={(e) => setDocForm({ ...docForm, fileName: e.target.value })} placeholder="Company-Profile-2026.pdf" />
             </div>
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>File URL</label>
-              <input style={{ width: "100%" }} value={docForm.fileUrl} onChange={(e) => setDocForm({ ...docForm, fileUrl: e.target.value })} placeholder="https://..." />
+              <label className="text-xs font-medium block mb-1">File URL</label>
+              <input className="w-full" value={docForm.fileUrl} onChange={(e) => setDocForm({ ...docForm, fileUrl: e.target.value })} placeholder="https://..." />
             </div>
             <button className="btn btn-primary" disabled={saving} onClick={addDocument}>Add</button>
           </div>
           <ErrorBanner message={docError} />
           {company.documents.length === 0 ? (
-            <p style={{ color: "#94a3b8" }}>No documents yet.</p>
+            <p className="text-slate-400">No documents yet.</p>
           ) : (
             <table>
               <thead><tr><th>Category</th><th>File</th><th>Added</th><th></th></tr></thead>
@@ -302,9 +301,9 @@ export default function CompanyDetailPage() {
                 {company.documents.map((d: Document) => (
                   <tr key={d.id}>
                     <td><span className="badge badge-gray">{d.category}</span></td>
-                    <td><a href={d.fileUrl} target="_blank" rel="noreferrer" style={{ color: "#1e40af" }}>{d.fileName}</a></td>
+                    <td><a href={d.fileUrl} target="_blank" rel="noreferrer" className="text-blue-800">{d.fileName}</a></td>
                     <td>{new Date(d.createdAt).toLocaleDateString("en-PH")}</td>
-                    <td><button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDocDelete({ id: d.id, name: d.fileName })}>Delete</button></td>
+                    <td><button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDocDelete({ id: d.id, name: d.fileName })}>Delete</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -314,11 +313,11 @@ export default function CompanyDetailPage() {
       )}
 
       {activeTab === "emails" && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 24 }}>
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
           {!emailsLoaded ? (
-            <p style={{ color: "#94a3b8" }}>Loading emails…</p>
+            <p className="text-slate-400">Loading emails…</p>
           ) : emails.length === 0 ? (
-            <p style={{ color: "#94a3b8" }}>No emails sent to this company or its contacts yet.</p>
+            <p className="text-slate-400">No emails sent to this company or its contacts yet.</p>
           ) : (
             <table>
               <thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>

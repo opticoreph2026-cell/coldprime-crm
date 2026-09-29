@@ -102,24 +102,24 @@ export default function EmailTemplatesPage() {
 
       <Modal open={showForm} title={editingId ? "Edit Template" : "New Template"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="grid grid-cols-2 gap-4">
             <div><label style={labelStyle}>Template Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="IAQ Indoor Air Quality Proposal" /></div>
             <div><label style={labelStyle}>Category</label><input style={inputStyle} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="IAQ Proposal, General Vendor Outreach, GC, Architect..." /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={labelStyle}>Subject *</label><input required style={inputStyle} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Indoor Air Quality Solutions - {{companyName}}" /></div>
-            <div style={{ gridColumn: "span 2" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <div className="col-span-2"><label style={labelStyle}>Subject *</label><input required style={inputStyle} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Indoor Air Quality Solutions - {{companyName}}" /></div>
+            <div className="col-span-2">
+              <div className="flex justify-between items-center mb-1">
                 <label style={labelStyle}>Body *</label>
-                <button type="button" className="btn btn-ghost" style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }} onClick={insertMergeTag} title="Insert company name merge tag">
+                <button type="button" className="btn btn-ghost text-xs px-2 py-1" onClick={insertMergeTag} title="Insert company name merge tag">
                   + {"{{companyName}}"}
                 </button>
               </div>
               <textarea required rows={12} style={{ ...inputStyle, fontFamily: "inherit" }} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} placeholder="Hello {{companyName}}, ..." />
-              <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: 4 }}>
+              <p className="text-xs text-slate-400 mt-1">
                 Merge tags: <code>{"{{companyName}}"}</code> is replaced with the recipient company&apos;s name when sending.
               </p>
             </div>
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>
             <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
           </div>
@@ -134,7 +134,7 @@ export default function EmailTemplatesPage() {
         onConfirm={handleDelete}
       />
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="flex gap-3 mb-4 flex-wrap">
         <SearchInput placeholder="Search templates..." value={search} onChange={(v) => setSearch(v)} />
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="">All Categories</option>
@@ -144,32 +144,32 @@ export default function EmailTemplatesPage() {
 
       <div className="page-scroll">
       {loading ? (
-        <p style={{ color: "#94a3b8" }}>Loading templates...</p>
+        <p className="text-slate-400">Loading templates...</p>
       ) : templates.length === 0 && !search && !categoryFilter && !error ? (
         <EmptyState message="No email templates yet — use + New Template to create the first one." />
       ) : filtered.length === 0 ? (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
+        <div className="bg-white border border-slate-200 text-center text-slate-400 rounded-lg p-8">
           No templates yet. Create one with <strong>+ New Template</strong>.
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 12 }}>
+        <div className="grid gap-3">
           {filtered.map((t) => (
-            <div key={t.id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                    <span style={{ fontWeight: 600 }}>{t.name}</span>
+            <div key={t.id} className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="flex justify-between items-start gap-3">
+                <div className="min-w-0">
+                  <div className="flex gap-2 items-center mb-1">
+                    <span className="font-semibold">{t.name}</span>
                     {t.category && <span className="badge badge-blue">{t.category}</span>}
                   </div>
-                  <div style={{ fontSize: "0.875rem", color: "#334155", marginBottom: 6 }}>Subject: {t.subject}</div>
-                  <div style={{ fontSize: "0.8125rem", color: "#64748b", whiteSpace: "pre-wrap", maxHeight: 60, overflow: "hidden" }}>{t.body}</div>
-                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: 6 }}>
+                  <div className="text-sm text-slate-700 mb-1.5">Subject: {t.subject}</div>
+                  <div className="text-[13px] text-slate-500 whitespace-pre-wrap overflow-hidden max-h-[60px]">{t.body}</div>
+                  <div className="text-xs text-slate-400 mt-1.5">
                     Updated {new Date(t.updatedAt).toLocaleString()}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => handleEdit(t)}>Edit</button>
-                  <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ id: t.id, name: t.name })}>Delete</button>
+                <div className="flex gap-1 shrink-0">
+                  <button className="btn btn-ghost px-2 py-1" onClick={() => handleEdit(t)}>Edit</button>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: t.id, name: t.name })}>Delete</button>
                 </div>
               </div>
             </div>

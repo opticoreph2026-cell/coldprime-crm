@@ -17,56 +17,42 @@ export default function SentPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
+      <div className="text-center text-slate-400 p-10">
         Loading sent emails...
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 24 }}>
+    <div className="p-6 max-w-[900px] mx-auto my-0">
+      <h1 className="text-2xl font-bold text-slate-900 mb-6">
         📤 Sent Emails ({logs.length})
       </h1>
 
       {logs.length === 0 ? (
-        <div style={{ textAlign: "center", color: "#94a3b8", padding: 40 }}>
+        <div className="text-center text-slate-400 p-10">
           No emails sent yet. Go to <a href="/emails">Compose</a> to send one.
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {logs.map((log) => (
             <div
-              key={log.id}
-              style={{
-                padding: 16,
-                border: "1px solid #e2e8f0",
-                borderRadius: 8,
-                background: log.status === "FAILED" ? "#fef2f2" : "#fff",
-              }}
+              key={log.id} className={`${`border border-slate-200 ${log.status === "FAILED" ? "bg-red-50" : "bg-white"}`} p-4 rounded-lg`}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="flex justify-between items-center">
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{log.subject}</div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                  <div className="font-semibold text-sm">{log.subject}</div>
+                  <div className="text-xs text-slate-500">
                     To: {log.toName || log.toEmail} • {new Date(log.sentAt).toLocaleString()}
                   </div>
                 </div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    padding: "2px 8px",
-                    borderRadius: 4,
-                    background: log.status === "SENT" ? "#dcfce7" : "#fef2f2",
-                    color: log.status === "SENT" ? "#166534" : "#dc2626",
-                    fontWeight: 600,
-                  }}
+                <span className={`${`text-[11px] px-2 py-0.5 font-semibold ${log.status === "SENT" ? "bg-green-100 text-green-800" : "bg-red-50 text-red-600"}`} rounded`}
                 >
                   {log.status}
                 </span>
               </div>
               {log.errorCode && (
-                <div style={{ fontSize: 12, color: "#dc2626", marginTop: 8 }}>Error: {log.errorCode}</div>
+                <div className="text-xs text-red-600 mt-2">Error: {log.errorCode}</div>
               )}
             </div>
           ))}

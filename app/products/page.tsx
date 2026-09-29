@@ -30,10 +30,10 @@ interface PreviewState {
 
 function ValidityBadge({ value }: { value?: string | null }) {
   const state = priceValidity(value);
-  if (state === "none") return <span style={{ color: "#94a3b8" }}>—</span>;
+  if (state === "none") return <span className="text-slate-400">—</span>;
   if (state === "expired") return <Badge color="red">Expired</Badge>;
   if (state === "expiring") return <Badge color="yellow">Expiring</Badge>;
-  return <span style={{ whiteSpace: "nowrap" }}>{String(value).slice(0, 10)}</span>;
+  return <span className="whitespace-nowrap">{String(value).slice(0, 10)}</span>;
 }
 
 export default function ProductsPage() {
@@ -195,10 +195,10 @@ export default function ProductsPage() {
 
       {error && <ErrorBanner message={error} />}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input placeholder="Search products..." style={{ flex: 1, padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+      <div className="flex gap-2 mb-4">
+        <input placeholder="Search products..." className="flex-1 p-2 border border-slate-200 rounded"
           value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
-        <select style={{ padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: 4 }}
+        <select className="p-2 border border-slate-200 rounded"
           value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
           <option value="">All Categories</option>
           <option value="HVAC Equipment">HVAC Equipment</option>
@@ -214,38 +214,38 @@ export default function ProductsPage() {
       {!loading && products.length === 0 && !search && !category && !error ? (
         <EmptyState message="No products yet — use + Add Product to create the first one, or import a price list." />
       ) : (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflowX: "auto" }}>
+        <div className="bg-white border border-slate-200 overflow-x-auto rounded-lg">
           {products.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>{loading ? "Loading…" : "No products found"}</div>
+            <div className="text-center text-slate-400 p-10">{loading ? "Loading…" : "No products found"}</div>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+            <table className="w-full border-collapse text-[13.6px]">
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
+                <tr className="bg-slate-50">
                   {["Product", "Category", "Brand / Model", "Unit", "Sell Price", "Lead Time", "Valid Until", "Status", ""].map((h) => (
-                    <th key={h} style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} className="px-3 py-2 text-left border-b border-b-slate-200 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {products.map((p) => (
                   <tr key={p.id}>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{p.name}</td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{p.category || "-"}</td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>{[p.brand, p.model].filter(Boolean).join(" / ") || "-"}</td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>{p.unit || "-"}</td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
+                    <td className="px-3 py-2 border-b border-b-slate-100 font-semibold">{p.name}</td>
+                    <td className="px-3 py-2 border-b border-b-slate-100">{p.category || "-"}</td>
+                    <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">{[p.brand, p.model].filter(Boolean).join(" / ") || "-"}</td>
+                    <td className="px-3 py-2 border-b border-b-slate-100">{p.unit || "-"}</td>
+                    <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">
                       {p.sellPrice !== null && p.sellPrice !== undefined ? `${p.sellPrice} ${p.currency}` : "-"}
                     </td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
+                    <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">
                       {p.leadTimeDays !== null && p.leadTimeDays !== undefined ? `${p.leadTimeDays} days` : "-"}
                     </td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}><ValidityBadge value={p.priceValidUntil} /></td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9" }}>
+                    <td className="px-3 py-2 border-b border-b-slate-100"><ValidityBadge value={p.priceValidUntil} /></td>
+                    <td className="px-3 py-2 border-b border-b-slate-100">
                       <Badge color={p.isActive ? "green" : "gray"}>{p.isActive ? "Active" : "Inactive"}</Badge>
                     </td>
-                    <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" }}>
-                      <button className="btn btn-ghost" style={{ padding: "0.15rem 0.4rem" }} onClick={() => openForm(p)}>Edit</button>
-                      <button className="btn btn-ghost" style={{ padding: "0.15rem 0.4rem", color: "#dc2626" }} onClick={() => setDeleteTarget({ id: p.id, name: p.name })}>Delete</button>
+                    <td className="px-3 py-2 border-b border-b-slate-100 whitespace-nowrap">
+                      <button className="btn btn-ghost px-[6.4px] py-[2.4px]" onClick={() => openForm(p)}>Edit</button>
+                      <button className="btn btn-ghost px-[6.4px] py-[2.4px] text-red-600" onClick={() => setDeleteTarget({ id: p.id, name: p.name })}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -260,8 +260,8 @@ export default function ProductsPage() {
 
       <Modal open={formOpen} title={editingId ? "Edit Product" : "New Product"} onClose={() => { setFormOpen(false); setEditingId(null); }} width={640}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div style={{ gridColumn: "span 2" }}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
               <label style={labelStyle}>Name *</label>
               <input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
@@ -288,7 +288,7 @@ export default function ProductsPage() {
             </div>
             <div><label style={labelStyle}>Notes</label><input style={inputStyle} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+          <div className="flex gap-2 justify-end mt-4">
             <button type="button" className="btn btn-secondary" onClick={() => { setFormOpen(false); setEditingId(null); }} disabled={busy}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : editingId ? "Update" : "Create"}</button>
           </div>
@@ -296,14 +296,14 @@ export default function ProductsPage() {
       </Modal>
 
       <Modal open={importOpen} title="Import price list" onClose={() => { setImportOpen(false); setPreview(null); }} width={720}>
-        <div style={{ display: "grid", gap: 12 }}>
-          <div style={{ fontSize: "0.8125rem", color: "#64748b" }}>
+        <div className="grid gap-3">
+          <div className="text-[13px] text-slate-500">
             Upload a CSV or Excel file. Columns are matched by header (Name / Item, Category, Brand, Model, Unit,
             Price, Currency, Valid Until, Lead Time, Notes). Duplicates on (name, brand, model) are skipped.
           </div>
           <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={() => setPreview(null)} />
           {!preview ? (
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <div className="flex justify-end gap-2">
               <button className="btn btn-secondary" onClick={() => { setImportOpen(false); }} disabled={importing}>Cancel</button>
               <button className="btn btn-primary" onClick={() => runImport("preview")} disabled={importing}>
                 {importing ? "Reading…" : "Preview"}
@@ -311,20 +311,20 @@ export default function ProductsPage() {
             </div>
           ) : (
             <>
-              <div style={{ fontSize: "0.8125rem", fontWeight: 600 }}>
+              <div className="text-[13px] font-semibold">
                 {preview.fileName}: {preview.total} rows — {preview.duplicateRows.length} duplicate
                 {preview.duplicateRows.length === 1 ? "" : "s"} in file, {preview.errors.length} invalid
               </div>
-              <div style={{ maxHeight: 260, overflowY: "auto", border: "1px solid #e2e8f0", borderRadius: 6 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
+              <div className="overflow-y-auto border border-slate-200 max-h-[260px] rounded-md">
+                <table className="w-full text-xs border-collapse">
                   <tbody>
                     {preview.rows.slice(0, 100).map((r, i) => (
-                      <tr key={i} style={{ background: preview.duplicateRows.includes(i) ? "#fef2f2" : undefined }}>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", color: "#94a3b8", width: 36 }}>{i + 1}</td>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", fontWeight: 600 }}>{String(r.itemName || "")}</td>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9" }}>{String(r.brand || "")} {String(r.model || "")}</td>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9", textAlign: "right" }}>{r.price !== undefined && r.price !== null ? String(r.price) : ""}</td>
-                        <td style={{ padding: "4px 8px", borderBottom: "1px solid #f1f5f9" }}>
+                      <tr key={i} className={`${preview.duplicateRows.includes(i) ? "bg-red-50" : ""}`}>
+                        <td className="px-2 py-1 border-b border-b-slate-100 text-slate-400 w-9">{i + 1}</td>
+                        <td className="px-2 py-1 border-b border-b-slate-100 font-semibold">{String(r.itemName || "")}</td>
+                        <td className="px-2 py-1 border-b border-b-slate-100">{String(r.brand || "")} {String(r.model || "")}</td>
+                        <td className="px-2 py-1 border-b border-b-slate-100 text-right">{r.price !== undefined && r.price !== null ? String(r.price) : ""}</td>
+                        <td className="px-2 py-1 border-b border-b-slate-100">
                           {preview.duplicateRows.includes(i) ? <Badge color="red">dup</Badge> : null}
                         </td>
                       </tr>
@@ -333,11 +333,11 @@ export default function ProductsPage() {
                 </table>
               </div>
               {preview.errors.length > 0 && (
-                <div style={{ fontSize: "0.75rem", color: "#dc2626" }}>
+                <div className="text-xs text-red-600">
                   {preview.errors.slice(0, 5).map((e, i) => <div key={i}>Row {e.row}: {e.reason}</div>)}
                 </div>
               )}
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <div className="flex justify-end gap-2">
                 <button className="btn btn-secondary" onClick={() => setPreview(null)} disabled={importing}>Back</button>
                 <button className="btn btn-primary" onClick={() => runImport("import")} disabled={importing || preview.rows.length === 0}>
                   {importing ? "Importing…" : `Import ${preview.rows.length - preview.duplicateRows.length} products`}

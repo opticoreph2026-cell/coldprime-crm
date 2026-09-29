@@ -26,17 +26,16 @@ export function Modal({ open, title, onClose, children, footer, width = 560 }: {
 
   return (
     <div
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.45)", zIndex: 50, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "6vh 16px 16px" }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} className="fixed inset-0 bg-[rgba(15,23,42,0.45)] z-50 flex items-start justify-center pb-4 px-4 pt-[6vh]"
     >
-      <div role="dialog" aria-modal="true" aria-label={title} style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: width, maxHeight: "86vh", overflowY: "auto", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, background: "#fff", borderRadius: "10px 10px 0 0" }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, margin: 0 }}>{title}</h2>
-          <button type="button" aria-label="Close" onClick={onClose} style={{ border: "none", background: "transparent", fontSize: "1.25rem", color: "#64748b", cursor: "pointer", lineHeight: 1 }}>✕</button>
+      <div role="dialog" aria-modal="true" aria-label={title} className="bg-white w-full max-h-[86vh] overflow-y-auto shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] rounded-[10px]" style={{ maxWidth: width }}>
+        <div className="flex justify-between items-center px-6 py-3.5 border-b border-b-slate-200 sticky top-0 bg-white rounded-[10px_10px_0px_0px]">
+          <h2 className="text-base font-semibold m-0">{title}</h2>
+          <button type="button" aria-label="Close" onClick={onClose} className="bg-transparent text-xl text-slate-500 cursor-pointer leading-none border-0">✕</button>
         </div>
-        <div style={{ padding: 24 }}>{children}</div>
+        <div className="p-6">{children}</div>
         {footer && (
-          <div style={{ padding: "14px 24px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 8, position: "sticky", bottom: 0, background: "#fff", borderRadius: "0 0 10px 10px" }}>{footer}</div>
+          <div className="px-6 py-3.5 border-t border-t-slate-200 flex justify-end gap-2 sticky bottom-0 bg-white rounded-[0px_0px_10px_10px]">{footer}</div>
         )}
       </div>
     </div>
@@ -69,7 +68,7 @@ export function ConfirmDialog({ open, title = "Are you sure?", message, confirmL
         </>
       }
     >
-      <p style={{ fontSize: "0.875rem", color: "#334155", margin: 0 }}>{message}</p>
+      <p className="text-sm text-slate-700 m-0">{message}</p>
     </Modal>
   );
 }
@@ -80,12 +79,12 @@ export function PageHeader({ title, subtitle, actions }: {
   actions?: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+    <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
       <div>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{title}</h1>
-        {subtitle && <p style={{ color: "#64748b", fontSize: "0.875rem" }}>{subtitle}</p>}
+        <h1 className="text-2xl font-bold">{title}</h1>
+        {subtitle && <p className="text-slate-500 text-sm">{subtitle}</p>}
       </div>
-      {actions && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginLeft: "auto", justifyContent: "flex-end" }}>{actions}</div>}
+      {actions && <div className="flex gap-2 flex-wrap ml-auto justify-end">{actions}</div>}
     </div>
   );
 }
@@ -93,7 +92,7 @@ export function PageHeader({ title, subtitle, actions }: {
 export function ErrorBanner({ message, children }: { message: string; children?: React.ReactNode }) {
   if (!message) return null;
   return (
-    <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fecaca", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+    <div className="bg-red-50 text-red-600 mb-4 border border-red-200 flex justify-between items-center gap-3 p-3 rounded-lg">
       <span>{message}</span>
       {children}
     </div>
@@ -103,7 +102,7 @@ export function ErrorBanner({ message, children }: { message: string; children?:
 export function NoticeBanner({ message, children }: { message: string; children?: React.ReactNode }) {
   if (!message) return null;
   return (
-    <div style={{ background: "#dcfce7", color: "#166534", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #bbf7d0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+    <div className="bg-green-100 text-green-800 mb-4 border border-green-200 flex justify-between items-center gap-3 p-3 rounded-lg">
       <span>{message}</span>
       {children}
     </div>
@@ -113,22 +112,22 @@ export function NoticeBanner({ message, children }: { message: string; children?
 export function EmptyRow({ colSpan, message }: { colSpan: number; message: string }) {
   return (
     <tr>
-      <td colSpan={colSpan} style={{ textAlign: "center", padding: 32, color: "#94a3b8" }}>{message}</td>
+      <td colSpan={colSpan} className="text-center text-slate-400 p-8">{message}</td>
     </tr>
   );
 }
 
 export function EmptyState({ message, action }: { message: string; action?: React.ReactNode }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 32, textAlign: "center", color: "#94a3b8" }}>
+    <div className="bg-white border border-slate-200 text-center text-slate-400 rounded-lg p-8">
       <div>{message}</div>
-      {action && <div style={{ marginTop: 12 }}>{action}</div>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
 
 export function LoadingState({ message = "Loading..." }: { message?: string }) {
-  return <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>{message}</div>;
+  return <div className="text-center text-slate-400 p-10">{message}</div>;
 }
 
 export function Pagination({ page, total, limit = 50, onPage }: {
@@ -140,9 +139,9 @@ export function Pagination({ page, total, limit = 50, onPage }: {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const btnStyle = { padding: "0.5rem 1rem", fontSize: "0.875rem" };
   return (
-    <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+    <div className="flex justify-center gap-2 mt-4">
       <button className="btn btn-secondary" style={{ ...btnStyle, opacity: page <= 1 ? 0.5 : 1 }} disabled={page <= 1} onClick={() => onPage(page - 1)}>Prev</button>
-      <span style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>Page {page} of {totalPages}</span>
+      <span className="px-4 py-2 text-sm">Page {page} of {totalPages}</span>
       <button className="btn btn-secondary" style={{ ...btnStyle, opacity: page >= totalPages ? 0.5 : 1 }} disabled={page >= totalPages} onClick={() => onPage(page + 1)}>Next</button>
     </div>
   );
@@ -165,7 +164,7 @@ export function FormField({ label, required, span, children }: {
 }) {
   return (
     <div style={span === 2 ? { gridColumn: "span 2" } : undefined}>
-      <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>
+      <label className="text-xs font-medium block mb-1">
         {label}{required && " *"}
       </label>
       {children}
@@ -199,5 +198,43 @@ export function Card({ children, padding = 24, style }: {
     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding, ...style }}>
       {children}
     </div>
+  );
+}
+
+type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+
+export function Button({ variant = "primary", size, type = "button", disabled, busy, onClick, className = "", title, children }: {
+  variant?: ButtonVariant;
+  size?: "sm";
+  type?: "button" | "submit";
+  disabled?: boolean;
+  busy?: boolean;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  className?: string;
+  title?: string;
+  children: React.ReactNode;
+}) {
+  const cls = ["btn", `btn-${variant}`, size === "sm" ? "btn-sm" : "", className].filter(Boolean).join(" ");
+  return (
+    <button type={type} className={cls} disabled={disabled || busy} onClick={onClick} title={title}>
+      {busy ? "Working\u2026" : children}
+    </button>
+  );
+}
+
+export function Table({ columns, children, className = "" }: {
+  columns?: string[];
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <table className={className}>
+      {columns && (
+        <thead>
+          <tr>{columns.map((c) => <th key={c}>{c}</th>)}</tr>
+        </thead>
+      )}
+      <tbody>{children}</tbody>
+    </table>
   );
 }

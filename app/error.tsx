@@ -8,25 +8,15 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <div style={{ padding: 40, textAlign: "center" }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, color: "#dc2626", marginBottom: 12 }}>
+    <div className="text-center p-10">
+      <h2 className="text-xl font-bold text-red-600 mb-3">
         Something went wrong
       </h2>
-      <p style={{ fontSize: 14, color: "#64748b", marginBottom: 20 }}>
+      <p className="text-sm text-slate-500 mb-5">
         {error.message || "An unexpected error occurred."}
       </p>
       <button
-        onClick={reset}
-        style={{
-          padding: "10px 24px",
-          background: "#1e40af",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          cursor: "pointer",
-          fontSize: 14,
-          fontWeight: 600,
-        }}
+        onClick={reset} className="px-6 py-2.5 bg-blue-800 text-white cursor-pointer text-sm font-semibold border-0 rounded-md"
       >
         Try again
       </button>

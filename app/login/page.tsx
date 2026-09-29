@@ -37,145 +37,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)",
-    }}>
-      <div style={{
-        width: "100%",
-        maxWidth: 400,
-        background: "#fff",
-        borderRadius: 12,
-        padding: "2.5rem",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-      }}>
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{
-            fontSize: "1.5rem",
-            fontWeight: 800,
-            color: "#0f172a",
-            letterSpacing: "-0.025em",
-          }}>
+    <div className="min-h-screen flex items-center justify-center bg-[linear-gradient(135deg,_#0f172a_0%,_#1e3a8a_100%)]">
+      <div className="w-full bg-white p-10 shadow-[0_25px_50px_-12px_rgba(0,_0,_0,_0.25)] max-w-[400px] rounded-xl">
+        <div className="text-center mb-8">
+          <div className="text-2xl font-extrabold text-slate-900 tracking-tight">
             COLDPRIME
           </div>
-          <div style={{
-            fontSize: "0.75rem",
-            color: "#64748b",
-            marginTop: 4,
-          }}>
+          <div className="text-xs text-slate-500 mt-1">
             Enterprises Corporation
           </div>
-          <div style={{
-            fontSize: "0.875rem",
-            color: "#94a3b8",
-            marginTop: 8,
-          }}>
+          <div className="text-sm text-slate-400 mt-2">
             Sign in to your CRM account
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && (
-            <div style={{
-              background: "#fef2f2",
-              border: "1px solid #fecaca",
-              color: "#991b1b",
-              padding: "0.75rem 1rem",
-              borderRadius: 6,
-              fontSize: "0.875rem",
-              marginBottom: 16,
-            }}>
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm mb-4 rounded-md">
               {error}
             </div>
           )}
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{
-              display: "block",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-            }}>
+          <div className="mb-4">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Email
             </label>
             <input
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.625rem 0.75rem",
-                border: "1px solid #d1d5db",
-                borderRadius: 6,
-                fontSize: "0.875rem",
-                outline: "none",
-                transition: "border-color 0.15s",
-                boxSizing: "border-box",
-              }}
+              onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 text-sm outline-none rounded-md box-border transition-colors"
               placeholder="admin@coldprime.ph"
             />
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label style={{
-              display: "block",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-            }}>
+          <div className="mb-6">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Password
             </label>
             <input
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.625rem 0.75rem",
-                border: "1px solid #d1d5db",
-                borderRadius: 6,
-                fontSize: "0.875rem",
-                outline: "none",
-                transition: "border-color 0.15s",
-                boxSizing: "border-box",
-              }}
+              onChange={(e) => setPassword(e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 text-sm outline-none rounded-md box-border transition-colors"
               placeholder="Enter your password"
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "0.625rem",
-              background: loading ? "#93c5fd" : "#1e40af",
-              color: "#fff",
-              border: "none",
-              borderRadius: 6,
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background 0.15s",
-            }}
+            disabled={loading} className={`${`${`${`w-full p-2.5 text-white text-sm font-semibold ${loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-800 cursor-pointer"}`} border-0`} rounded-md`} transition-colors`}
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <div style={{
-          textAlign: "center",
-          marginTop: "1.5rem",
-          fontSize: "0.75rem",
-          color: "#94a3b8",
-        }}>
+        <div className="text-center mt-6 text-xs text-slate-400">
           Coldprime CRM v2.0
         </div>
       </div>

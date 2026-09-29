@@ -43,24 +43,19 @@ function SetupChecklist({ stats }: { stats: DashboardStats }) {
 
   return (
     <Card style={{ marginBottom: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>Get started — {doneCount}/{steps.length} done</h2>
-        <button className="btn btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }} onClick={dismiss}>Dismiss</button>
+      <div className="flex justify-between items-center mb-1">
+        <h2 className="text-base font-semibold">Get started — {doneCount}/{steps.length} done</h2>
+        <button className="btn btn-ghost px-2 py-1 text-xs" onClick={dismiss}>Dismiss</button>
       </div>
-      <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: 12 }}>Finish these steps to unlock the full Coldprime workflow.</p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
+      <p className="text-xs text-slate-400 mb-3">Finish these steps to unlock the full Coldprime workflow.</p>
+      <div className="grid grid-cols-[repeat(auto-fill,_minmax(240px,_1fr))] gap-2">
         {steps.map((s) => (
           <Link
             key={s.label}
-            href={s.href}
-            style={{
-              display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 6,
-              border: "1px solid #e2e8f0", fontSize: "0.8rem", textDecoration: "none",
-              color: s.done ? "#166534" : "#0f172a", background: s.done ? "#f0fdf4" : "#fff",
-            }}
+            href={s.href} className={`flex items-center gap-2 px-3 py-2 rounded-md border border-slate-200 text-[12.8px] no-underline ${s.done ? "text-green-800 bg-green-50" : "text-slate-900 bg-white"}`}
           >
             <span>{s.done ? "✅" : "⬜"}</span>
-            <span style={{ textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.7 : 1 }}>{s.label}</span>
+            <span className={`${s.done ? "line-through opacity-70" : "no-underline opacity-100"}`}>{s.label}</span>
           </Link>
         ))}
       </div>
@@ -92,7 +87,7 @@ export default function DashboardPage() {
     </div>
   );
 
-  if (!stats) return <div className="page"><p style={{ color: "#64748b" }}>Loading dashboard...</p></div>;
+  if (!stats) return <div className="page"><p className="text-slate-500">Loading dashboard...</p></div>;
 
   const cards = [
     { label: "Pipeline Value", value: peso(stats.pipelineTotal), color: "#1e40af", sub: `${stats.activeLeads} open leads` },
@@ -114,7 +109,7 @@ export default function DashboardPage() {
         title="Dashboard"
         subtitle={`Coldprime Enterprises Corporation — ${branchName}`}
         actions={
-          <span style={{ fontSize: "0.8rem", color: "#64748b", alignSelf: "center" }}>
+          <span className="text-slate-500 self-center text-[12.8px]">
             This month: <strong>{stats.activitiesThisMonth}</strong> activities · <strong>{stats.newLeadsThisMonth}</strong> new leads
           </span>
         }
@@ -123,38 +118,38 @@ export default function DashboardPage() {
       <div className="page-scroll">
       <SetupChecklist stats={stats} />
 
-      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="responsive-grid grid grid-cols-4 gap-4 mb-6">
         {cards.map((card) => (
           <Card key={card.label} padding={20}>
-            <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div className="text-slate-500 uppercase tracking-wider text-[11.2px]">
               {card.label}
             </div>
-            <div style={{ fontSize: "1.75rem", fontWeight: 700, color: card.color, marginTop: 4 }}>
+            <div className="text-[28px] font-bold mt-1" style={{ color: card.color }}>
               {typeof card.value === "string" ? card.value : card.value.toLocaleString()}
             </div>
             {card.sub && (
-              <div style={{ fontSize: "0.72rem", marginTop: 4, color: card.subColor || "#94a3b8" }}>{card.sub}</div>
+              <div className="mt-1 text-[11.52px]" style={{ color: card.subColor || "#94a3b8" }}>{card.sub}</div>
             )}
           </Card>
         ))}
       </div>
 
-      <div className="responsive-split" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div className="responsive-split grid grid-cols-[2fr_1fr] gap-4 mb-6">
         <Card>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 4 }}>Pipeline Value by Status</h2>
-          <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: 16 }}>Estimated value of open leads, excluding completed/cancelled.</p>
+          <h2 className="text-base font-semibold mb-1">Pipeline Value by Status</h2>
+          <p className="text-xs text-slate-400 mb-4">Estimated value of open leads, excluding completed/cancelled.</p>
           {stats.pipelineByStatus.length === 0 ? (
             <EmptyState message="No open leads with estimated values yet." />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="flex flex-col gap-2.5">
               {stats.pipelineByStatus.map((p) => (
                 <div key={p.status}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: 3 }}>
-                    <span style={{ fontWeight: 500 }}>{p.status} <span style={{ color: "#94a3b8" }}>({p.count})</span></span>
-                    <span style={{ fontWeight: 600, color: "#1e40af" }}>{peso(p.value)}</span>
+                  <div className="flex justify-between mb-[3px] text-[12.8px]">
+                    <span className="font-medium">{p.status} <span className="text-slate-400">({p.count})</span></span>
+                    <span className="font-semibold text-blue-800">{peso(p.value)}</span>
                   </div>
-                  <div style={{ height: 8, background: "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${Math.max(2, (p.value / maxPipeline) * 100)}%`, background: "#1e40af", borderRadius: 4 }} />
+                  <div className="bg-slate-100 overflow-hidden h-2 rounded">
+                    <div className="h-full bg-blue-800 rounded" style={{ width: `${Math.max(2, (p.value / maxPipeline) * 100)}%` }} />
                   </div>
                 </div>
               ))}
@@ -163,15 +158,15 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 16 }}>Projects by Status</h2>
+          <h2 className="text-base font-semibold mb-4">Projects by Status</h2>
           {stats.projectsByStatus.length === 0 ? (
             <EmptyState message="No projects yet." />
           ) : (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="flex gap-2 flex-wrap">
               {stats.projectsByStatus.map((p) => (
-                <div key={p.status} style={{ padding: "0.4rem 0.75rem", background: "#f1f5f9", borderRadius: 6, fontSize: "0.8rem" }}>
-                  <span style={{ fontWeight: 600 }}>{p.count}</span>{" "}
-                  <span style={{ color: "#64748b" }}>{p.status}</span>
+                <div key={p.status} className="px-3 py-[6.4px] bg-slate-100 rounded-md text-[12.8px]">
+                  <span className="font-semibold">{p.count}</span>{" "}
+                  <span className="text-slate-500">{p.status}</span>
                 </div>
               ))}
             </div>
@@ -180,29 +175,29 @@ export default function DashboardPage() {
       </div>
 
       <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>Recent Activity</h2>
-          <Link href="/activities" style={{ fontSize: "0.8rem", color: "#1e40af" }}>View all →</Link>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-base font-semibold">Recent Activity</h2>
+          <Link href="/activities" className="text-[12.8px] text-blue-800">View all →</Link>
         </div>
         {stats.recentActivities.length === 0 ? (
             <EmptyState message="No activities logged yet." />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="flex flex-col">
             {stats.recentActivities.map((a, i) => {
               const overdue = a.nextFollowUp && new Date(a.nextFollowUp) < new Date();
               return (
-                <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid #f1f5f9" }}>
-                  <span style={{ fontSize: "1rem", width: 24, textAlign: "center" }}>{TYPE_ICONS[a.type] || "📌"}</span>
-                  <span style={{ fontSize: "0.75rem", color: "#64748b", width: 56, whiteSpace: "nowrap" }}>{fmtDate(a.date)}</span>
+                <div key={a.id} className={`${`flex items-center gap-3 ${i === 0 ? "border-t-0" : "border-t border-t-slate-100"}`} px-0 py-2.5`}>
+                  <span className="text-base text-center w-6">{TYPE_ICONS[a.type] || "📌"}</span>
+                  <span className="text-xs text-slate-500 whitespace-nowrap w-14">{fmtDate(a.date)}</span>
                   <Badge color="gray" title={a.type}>{a.type.replace(/_/g, " ")}</Badge>
-                  <span style={{ flex: 1, fontSize: "0.85rem", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <span className="flex-1 text-slate-900 overflow-hidden text-ellipsis whitespace-nowrap text-[13.6px]">
                     {a.description || "—"}
                     {(a.company || a.project) && (
-                      <span style={{ color: "#64748b" }}> · {a.company?.name || a.project?.projectName}</span>
+                      <span className="text-slate-500"> · {a.company?.name || a.project?.projectName}</span>
                     )}
                   </span>
                   {a.nextFollowUp && (
-                    <span style={{ fontSize: "0.72rem", whiteSpace: "nowrap", color: overdue ? "#dc2626" : "#0f766e", fontWeight: overdue ? 600 : 400 }}>
+                    <span className={`${`whitespace-nowrap ${overdue ? "text-red-600 font-semibold" : "text-teal-700 font-normal"}`} text-[11.52px]`}>
                       {overdue ? "overdue " : "next "}{fmtDate(a.nextFollowUp)}
                     </span>
                   )}

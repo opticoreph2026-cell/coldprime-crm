@@ -122,16 +122,16 @@ export default function LeadsPage() {
 
       <Modal open={showForm} title="New Lead" onClose={() => setShowForm(false)}>
         <form onSubmit={handleCreate}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company</label><select style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Lead Type</label><select style={{ width: "100%" }} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Source</label><input style={{ width: "100%" }} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Industry</label><input style={{ width: "100%" }} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Priority</label><select style={{ width: "100%" }} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Estimated Value</label><input type="number" style={{ width: "100%" }} value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0.00" /></div>
-            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Notes</label><textarea rows={2} style={{ width: "100%" }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="text-xs font-medium block mb-1">Company</label><select className="w-full" value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Lead Type</label><select className="w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Source</label><input className="w-full" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
+            <div><label className="text-xs font-medium block mb-1">Industry</label><input className="w-full" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Priority</label><select className="w-full" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Estimated Value</label><input type="number" className="w-full" value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0.00" /></div>
+            <div className="col-span-2"><label className="text-xs font-medium block mb-1">Notes</label><textarea rows={2} className="w-full" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">Create Lead</button>
             <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
           </div>
@@ -146,7 +146,7 @@ export default function LeadsPage() {
         onConfirm={handleDelete}
       />
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="flex gap-3 mb-4 flex-wrap">
         <SearchInput placeholder="Search leads..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
         <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setStatusFilter(""); setPage(1); }}>
           <option value="">All Types</option>
@@ -162,7 +162,7 @@ export default function LeadsPage() {
       {!loading && leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
         <EmptyState message="No leads yet — use + New Lead to create the first one." />
       ) : (
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+      <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
         <table>
           <thead>
             <tr><th>Date</th><th>Company</th><th>Type</th><th>Source</th><th>Industry</th><th>Status</th><th>Priority</th><th>Next Follow-Up</th><th>Actions</th></tr>
@@ -170,20 +170,20 @@ export default function LeadsPage() {
           <tbody>
             {leads.map((l) => (
               <tr key={l.id}>
-                <td style={{ whiteSpace: "nowrap" }}>{new Date(l.dateAdded).toLocaleDateString("en-PH")}</td>
-                <td style={{ fontWeight: 500 }}>{l.company?.name || "Walk-in"}</td>
+                <td className="whitespace-nowrap">{new Date(l.dateAdded).toLocaleDateString("en-PH")}</td>
+                <td className="font-medium">{l.company?.name || "Walk-in"}</td>
                 <td><span className={`badge ${TYPE_BADGE[l.type] || "badge-gray"}`}>{TYPE_LABELS[l.type] || l.type}</span></td>
                 <td>{l.source || "-"}</td>
                 <td>{l.industry || "-"}</td>
                 <td>
-                  <select value={l.status} onChange={(e) => handleStatusChange(l.id, e.target.value)} style={{ padding: "2px 6px", fontSize: "0.75rem" }}>
+                  <select value={l.status} onChange={(e) => handleStatusChange(l.id, e.target.value)} className="px-1.5 py-0.5 text-xs">
                     {stagesFor(l.type, l.status).map((s) => <option key={s}>{s}</option>)}
                   </select>
                 </td>
                 <td><span className={`badge badge-${l.priority === "High" ? "red" : l.priority === "Low" ? "gray" : "blue"}`}>{l.priority}</span></td>
-                <td style={{ whiteSpace: "nowrap" }}>{l.nextFollowUp ? new Date(l.nextFollowUp).toLocaleDateString("en-PH") : "-"}</td>
+                <td className="whitespace-nowrap">{l.nextFollowUp ? new Date(l.nextFollowUp).toLocaleDateString("en-PH") : "-"}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: l.id, name: l.company?.name || "Walk-in" })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: l.id, name: l.company?.name || "Walk-in" })}>Delete</button>
                 </td>
               </tr>
             ))}

@@ -506,7 +506,7 @@ export default function EmailsPage() {
   if (loading) {
     return (
       <div className="page">
-        <p style={{ textAlign: "center", color: "#94a3b8" }}>Loading emails...</p>
+        <p className="text-center text-slate-400">Loading emails...</p>
       </div>
     );
   }
@@ -543,12 +543,12 @@ export default function EmailsPage() {
   });
 
   return (
-    <div className="page" style={{ maxWidth: 900, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 24 }}>
+    <div className="page max-w-[900px] mx-auto my-0">
+      <h1 className="text-2xl font-bold text-slate-900 mb-6">
         ✉️ Email Outreach
       </h1>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+      <div className="flex gap-2 mb-6 flex-wrap">
         <button
           onClick={() => router.push("/emails/compose")}
           style={{
@@ -576,28 +576,28 @@ export default function EmailsPage() {
       </div>
 
       {error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+        <div className="bg-red-50 text-red-600 mb-4 p-3 rounded-lg">
           {error}
         </div>
       )}
       {notice && (
-        <div style={{ background: "#dcfce7", color: "#166534", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+        <div className="bg-green-100 text-green-800 mb-4 p-3 rounded-lg">
           {notice}
         </div>
       )}
 
       {emailStatus?.freeMailWarning && (
-        <div style={{ background: "#fffbeb", color: "#92400e", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #fde68a", fontSize: 13 }}>
+        <div className="bg-amber-50 text-amber-800 mb-4 border border-yellow-200 text-[13px] p-3 rounded-lg">
           ⚠️ {emailStatus.freeMailWarning}
         </div>
       )}
 
-      <details style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13 }}>
-        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+      <details className="bg-slate-50 border border-slate-200 px-3.5 py-2.5 mb-4 text-[13px] rounded-lg">
+        <summary className="cursor-pointer font-semibold">
           📋 Sending setup checklist (owner action)
           {emailStatus ? ` — today: ${emailStatus.sentToday}/${emailStatus.dailyCap} sent, ${emailStatus.remaining} remaining` : ""}
         </summary>
-        <ul style={{ margin: "8px 0 0 18px", color: "#475569", lineHeight: 1.7 }}>
+        <ul className="text-slate-600 leading-[1.7] mr-[18px] mb-0 ml-0 mt-2">
           <li>Send from an address on the company&apos;s own domain (confirm: <code>coldprimecorporation.com</code> for email vs <code>coldprimecorp.com</code> for the website).</li>
           <li>Configure SPF, DKIM and DMARC records for that domain before sending volume.</li>
           <li>Warm the address up gradually — the daily cap per user is enforced in code (default 30, set <code>EMAIL_DAILY_CAP</code> to change).</li>
@@ -608,19 +608,19 @@ export default function EmailsPage() {
       <div className="page-scroll">
       {activeTab === "bulk" && (
         <div>
-          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+          <div className="bg-slate-50 border border-slate-200 mb-4 rounded-lg p-4">
+            <div className="font-semibold text-sm mb-1">
               📦 Bulk Send — {finalTargets.length} of {companyTargets.length} companies selected
             </div>
-            <div style={{ fontSize: 12, color: "#64748b" }}>
+            <div className="text-xs text-slate-500">
               <code>[Company Name]</code> is replaced from the database for each recipient. Edit{" "}
               <code>[Your Name]</code>, <code>[Phone]</code>, and <code>[Email]</code> in the fields below or directly in the body.
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 8 }}>
+          <div className="grid grid-cols-3 gap-3 mb-2">
             <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Your Name</label>
+              <label className="block text-[13px] font-semibold mb-1">Your Name</label>
               <input
                 type="text"
                 value={senderName}
@@ -630,7 +630,7 @@ export default function EmailsPage() {
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Phone</label>
+              <label className="block text-[13px] font-semibold mb-1">Phone</label>
               <input
                 type="text"
                 value={phone}
@@ -640,7 +640,7 @@ export default function EmailsPage() {
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Email</label>
+              <label className="block text-[13px] font-semibold mb-1">Email</label>
               <input
                 type="email"
                 value={senderEmail}
@@ -650,10 +650,10 @@ export default function EmailsPage() {
               />
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 8 }}>
+          <div className="grid grid-cols-2 gap-3 mb-2">
             <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-                CC <span style={{ fontWeight: 400, color: "#94a3b8", fontSize: 11 }}>(optional — gets a copy of every send)</span>
+              <label className="block text-[13px] font-semibold mb-1">
+                CC <span className="font-normal text-slate-400 text-[11px]">(optional — gets a copy of every send)</span>
               </label>
               <input
                 type="email"
@@ -664,7 +664,7 @@ export default function EmailsPage() {
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>CC Name</label>
+              <label className="block text-[13px] font-semibold mb-1">CC Name</label>
               <input
                 type="text"
                 value={ccName}
@@ -674,7 +674,7 @@ export default function EmailsPage() {
               />
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <div className="flex items-center gap-3 mb-4">
             <button
               onClick={handleSaveProfile}
               disabled={savingProfile}
@@ -682,18 +682,18 @@ export default function EmailsPage() {
             >
               {savingProfile ? "Saving…" : "💾 Save details"}
             </button>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>
+            <span className="text-[11px] text-slate-400">
               Saved once — prefilled automatically next time on any device.
             </span>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Subject</label>
+          <div className="mb-4">
+            <label className="block text-[13px] font-semibold mb-1">Subject</label>
             <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} style={inputStyle} />
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Body</label>
+          <div className="mb-4">
+            <label className="block text-[13px] font-semibold mb-1">Body</label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -702,23 +702,14 @@ export default function EmailsPage() {
             />
           </div>
 
-          <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, marginBottom: 16, background: "#fff" }}>
-            <div
-              style={{
-                padding: "10px 12px",
-                borderBottom: "1px solid #e2e8f0",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 8,
-              }}
+          <div className="border border-slate-200 mb-4 bg-white rounded-lg">
+            <div className="px-3 py-2.5 border-b border-b-slate-200 flex justify-between items-center flex-wrap gap-2"
             >
-              <div style={{ fontSize: 13, fontWeight: 600 }}>
+              <div className="text-[13px] font-semibold">
                 Recipients — {finalTargets.length} will receive
                 {limitNum > 0 && selectedIds.length > finalTargets.length ? ` (limited to ${limitNum})` : ""}
               </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <div className="flex gap-1.5 items-center">
                 <button
                   onClick={() => setSelectedIds(filteredCompanies.map((c) => c.id!))}
                   style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}
@@ -728,26 +719,19 @@ export default function EmailsPage() {
                 <button onClick={() => setSelectedIds([])} style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}>
                   Deselect all
                 </button>
-                <label style={{ fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 4 }}>
+                <label className="text-xs text-slate-500 flex items-center gap-1">
                   Max sends:
                   <input
                     type="number"
                     min={1}
                     value={sendLimit}
                     onChange={(e) => setSendLimit(e.target.value)}
-                    placeholder="∞"
-                    style={{
-                      width: 70,
-                      padding: "4px 8px",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: 6,
-                      fontSize: 13,
-                    }}
+                    placeholder="∞" className="px-2 py-1 border border-slate-200 text-[13px] w-[70px] rounded-md"
                   />
                 </label>
               </div>
             </div>
-            <div style={{ padding: "8px 12px" }}>
+            <div className="px-3 py-2">
               <input
                 type="text"
                 value={recipSearch}
@@ -756,24 +740,15 @@ export default function EmailsPage() {
                 style={inputStyle}
               />
             </div>
-            <div style={{ maxHeight: 280, overflow: "auto", padding: "0 12px 12px" }}>
+            <div className="overflow-auto max-h-[280px] pb-3 px-3 pt-0">
               {filteredCompanies.length === 0 && (
-                <div style={{ fontSize: 13, color: "#94a3b8", padding: "8px 0" }}>
+                <div className="text-[13px] text-slate-400 px-0 py-2">
                   No companies with email addresses found.
                 </div>
               )}
               {filteredCompanies.map((c) => (
                 <label
-                  key={c.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "6px 4px",
-                    fontSize: 13,
-                    borderBottom: "1px solid #f1f5f9",
-                    cursor: "pointer",
-                  }}
+                  key={c.id} className="flex items-center gap-2 px-1 py-1.5 text-[13px] border-b border-b-slate-100 cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -781,14 +756,14 @@ export default function EmailsPage() {
                     onChange={() => toggleSelect(c.id!)}
                     disabled={sending}
                   />
-                  <span style={{ fontWeight: 500, minWidth: 180 }}>{c.name}</span>
-                  <span style={{ color: "#64748b", fontSize: 12 }}>{c.email}</span>
+                  <span className="font-medium min-w-[180px]">{c.name}</span>
+                  <span className="text-slate-500 text-xs">{c.email}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 16, cursor: "pointer" }}>
+          <label className="flex items-center gap-2 text-[13px] mb-4 cursor-pointer">
             <input
               type="checkbox"
               checked={skipAlreadySent}
@@ -798,20 +773,10 @@ export default function EmailsPage() {
             Skip companies that already received an email with this subject
           </label>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="flex gap-2 items-center">
             <button
               onClick={requestBulkSend}
-              disabled={sending || finalTargets.length === 0}
-              style={{
-                padding: "10px 24px",
-                background: sending ? "#94a3b8" : "#1e40af",
-                color: "#fff",
-                border: "none",
-                borderRadius: 6,
-                cursor: sending ? "not-allowed" : "pointer",
-                fontSize: 14,
-                fontWeight: 700,
-              }}
+              disabled={sending || finalTargets.length === 0} className={`${`${`px-6 py-2.5 text-white text-sm font-bold ${sending ? "bg-slate-400 cursor-not-allowed" : "bg-blue-800 cursor-pointer"}`} border-0`} rounded-md`}
             >
               {sending && progress
                 ? `Sending ${progress.done}/${progress.total}…`
@@ -819,36 +784,19 @@ export default function EmailsPage() {
             </button>
             <button
               onClick={() => { setShowSaveForm((v) => !v); setError(""); setNotice(""); }}
-              disabled={sending}
-              style={{
-                padding: "10px 16px",
-                background: "#fff",
-                color: "#1e40af",
-                border: "1px solid #1e40af",
-                borderRadius: 6,
-                cursor: sending ? "not-allowed" : "pointer",
-                fontSize: 14,
-                fontWeight: 600,
-              }}
+              disabled={sending} className={`${`px-4 py-2.5 bg-white text-blue-800 border border-blue-800 text-sm font-semibold ${sending ? "cursor-not-allowed" : "cursor-pointer"}`} rounded-md`}
             >
               {showSaveForm ? "Close" : "Save as Template"}
             </button>
           </div>
 
           {showSaveForm && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: 16,
-                border: "1px solid #bfdbfe",
-                background: "#eff6ff",
-                borderRadius: 8,
-              }}
+            <div className="mt-3 border border-blue-200 bg-[#eff6ff] p-4 rounded-lg"
             >
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              <label className="block text-[13px] font-semibold mb-1">
                 Template name
               </label>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="flex gap-2">
                 <input
                   type="text"
                   value={templateName}
@@ -860,17 +808,7 @@ export default function EmailsPage() {
                 />
                 <button
                   onClick={handleSaveTemplate}
-                  disabled={savingTemplate}
-                  style={{
-                    padding: "8px 16px",
-                    background: savingTemplate ? "#94a3b8" : "#16a34a",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: savingTemplate ? "not-allowed" : "pointer",
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
+                  disabled={savingTemplate} className={`${`${`px-4 py-2 text-white text-sm font-semibold ${savingTemplate ? "bg-slate-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"}`} border-0`} rounded-md`}
                 >
                   {savingTemplate ? "Saving…" : "Save"}
                 </button>
@@ -879,15 +817,7 @@ export default function EmailsPage() {
           )}
 
           {result && (
-            <div
-              style={{
-                marginTop: 16,
-                padding: 16,
-                borderRadius: 8,
-                background: result.failed > 0 ? "#fffbeb" : "#dcfce7",
-                color: result.failed > 0 ? "#92400e" : "#166534",
-                fontSize: 14,
-              }}
+            <div className={`${`mt-4 text-sm ${result.failed > 0 ? "bg-amber-50 text-amber-800" : "bg-green-100 text-green-800"}`} p-4 rounded-lg`}
             >
               Done — {result.sent} sent, {result.failed} failed, {result.skipped} skipped.
             </div>
@@ -897,8 +827,8 @@ export default function EmailsPage() {
 
       {activeTab === "templates" && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>Templates ({templates.length})</h2>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-base font-semibold">Templates ({templates.length})</h2>
             <button
               onClick={() => router.push("/emails/compose")}
               style={{ ...tabStyle(true), background: "#16a34a" }}
@@ -907,40 +837,25 @@ export default function EmailsPage() {
             </button>
           </div>
           {templates.length === 0 ? (
-            <p style={{ color: "#94a3b8", fontSize: 14 }}>No templates yet. Save one from the Bulk Send tab.</p>
+            <p className="text-slate-400 text-sm">No templates yet. Save one from the Bulk Send tab.</p>
           ) : (
             templates.map((tpl) => (
               <div
-                key={tpl.id}
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  background: "#fff",
-                  overflow: "hidden",
-                }}
+                key={tpl.id} className="border border-slate-200 mb-2.5 bg-white overflow-hidden rounded-lg"
               >
-                <div style={{ padding: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{tpl.name}</div>
-                      <div style={{ fontSize: 12, color: "#64748b" }}>{tpl.subject}</div>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          background: tpl.category === "HVAC" ? "#dbeafe" : tpl.category === "IAQ" ? "#dcfce7" : "#fef3c7",
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          marginTop: 4,
-                          display: "inline-block",
-                        }}
+                <div className="p-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm">{tpl.name}</div>
+                      <div className="text-xs text-slate-500">{tpl.subject}</div>
+                      <span className={`text-[11px] px-2 py-0.5 mt-1 inline-block rounded ${tpl.category === "HVAC" ? "bg-blue-100" : tpl.category === "IAQ" ? "bg-green-100" : "bg-amber-100"}`}
                       >
                         {tpl.category || "General"}
                       </span>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+                  <div className="flex gap-1.5 mt-2.5 flex-wrap">
                     <button onClick={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)} style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}>
                       {expandedId === tpl.id ? "Hide body" : "Preview"}
                     </button>
@@ -962,20 +877,7 @@ export default function EmailsPage() {
                   </div>
 
                   {expandedId === tpl.id && (
-                    <pre
-                      style={{
-                        marginTop: 10,
-                        padding: 12,
-                        background: "#f8fafc",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: 6,
-                        fontSize: 12,
-                        whiteSpace: "pre-wrap",
-                        fontFamily: "monospace",
-                        maxHeight: 240,
-                        overflow: "auto",
-                        lineHeight: 1.5,
-                      }}
+                    <pre className="mt-2.5 bg-slate-50 border border-slate-200 text-xs whitespace-pre-wrap overflow-auto leading-normal p-3 rounded-md max-h-[240px] font-mono"
                     >
                       {tpl.body || "(empty)"}
                     </pre>
@@ -983,23 +885,23 @@ export default function EmailsPage() {
                 </div>
 
                 {editingId === tpl.id && (
-                  <div style={{ padding: 12, borderTop: "1px solid #e2e8f0", background: "#eff6ff" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px", gap: 8, marginBottom: 8 }}>
+                  <div className="border-t border-t-slate-200 bg-[#eff6ff] p-3">
+                    <div className="grid grid-cols-[1fr_1fr_140px] gap-2 mb-2">
                       <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Name</label>
+                        <label className="block text-xs font-semibold mb-0.5">Name</label>
                         <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Subject</label>
+                        <label className="block text-xs font-semibold mb-0.5">Subject</label>
                         <input type="text" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} style={inputStyle} />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Category</label>
+                        <label className="block text-xs font-semibold mb-0.5">Category</label>
                         <input type="text" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} style={inputStyle} />
                       </div>
                     </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Body</label>
+                    <div className="mb-2">
+                      <label className="block text-xs font-semibold mb-0.5">Body</label>
                       <textarea
                         value={editBody}
                         onChange={(e) => setEditBody(e.target.value)}
@@ -1007,7 +909,7 @@ export default function EmailsPage() {
                         style={{ ...inputStyle, fontFamily: "monospace", lineHeight: 1.5 }}
                       />
                     </div>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div className="flex gap-2">
                       <button
                         onClick={handleUpdateTemplate}
                         disabled={savingEdit}
@@ -1025,9 +927,9 @@ export default function EmailsPage() {
             ))
           )}
 
-          <div style={{ marginTop: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Single Recipients</h2>
-            <div style={{ maxHeight: 400, overflow: "auto" }}>
+          <div className="mt-6">
+            <h2 className="text-base font-semibold mb-3">Single Recipients</h2>
+            <div className="overflow-auto max-h-[400px]">
               {recipients.map((r, i) => (
                 <div
                   key={i}
@@ -1035,21 +937,13 @@ export default function EmailsPage() {
                     router.push(
                       `/emails/compose?to=${encodeURIComponent(r.email)}&toName=${encodeURIComponent(r.name || "")}`
                     )
-                  }
-                  style={{
-                    padding: 10,
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 8,
-                    marginBottom: 6,
-                    cursor: "pointer",
-                    background: "#fff",
-                  }}
+                  } className="border border-slate-200 mb-1.5 cursor-pointer bg-white p-2.5 rounded-lg"
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
                 >
-                  <div style={{ fontWeight: 500, fontSize: 13 }}>{r.name || r.email}</div>
-                  <div style={{ fontSize: 11, color: "#64748b" }}>{r.email}</div>
-                  {r.industry && <div style={{ fontSize: 10, color: "#94a3b8" }}>{r.industry}</div>}
+                  <div className="font-medium text-[13px]">{r.name || r.email}</div>
+                  <div className="text-[11px] text-slate-500">{r.email}</div>
+                  {r.industry && <div className="text-[10px] text-slate-400">{r.industry}</div>}
                 </div>
               ))}
             </div>
@@ -1059,8 +953,8 @@ export default function EmailsPage() {
 
       {activeTab === "mailbox" && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+            <div className="flex gap-1.5 items-center">
               <button
                 onClick={() => switchFolder("inbox")}
                 style={btnStyle(mailboxFolder === "inbox" ? "#1e40af" : "#f1f5f9", mailboxFolder === "inbox" ? "#fff" : "#0f172a", mailboxFolder === "inbox" ? undefined : "#e2e8f0")}
@@ -1075,14 +969,13 @@ export default function EmailsPage() {
               </button>
               <select
                 value={mailFilter}
-                onChange={(e) => setMailFilter(e.target.value as "all" | "replies")}
-                style={{ padding: "5px 8px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 12 }}
+                onChange={(e) => setMailFilter(e.target.value as "all" | "replies")} className="px-2 py-[5px] border border-slate-200 text-xs rounded-md"
               >
                 <option value="all">All messages</option>
                 <option value="replies">{mailboxFolder === "inbox" ? "Replies only" : "CRM sends only"}</option>
               </select>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="flex gap-1.5">
               <button onClick={() => fetchMailList(mailboxFolder)} disabled={mailListLoading} style={btnStyle("#f1f5f9", "#0f172a", "#e2e8f0")}>
                 {mailListLoading ? "Loading…" : "🔄 Refresh"}
               </button>
@@ -1092,15 +985,15 @@ export default function EmailsPage() {
             </div>
           </div>
 
-          <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
+          <div className="text-xs text-slate-400 mb-3">
             Last 30 days — click a message to read it. Green = reply to your outreach; blue badge in Sent = sent by the CRM.
           </div>
 
           {mailListLoading && !mailList && (
-            <div style={{ padding: 32, textAlign: "center", color: "#94a3b8" }}>Loading mailbox…</div>
+            <div className="text-center text-slate-400 p-8">Loading mailbox…</div>
           )}
           {mailListError && (
-            <div style={{ background: "#fef2f2", color: "#dc2626", padding: 12, borderRadius: 8, marginBottom: 12 }}>
+            <div className="bg-red-50 text-red-600 mb-3 p-3 rounded-lg">
               {mailListError}
             </div>
           )}
@@ -1108,65 +1001,55 @@ export default function EmailsPage() {
             (() => {
               const shown = mailFilter === "replies" ? mailList.filter((m) => m.matched) : mailList;
               if (shown.length === 0) {
-                return <p style={{ color: "#94a3b8", fontSize: 14 }}>No messages{mailFilter === "replies" ? " matched" : ""} in the last 30 days.</p>;
+                return <p className="text-slate-400 text-sm">No messages{mailFilter === "replies" ? " matched" : ""} in the last 30 days.</p>;
               }
               return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div className="flex flex-col gap-1.5">
                   {shown.map((m) => {
                     const key = `${mailboxFolder}-${m.uid}`;
                     const isOpen = openMail?.key === key;
                     return (
-                      <div key={m.uid} style={{ border: "1px solid #e2e8f0", borderRadius: 8, background: m.matched ? "#f0fdf4" : "#fff", overflow: "hidden" }}>
+                      <div key={m.uid} className={`${`border border-slate-200 overflow-hidden ${m.matched ? "bg-green-50" : "bg-white"}`} rounded-lg`}>
                         <div
-                          onClick={() => toggleMail(m)}
-                          style={{ padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}
+                          onClick={() => toggleMail(m)} className="px-3.5 py-2.5 cursor-pointer flex justify-between gap-2 items-center"
                         >
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.subject}</div>
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">{m.subject}</div>
+                            <div className="text-xs text-slate-500">
                               {mailboxFolder === "inbox" ? `From: ${m.from}` : `To: ${m.to}`}
                               {m.date ? ` • ${new Date(m.date).toLocaleString()}` : ""}
                             </div>
                           </div>
-                          <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
+                          <div className="flex gap-1.5 shrink-0 items-center">
                             {m.matched && (
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  padding: "2px 8px",
-                                  borderRadius: 4,
-                                  background: mailboxFolder === "inbox" ? "#dcfce7" : "#dbeafe",
-                                  color: mailboxFolder === "inbox" ? "#166534" : "#1e40af",
-                                }}
+                              <span className={`${`text-[11px] font-semibold px-2 py-0.5 ${mailboxFolder === "inbox" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`} rounded`}
                               >
                                 {mailboxFolder === "inbox" ? "↩ Reply" : "CRM send"}
                                 {m.company ? ` • ${m.company.name}` : ""}
                               </span>
                             )}
-                            <span style={{ fontSize: 11, color: "#94a3b8" }}>{isOpen ? "▾" : "▸"}</span>
+                            <span className="text-[11px] text-slate-400">{isOpen ? "▾" : "▸"}</span>
                           </div>
                         </div>
                         {isOpen && (
-                          <div style={{ borderTop: "1px solid #e2e8f0", padding: 12 }}>
+                          <div className="border-t border-t-slate-200 p-3">
                             {openMail?.loading ? (
-                              <div style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>Loading message…</div>
+                              <div className="text-center text-slate-400 p-6">Loading message…</div>
                             ) : openMail?.error ? (
-                              <div style={{ color: "#dc2626", fontSize: 13, padding: 8 }}>{openMail.error}</div>
+                              <div className="text-red-600 text-[13px] p-2">{openMail.error}</div>
                             ) : openMail?.data ? (
                               <div>
-                                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                                <div className="text-xs text-slate-500 mb-2">
                                   From: {openMail.data.from} • To: {openMail.data.to}
                                   {openMail.data.cc ? ` • CC: ${openMail.data.cc}` : ""}
                                 </div>
                                 {openMail.data.html ? (
                                   <iframe
                                     srcDoc={openMail.data.html}
-                                    sandbox=""
-                                    style={{ width: "100%", height: 480, border: "1px solid #e2e8f0", borderRadius: 6, background: "#fff" }}
+                                    sandbox="" className="w-full border border-slate-200 bg-white h-[480px] rounded-md"
                                   />
                                 ) : (
-                                  <pre style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, background: "#f8fafc", padding: 12, borderRadius: 6 }}>
+                                  <pre className="whitespace-pre-wrap text-[13px] bg-slate-50 p-3 rounded-md font-mono">
                                     {openMail.data.text || "(empty)"}
                                   </pre>
                                 )}
@@ -1185,8 +1068,8 @@ export default function EmailsPage() {
 
       {activeTab === "sent" && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>
+          <div className="flex justify-between items-center mb-3 gap-2 flex-wrap">
+            <h2 className="text-base font-semibold">
               {showDeleted ? "Deleted Emails" : "Sent Emails"} ({logs.length})
             </h2>
             <button onClick={toggleShowDeleted} style={btnStyle(showDeleted ? "#1e40af" : "#f1f5f9", showDeleted ? "#fff" : "#1e40af", "#e2e8f0")}>
@@ -1194,38 +1077,24 @@ export default function EmailsPage() {
             </button>
           </div>
           {logs.length === 0 ? (
-            <p style={{ color: "#94a3b8", fontSize: 14 }}>
+            <p className="text-slate-400 text-sm">
               {showDeleted ? "No deleted emails." : "No emails sent yet. Compose one to get started."}
             </p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {logs.map((log) => (
                 <div
-                  key={log.id}
-                  style={{
-                    padding: 16,
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 8,
-                    background: log.status === "FAILED" ? "#fef2f2" : "#fff",
-                  }}
+                  key={log.id} className={`${`border border-slate-200 ${log.status === "FAILED" ? "bg-red-50" : "bg-white"}`} p-4 rounded-lg`}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="flex justify-between items-center">
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{log.subject}</div>
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                      <div className="font-semibold text-sm">{log.subject}</div>
+                      <div className="text-xs text-slate-500">
                         To: {log.toName || log.toEmail} &bull; {new Date(log.sentAt).toLocaleString()}
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          background: log.status === "SENT" ? "#dcfce7" : "#fef2f2",
-                          color: log.status === "SENT" ? "#166534" : "#dc2626",
-                          fontWeight: 600,
-                        }}
+                    <div className="flex gap-1.5 items-center">
+                      <span className={`${`text-[11px] px-2 py-0.5 font-semibold ${log.status === "SENT" ? "bg-green-100 text-green-800" : "bg-red-50 text-red-600"}`} rounded`}
                       >
                         {log.status}
                       </span>
@@ -1245,23 +1114,22 @@ export default function EmailsPage() {
                     </div>
                   </div>
                   {log.errorCode && (
-                    <div style={{ fontSize: 12, color: "#dc2626", marginTop: 8 }}>Error: {log.errorCode}</div>
+                    <div className="text-xs text-red-600 mt-2">Error: {log.errorCode}</div>
                   )}
                   {viewLog?.key === log.id && (
-                    <div style={{ marginTop: 10 }}>
+                    <div className="mt-2.5">
                       {viewLog.loading ? (
-                        <div style={{ padding: 16, textAlign: "center", color: "#94a3b8" }}>Loading message…</div>
+                        <div className="text-center text-slate-400 p-4">Loading message…</div>
                       ) : viewLog.error ? (
-                        <div style={{ color: "#dc2626", fontSize: 13 }}>{viewLog.error}</div>
+                        <div className="text-red-600 text-[13px]">{viewLog.error}</div>
                       ) : viewLog.data ? (
                         viewLog.data.html ? (
                           <iframe
                             srcDoc={viewLog.data.html}
-                            sandbox=""
-                            style={{ width: "100%", height: 480, border: "1px solid #e2e8f0", borderRadius: 6, background: "#fff" }}
+                            sandbox="" className="w-full border border-slate-200 bg-white h-[480px] rounded-md"
                           />
                         ) : (
-                          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, background: "#f8fafc", padding: 12, borderRadius: 6 }}>
+                          <pre className="whitespace-pre-wrap text-[13px] bg-slate-50 p-3 rounded-md font-mono">
                             {viewLog.data.text || "(empty)"}
                           </pre>
                         )

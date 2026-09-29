@@ -101,20 +101,20 @@ export default function ProjectsPage() {
 
       <Modal open={showForm} title="New Project" onClose={() => setShowForm(false)}>
         <form onSubmit={handleCreate}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Company *</label><select required style={{ width: "100%" }} value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Project Name *</label><input required style={{ width: "100%" }} value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Location</label><input style={{ width: "100%" }} value={form.projectLocation} onChange={(e) => setForm({ ...form, projectLocation: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Type</label><input style={{ width: "100%" }} value={form.projectType} onChange={(e) => setForm({ ...form, projectType: e.target.value })} placeholder="HVAC Installation, Testing..." /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Status</label><select style={{ width: "100%" }} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Start Date</label><input type="date" style={{ width: "100%" }} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Target Completion</label><input type="date" style={{ width: "100%" }} value={form.targetCompletion} onChange={(e) => setForm({ ...form, targetCompletion: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Installation Status</label><select style={{ width: "100%" }} value={form.installationStatus} onChange={(e) => setForm({ ...form, installationStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Testing Status</label><select style={{ width: "100%" }} value={form.testingStatus} onChange={(e) => setForm({ ...form, testingStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
-            <div><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Commissioning Status</label><select style={{ width: "100%" }} value={form.commissioningStatus} onChange={(e) => setForm({ ...form, commissioningStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
-            <div style={{ gridColumn: "span 2" }}><label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 4 }}>Remarks</label><textarea rows={2} style={{ width: "100%" }} value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="text-xs font-medium block mb-1">Company *</label><select required className="w-full" value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Project Name *</label><input required className="w-full" value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Location</label><input className="w-full" value={form.projectLocation} onChange={(e) => setForm({ ...form, projectLocation: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Type</label><input className="w-full" value={form.projectType} onChange={(e) => setForm({ ...form, projectType: e.target.value })} placeholder="HVAC Installation, Testing..." /></div>
+            <div><label className="text-xs font-medium block mb-1">Status</label><select className="w-full" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Start Date</label><input type="date" className="w-full" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Target Completion</label><input type="date" className="w-full" value={form.targetCompletion} onChange={(e) => setForm({ ...form, targetCompletion: e.target.value })} /></div>
+            <div><label className="text-xs font-medium block mb-1">Installation Status</label><select className="w-full" value={form.installationStatus} onChange={(e) => setForm({ ...form, installationStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Testing Status</label><select className="w-full" value={form.testingStatus} onChange={(e) => setForm({ ...form, testingStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label className="text-xs font-medium block mb-1">Commissioning Status</label><select className="w-full" value={form.commissioningStatus} onChange={(e) => setForm({ ...form, commissioningStatus: e.target.value })}><option value="">--</option>{SUB_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div className="col-span-2"><label className="text-xs font-medium block mb-1">Remarks</label><textarea rows={2} className="w-full" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></div>
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">Create Project</button>
             <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
           </div>
@@ -129,7 +129,7 @@ export default function ProjectsPage() {
         onConfirm={handleDelete}
       />
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="flex gap-3 mb-4 flex-wrap">
         <SearchInput placeholder="Search projects..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
@@ -141,7 +141,7 @@ export default function ProjectsPage() {
       {!loading && projects.length === 0 && !search && !debouncedSearch && !statusFilter && !error ? (
         <EmptyState message="No projects yet — use + New Project to create the first one." />
       ) : (
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+      <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
         <table>
           <thead>
             <tr><th>Company</th><th>Project</th><th>Location</th><th>Status</th><th>Installation</th><th>Testing</th><th>Commissioning</th><th>Actions</th></tr>
@@ -149,11 +149,11 @@ export default function ProjectsPage() {
           <tbody>
             {projects.map((p) => (
               <tr key={p.id}>
-                <td style={{ fontWeight: 500 }}>{p.company.name}</td>
+                <td className="font-medium">{p.company.name}</td>
                 <td>{p.projectName}</td>
                 <td>{p.projectLocation || "-"}</td>
                 <td>
-                  <select value={p.status} onChange={(e) => handleStatusChange(p.id, e.target.value)} style={{ padding: "2px 6px", fontSize: "0.75rem" }}>
+                  <select value={p.status} onChange={(e) => handleStatusChange(p.id, e.target.value)} className="px-1.5 py-0.5 text-xs">
                     {statuses.map((s) => <option key={s}>{s}</option>)}
                   </select>
                 </td>
@@ -161,7 +161,7 @@ export default function ProjectsPage() {
                 <td>{p.testingStatus || "-"}</td>
                 <td>{p.commissioningStatus || "-"}</td>
                 <td>
-                  <button className="btn btn-ghost" onClick={() => setDeleteTarget({ id: p.id, name: p.projectName })} style={{ padding: "0.25rem 0.5rem", color: "#dc2626" }}>Delete</button>
+                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: p.id, name: p.projectName })}>Delete</button>
                 </td>
               </tr>
             ))}
