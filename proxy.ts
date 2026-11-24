@@ -1,34 +1,33 @@
 import { NextResponse, NextRequest } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+// Next.js 16 renamed the middleware file convention to `proxy` (Node.js runtime).
+// This file is intentionally optimistic: it only checks for a session cookie and
+// rate-limits credential sign-in. Authorization still runs in every route handler.
 
 const publicPaths = ["/login", "/api/auth"];
 
-// Simple in-memory login rate limit (per serverless instance — best-effort).
-const LOGIN_WINDOW_MS = 15 * 60 * 1000;
-const LOGIN_MAX_ATTEMPTS = 10;
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const LOGIN_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 };
 
-function isLoginRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
-  if (!entry || entry.resetAt < now) {
-    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
-    return false;
-  }
-  entry.count++;
-  if (loginAttempts.size > 10000) loginAttempts.clear();
-  return entry.count > LOGIN_MAX_ATTEMPTS;
+function clientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
 }
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Rate-limit credential sign-in attempts by IP
+  // Rate-limit credential sign-in attempts by IP (shared store, all instances)
   if (pathname === "/api/auth/callback/credentials" && request.method === "POST") {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-      || request.headers.get("x-real-ip")
-      || "unknown";
-    if (isLoginRateLimited(ip)) {
-      return NextResponse.json({ error: "Too many login attempts. Try again later." }, { status: 429 });
+    const result = await checkRateLimit("login", clientIp(request), LOGIN_LIMIT);
+    if (!result.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Try again later." },
+        { status: 429, headers: { "Retry-After": String(result.retryAfterSeconds) } }
+      );
     }
   }
 

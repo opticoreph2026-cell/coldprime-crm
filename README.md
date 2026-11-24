@@ -153,7 +153,7 @@ coldprime-crm/
 │   ├── email.ts reply-check.ts mailbox.ts
 │   ├── excel/ import.ts export.ts
 │   └── prisma/                # generated client
-├── middleware.ts              # auth, cron Bearer, login rate limit
+├── proxy.ts                   # Next 16 proxy: auth gate, cron Bearer, shared login rate limit
 ├── prisma/ schema.prisma seed.ts
 ├── scripts/                   # db-*.ts migrations, test-*.ts
 ├── eslint.config.mjs

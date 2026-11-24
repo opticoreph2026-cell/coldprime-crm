@@ -500,3 +500,14 @@ model Document {
   @@index([vendorId])
   @@map("documents")
 }
+
+/// Shared fixed-window rate limiter (login throttling and future limits).
+/// One row per (bucket, id, window start); the window is part of the key.
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("RateLimit")
+}

@@ -46,7 +46,7 @@ Coldprime CRM is a multi-branch sales CRM (companies → contacts → leads → 
 ### 2.2 Directory map
 
 ```
-middleware.ts           # login rate limit (10/15 min/IP), public paths, cron bearer gate
+proxy.ts                # login rate limit (10/15 min/IP), public paths, cron bearer gate
 app/                    # App Router
   <page>/page.tsx       # 20 pages: dashboard, companies(+[id] 8 tabs), contacts, leads,
                         #   projects, activities, vendors(+[id]), products, emails(compose/sent),
@@ -78,7 +78,7 @@ src/                    # empty (leftover — safe to delete)
 
 ```
 browser/cron
-  → middleware.ts            rate-limit credentials POST · allow /login,/api/auth · verify Bearer CRON_SECRET for cron
+  → proxy.ts                 rate-limit credentials POST · allow /login,/api/auth · verify Bearer CRON_SECRET for cron
   → route handler (app/api/*)
       1. requireAuth()               401 + DB re-check of user.isActive
       2. getBranchFilter()/requireBranchId()/requireRole()   branch scoping (41/48 routes)
