@@ -389,7 +389,7 @@ export default function VendorDetailPage() {
             Upload a CSV or Excel file with columns like Item Name, Category, Brand, Model, Unit, Unit Price,
             Valid Until, Lead Time. Every row is added to this vendor. Duplicates on (vendor, brand, model) are skipped.
           </div>
-          <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={() => setPreview(null)} />
+          <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx" onChange={() => setPreview(null)} />
           {!preview ? (
             <div className="flex justify-end gap-2">
               <button className="btn btn-secondary" onClick={() => setImportOpen(false)} disabled={importing}>Cancel</button>

@@ -164,7 +164,7 @@ coldprime-crm/
 ## Excel Import Guide
 
 1. Go to **Import / Export**
-2. Select a workbook (.xlsx/.xls)
+2. Select a workbook (.xlsx)
 3. Click **Preview** (rows, duplicates, validation errors)
 4. Click **Import Valid Records**
 
@@ -208,7 +208,7 @@ PostgreSQL tables include: companies, contacts, leads, projects, activities, sta
 - **Frontend:** Next.js 16, React 19, Tailwind CSS 4
 - **Backend:** Next.js API Routes
 - **Database:** PostgreSQL + Prisma ORM
-- **Excel:** SheetJS (import, SheetJS CDN), ExcelJS (export)
+- **Excel:** ExcelJS (import + export)
 - **PDF:** jsPDF + jspdf-autotable
 - **Auth:** NextAuth v5 (JWT)
 - **Email:** Nodemailer (Gmail SMTP), Gmail IMAP (mailbox/replies)

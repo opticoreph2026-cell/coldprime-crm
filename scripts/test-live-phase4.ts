@@ -7,7 +7,7 @@
    - import preview: headers + rawData from actual cells
    Usage: npx tsx scripts/test-live-phase4.ts [baseUrl] */
 import "dotenv/config";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 const BASE = process.argv[2] || "https://coldprime-crm.vercel.app";
 const STAMP = Date.now();
@@ -150,9 +150,16 @@ async function main() {
       ["Date", "Customer", "Email"],
       ["2026-01-05", `Probe Import ${STAMP}`, `probe-${STAMP}@example.com`],
     ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "Customer");
-    const xlsxBuf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Customer");
+    aoa.forEach((values, rowIdx) => {
+      const sheetRow = ws.getRow(rowIdx + 1);
+      values.forEach((value, colIdx) => {
+        sheetRow.getCell(colIdx + 1).value = value as ExcelJS.CellValue;
+      });
+      sheetRow.commit();
+    });
+    const xlsxBuf = Buffer.from(await wb.xlsx.writeBuffer());
     const fd2 = new FormData();
     fd2.append("file", new File([new Uint8Array(xlsxBuf)], "probe.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
     fd2.append("action", "preview");

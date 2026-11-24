@@ -74,13 +74,13 @@ export default function ImportExportPage() {
       <div className="bg-white border border-slate-200 mb-6 rounded-lg p-6">
         <h2 className="text-base font-semibold mb-4">Import from Excel</h2>
         <p className="text-sm text-slate-500 mb-3">
-          Select an Excel workbook (.xlsx/.xls) to import. The system will parse all relevant sheets, merge duplicates, and create company records.
+          Select an Excel workbook (.xlsx) to import. The system will parse all relevant sheets, merge duplicates, and create company records.
         </p>
         <div className="flex gap-3 mb-4 flex-wrap">
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls" className="flex-1"
+            accept=".xlsx" className="flex-1"
             onChange={handleFileChange}
           />
           <button className="btn btn-secondary" onClick={handlePreview} disabled={loading || !selectedFile}>

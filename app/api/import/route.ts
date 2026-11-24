@@ -6,7 +6,8 @@ import { requireAuth, requireBranchId } from "@/lib/branch";
 import { parseOr400 } from "@/lib/validations";
 import { importActionSchema, fdString } from "@/lib/validations/import";
 
-const ALLOWED_EXTENSIONS = [".xlsx", ".xls"];
+// exceljs reads .xlsx only; legacy binary .xls must be re-saved as .xlsx.
+const ALLOWED_EXTENSIONS = [".xlsx"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function validateFile(buffer: Buffer): { valid: boolean; error?: string } {
@@ -37,7 +38,10 @@ export async function POST(request: Request) {
 
     const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return NextResponse.json({ error: "Only .xlsx and .xls files are allowed" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only .xlsx files are allowed (re-save legacy .xls files as .xlsx)" },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
@@ -48,12 +52,12 @@ export async function POST(request: Request) {
     }
 
     if (action === "preview") {
-      const preview = parseExcelFile(buffer, file.name);
+      const preview = await parseExcelFile(buffer, file.name);
       return NextResponse.json(preview);
     }
 
     if (action === "import") {
-      const preview = parseExcelFile(buffer, file.name);
+      const preview = await parseExcelFile(buffer, file.name);
       const merged = mergeImportData(preview);
 
       let imported = 0;

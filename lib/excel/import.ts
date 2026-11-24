@@ -1,4 +1,5 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { cellValue, columnIndex } from "./cell";
 
 export interface ImportRow {
   rowIndex: number;
@@ -66,45 +67,50 @@ function normalizeStatus(value: unknown): string {
   return str;
 }
 
+/** 0-based row reader; `get("B")` returns the normalized cell in that column. */
+function cellGetter(worksheet: ExcelJS.Worksheet, rowIdx: number) {
+  const excelRow = worksheet.getRow(rowIdx + 1);
+  return (col: string) => cellValue(excelRow.getCell(columnIndex(col)).value);
+}
+
 // Read a data row's actual cell values, keyed by the sheet's header row
 // (falls back to the column letter when a header cell is empty). This is what
 // populates ImportRow.rawData so the preview can show real headers.
 function readRawRow(
-  sheet: XLSX.WorkSheet,
+  worksheet: ExcelJS.Worksheet,
   rowIdx: number,
   headerRowIdx: number
 ): Record<string, unknown> {
   const raw: Record<string, unknown> = {};
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    const cell = sheet[XLSX.utils.encode_cell({ c, r: rowIdx })];
-    if (!cell || cell.v === undefined || cell.v === "") continue;
-    const colLetter = XLSX.utils.encode_col(c);
-    const headerCell = sheet[XLSX.utils.encode_cell({ c, r: headerRowIdx })];
-    let key = String(headerCell?.v ?? "").trim() || colLetter;
+  const excelRow = worksheet.getRow(rowIdx + 1);
+  const headerRow = worksheet.getRow(headerRowIdx + 1);
+  const lastCol = Math.max(worksheet.columnCount, 1);
+
+  for (let c = 1; c <= lastCol; c++) {
+    const value = cellValue(excelRow.getCell(c).value);
+    if (value === undefined || value === "") continue;
+    const colLetter = excelRow.getCell(c).address.replace(/\d+/g, "");
+    const headerText = cellValue(headerRow.getCell(c).value);
+    let key = String(headerText ?? "").trim() || colLetter;
     if (key in raw) key = `${key} (${colLetter})`;
-    raw[key] = cell.v;
+    raw[key] = value;
   }
   return raw;
 }
 
 // Map the Customer sheet (master company list)
 function mapCustomerSheet(
-  sheet: XLSX.WorkSheet,
+  worksheet: ExcelJS.Worksheet,
   sheetName: string
 ): ImportRow[] {
   const rows: ImportRow[] = [];
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Customer sheet: Row 3 has headers
-  const headerRow = range.s.r + 2;  // A=Date, B=Customer, C=Industry, D=Email, E=Contact Number,
+  const headerRow = 2; // A=Date, B=Customer, C=Industry, D=Email, E=Contact Number,
   // F=Address, G=Website, H=Contact Person, I=Position, J=Number,
   // K=Status, L=Date, M=Remarks
-  for (let r = range.s.r + 3; r <= range.e.r; r++) {
-    const get = (col: string) => {
-      const cell = sheet[`${col}${r + 1}`];
-      return cell?.v;
-    };
+  for (let r = 3; r < worksheet.rowCount; r++) {
+    const get = cellGetter(worksheet, r);
 
     const company = get("B");
     if (!company || String(company).trim() === "") continue;
@@ -125,7 +131,7 @@ function mapCustomerSheet(
       remarks: String(get("M") || "").trim() || undefined,
       date: parseDate(get("A")),
       secondDate: parseDate(get("L")),
-      rawData: readRawRow(sheet, r, headerRow),
+      rawData: readRawRow(worksheet, r, headerRow),
     });
   }
   return rows;
@@ -133,21 +139,17 @@ function mapCustomerSheet(
 
 // Map the Xedes sheet (has accomplishment data mixed in)
 function mapXedesSheet(
-  sheet: XLSX.WorkSheet,
+  worksheet: ExcelJS.Worksheet,
   sheetName: string
 ): ImportRow[] {
   const rows: ImportRow[] = [];
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Xedes: Row 1 has headers
-  const headerRow = range.s.r;
+  const headerRow = 0;
   // A=Date, B=Customer, C=Industry, D=Email, E=Contact No.,
   // F=Address, G=Contact Person, H=Position, I=Remarks
-  for (let r = range.s.r + 1; r <= range.e.r; r++) {
-    const get = (col: string) => {
-      const cell = sheet[`${col}${r + 1}`];
-      return cell?.v;
-    };
+  for (let r = 1; r < worksheet.rowCount; r++) {
+    const get = cellGetter(worksheet, r);
 
     const company = get("B");
     if (!company || String(company).trim() === "") continue;
@@ -166,7 +168,7 @@ function mapXedesSheet(
       remarks: undefined,
       date: parseDate(get("A")),
       secondDate: undefined,
-      rawData: readRawRow(sheet, r, headerRow),
+      rawData: readRawRow(worksheet, r, headerRow),
     });
   }
   return rows;
@@ -174,20 +176,16 @@ function mapXedesSheet(
 
 // Map the Raiza sheet
 function mapRaizaSheet(
-  sheet: XLSX.WorkSheet,
+  worksheet: ExcelJS.Worksheet,
   sheetName: string
 ): ImportRow[] {
   const rows: ImportRow[] = [];
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Raiza: Row 1 has headers
-  const headerRow = range.s.r;
+  const headerRow = 0;
   // A=Company, B=Email, C=Number, D=Status, E=Remarks, F=Date
-  for (let r = range.s.r + 1; r <= range.e.r; r++) {
-    const get = (col: string) => {
-      const cell = sheet[`${col}${r + 1}`];
-      return cell?.v;
-    };
+  for (let r = 1; r < worksheet.rowCount; r++) {
+    const get = cellGetter(worksheet, r);
 
     const company = get("A");
     if (!company || String(company).trim() === "") continue;
@@ -202,7 +200,7 @@ function mapRaizaSheet(
       remarks: String(get("E") || "").trim() || undefined,
       date: parseDate(get("F")),
       secondDate: undefined,
-      rawData: readRawRow(sheet, r, headerRow),
+      rawData: readRawRow(worksheet, r, headerRow),
     });
   }
   return rows;
@@ -210,21 +208,17 @@ function mapRaizaSheet(
 
 // Map the Ellaine & Nhecel sheet
 function mapEllaineSheet(
-  sheet: XLSX.WorkSheet,
+  worksheet: ExcelJS.Worksheet,
   sheetName: string
 ): ImportRow[] {
   const rows: ImportRow[] = [];
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Ellaine & Nhecel: Row 2 has headers (Row 1 is "CONTACT INFO" header)
-  const headerRow = range.s.r + 1;
+  const headerRow = 1;
   // A=Date, B=Company Name/Brands, C=Business Type, D=Email,
   // E=Contact Number, F=Address, G=Website, H=Status, I=Remarks
-  for (let r = range.s.r + 2; r <= range.e.r; r++) {
-    const get = (col: string) => {
-      const cell = sheet[`${col}${r + 1}`];
-      return cell?.v;
-    };
+  for (let r = 2; r < worksheet.rowCount; r++) {
+    const get = cellGetter(worksheet, r);
 
     const company = get("B");
     if (!company || String(company).trim() === "") continue;
@@ -242,7 +236,7 @@ function mapEllaineSheet(
       remarks: String(get("I") || "").trim() || undefined,
       date: parseDate(get("A")),
       secondDate: undefined,
-      rawData: readRawRow(sheet, r, headerRow),
+      rawData: readRawRow(worksheet, r, headerRow),
     });
   }
   return rows;
@@ -250,19 +244,15 @@ function mapEllaineSheet(
 
 // Map Sheet6 (simple hotel list)
 function mapSheet6(
-  sheet: XLSX.WorkSheet,
+  worksheet: ExcelJS.Worksheet,
   sheetName: string
 ): ImportRow[] {
   const rows: ImportRow[] = [];
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   // Sheet6: A=Business, B=Industry, C=Contact Number
-  const headerRow = range.s.r;
-  for (let r = range.s.r + 1; r <= range.e.r; r++) {
-    const get = (col: string) => {
-      const cell = sheet[`${col}${r + 1}`];
-      return cell?.v;
-    };
+  const headerRow = 0;
+  for (let r = 1; r < worksheet.rowCount; r++) {
+    const get = cellGetter(worksheet, r);
 
     const company = get("A");
     if (!company || String(company).trim() === "") continue;
@@ -273,16 +263,17 @@ function mapSheet6(
       company: String(company).trim(),
       industry: String(get("B") || "").trim() || undefined,
       mobile1: normalizePhone(get("C")),
-      rawData: readRawRow(sheet, r, headerRow),
+      rawData: readRawRow(worksheet, r, headerRow),
     });
   }
   return rows;
 }
 
-export function parseExcelFile(buffer: Buffer, filename: string): ImportPreview {
-  const workbook = XLSX.read(buffer, { type: "buffer" });
+export async function parseExcelFile(buffer: Buffer, filename: string): Promise<ImportPreview> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
 
-  const sheetHandlers: Record<string, (sheet: XLSX.WorkSheet, name: string) => ImportRow[]> = {
+  const sheetHandlers: Record<string, (sheet: ExcelJS.Worksheet, name: string) => ImportRow[]> = {
     "Customer": mapCustomerSheet,
     "Xedes": mapXedesSheet,
     "Raiza": mapRaizaSheet,
@@ -295,12 +286,12 @@ export function parseExcelFile(buffer: Buffer, filename: string): ImportPreview 
   const globalDuplicates: { sheetName: string; row: number }[] = [];
   let totalRows = 0;
 
-  for (const sheetName of workbook.SheetNames) {
+  for (const worksheet of workbook.worksheets) {
+    const sheetName = worksheet.name;
     if (sheetName === "Accomplishment Report Rose") continue;
 
-    const sheet = workbook.Sheets[sheetName];
     const handler = sheetHandlers[sheetName] || mapCustomerSheet;
-    const rows = handler(sheet, sheetName);
+    const rows = handler(worksheet, sheetName);
 
     const sheetSeenCompanies = new Set<string>();
     const duplicates: number[] = [];

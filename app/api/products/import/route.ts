@@ -8,7 +8,7 @@ import { parsePriceList, PriceRow } from "@/lib/price-list";
 import { parseOr400 } from "@/lib/validations";
 import { importActionSchema, fdString } from "@/lib/validations/import";
 
-const ALLOWED_EXTENSIONS = [".csv", ".txt", ".xlsx", ".xls"];
+const ALLOWED_EXTENSIONS = [".csv", ".txt", ".xlsx"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function rowKey(row: PriceRow): string {
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     if (!file) return NextResponse.json({ error: "File is required" }, { status: 400 });
     const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return NextResponse.json({ error: "Only .csv, .txt, .xlsx and .xls files are allowed" }, { status: 400 });
+      return NextResponse.json({ error: "Only .csv, .txt and .xlsx files are allowed" }, { status: 400 });
     }
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });

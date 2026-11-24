@@ -301,7 +301,7 @@ export default function ProductsPage() {
             Upload a CSV or Excel file. Columns are matched by header (Name / Item, Category, Brand, Model, Unit,
             Price, Currency, Valid Until, Lead Time, Notes). Duplicates on (name, brand, model) are skipped.
           </div>
-          <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={() => setPreview(null)} />
+          <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx" onChange={() => setPreview(null)} />
           {!preview ? (
             <div className="flex justify-end gap-2">
               <button className="btn btn-secondary" onClick={() => { setImportOpen(false); }} disabled={importing}>Cancel</button>

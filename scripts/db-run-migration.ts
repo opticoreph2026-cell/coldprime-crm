@@ -5,8 +5,13 @@ import pg from "pg";
 
 function cfg() {
   const url = new URL(process.env.DATABASE_URL!);
+  const sslmode = url.searchParams.get("sslmode");
   url.searchParams.delete("sslmode");
-  return { connectionString: url.toString(), ssl: { rejectUnauthorized: false } };
+  // CI runs a plain local Postgres (sslmode=disable); hosted Supabase needs SSL.
+  return {
+    connectionString: url.toString(),
+    ssl: sslmode === "disable" ? false : { rejectUnauthorized: false },
+  };
 }
 
 // Usage: npx tsx -r dotenv/config scripts/db-run-migration.ts <sql-file-in-prisma/migrations>
