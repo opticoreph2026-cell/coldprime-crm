@@ -33,6 +33,7 @@ interface EmailStatus {
   dailyCap: number;
   sentToday: number;
   remaining: number;
+  bulkSendEnabled?: boolean;
 }
 
 export default function EmailsPage() {
@@ -117,7 +118,13 @@ export default function EmailsPage() {
     ])
       .then(([tplRes, recRes, logRes, statusRes]) => {
         setTemplates(tplRes.data || []);
-        if (statusRes && !statusRes.error) setEmailStatus(statusRes);
+        if (statusRes && !statusRes.error) {
+          setEmailStatus(statusRes);
+          // Bulk sending is flag-gated; land on Templates when it is off.
+          if (statusRes.bulkSendEnabled === false) {
+            setActiveTab((tab) => (tab === "bulk" ? "templates" : tab));
+          }
+        }
         const recData = recRes.contacts || [];
         const compData = recRes.companies || [];
         const allRecipients: Recipient[] = [
@@ -330,6 +337,10 @@ export default function EmailsPage() {
   };
 
   const requestBulkSend = () => {
+    if (emailStatus?.bulkSendEnabled === false) {
+      setError("Bulk sending is disabled. Use the email composer on a company record.");
+      return;
+    }
     if (!subject.trim() || !body.trim()) {
       setError("Subject and body are required");
       return;
@@ -558,9 +569,11 @@ export default function EmailsPage() {
         >
           ✏️ Compose Email
         </button>
-        <button onClick={() => setActiveTab("bulk")} style={tabStyle(activeTab === "bulk")}>
-          📦 Bulk Send
-        </button>
+        {emailStatus?.bulkSendEnabled !== false && (
+          <button onClick={() => setActiveTab("bulk")} style={tabStyle(activeTab === "bulk")}>
+            📦 Bulk Send
+          </button>
+        )}
         <button onClick={() => setActiveTab("templates")} style={tabStyle(activeTab === "templates")}>
           🗂 Templates ({templates.length})
         </button>

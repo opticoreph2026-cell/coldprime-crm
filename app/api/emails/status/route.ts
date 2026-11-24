@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/branch";
 import { dailyEmailCap } from "@/lib/email/guard";
 import { freeMailWarning } from "@/lib/email/guard";
 import { startOfDayPH, todayPH } from "@/lib/dates";
+import { bulkSendEnabled } from "@/lib/flags";
 
 export async function GET() {
   try {
@@ -25,6 +26,7 @@ export async function GET() {
       dailyCap: cap,
       sentToday,
       remaining: Math.max(0, cap - sentToday),
+      bulkSendEnabled: bulkSendEnabled(),
     });
   } catch (error) {
     console.error("Error fetching email status:", error);

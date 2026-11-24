@@ -7,6 +7,7 @@ import { addDaysISO, startOfDayPH, todayPH } from "@/lib/dates";
 import { logAudit } from "@/lib/audit";
 import { parseOr400, readJson } from "@/lib/validations";
 import { emailBulkSendSchema } from "@/lib/validations/email";
+import { bulkSendEnabled } from "@/lib/flags";
 
 export const maxDuration = 30;
 
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
   let branchFilter;
   try {
     try { session = await requireAuth(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); }
+    if (!bulkSendEnabled()) {
+      return NextResponse.json(
+        { error: "Bulk sending is disabled. Use the email composer on a company record." },
+        { status: 403 }
+      );
+    }
     branchFilter = await getBranchFilter();
 
     const parsed = parseOr400(emailBulkSendSchema, await readJson(request));

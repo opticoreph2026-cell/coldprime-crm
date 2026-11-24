@@ -93,6 +93,7 @@ Confirmed by OpenCode as the working plan; awaiting Julius's explicit approval b
 |---|---|---|
 | 2026-11-24 | File created; input register seeded; data profile recorded; cut line proposed | OpenCode |
 | 2026-11-24 | I-10 resolved by Julius (hosting, storage, staging, backups, headcount) | Julius |
+| 2026-11-24 | DOC-01 conflicts resolved in Phase 0 (templates path, bulk send flag, SEED_KEY) | OpenCode |
 
 ---
 
@@ -106,3 +107,15 @@ Confirmed by OpenCode as the working plan; awaiting Julius's explicit approval b
 | Backups | **PITR + nightly logical dumps** | Owner: enable PITR on the production plan; dumps go to Supabase Storage with 30-day retention. RPO ≈ 5 min, RTO ≈ 2 h. Restore drill documented in `docs/RUNBOOK_BACKUP.md` (Phase 0). |
 | Users | **11–30 at R1 go-live** | Build permission sets for the ~13 spec roles; paginated list views remain required but 50k-row benchmark is a safety margin, not a current volume. |
 | Rate limiting | **DEFAULTED:** Postgres-backed fixed-window limiter (`RateLimit` table), no new vendor | Meets the shared-store requirement across serverless instances. Alternative if preferred: Upstash Redis / Vercel KV. Flag for confirmation. |
+
+---
+
+## 8. Document conflicts resolved (DOC-01)
+
+| Conflict | Resolution (Phase 0) |
+|---|---|
+| Templates at `/api/emails/templates/` vs `/api/email-templates/` | Only `/api/emails/templates/` exists (GET/POST + `[id]`). `/email-templates` is a **UI page**, not an API path. No alias needed. |
+| "No bulk sending" vs shipped `bulk-send` | Kept behind an **env flag**, off by default: `BULK_SEND_ENABLED=true` to enable. Route returns 403 and the /emails UI hides the tab when disabled. The platform replaces it with per-record sends from Phase 5. |
+| `SEED_KEY` | Never implemented and **not used**. Seeding runs through local scripts only (`npm run seed`, `scripts/seed-*.ts`); no HTTP seed endpoint exists. Removed from design intent. |
+| Login rate-limit ownership (10 / 15 min / IP) | Phase 0 moves the limiter to a shared Postgres store (see §7); policy values stay as implemented until Phase 1 permission work. |
+
