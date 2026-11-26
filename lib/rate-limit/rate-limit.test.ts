@@ -71,12 +71,16 @@ describe("toResult", () => {
 
 describe("checkRateLimit (memory store)", () => {
   const original = process.env.RATE_LIMIT_STORE;
+  const now = new Date("2026-11-24T12:00:00.000Z").getTime();
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
     process.env.RATE_LIMIT_STORE = "memory";
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     if (original === undefined) delete process.env.RATE_LIMIT_STORE;
     else process.env.RATE_LIMIT_STORE = original;
   });
@@ -84,11 +88,10 @@ describe("checkRateLimit (memory store)", () => {
   it("allows exactly `limit` attempts per window, then blocks", async () => {
     const bucket = `test-${Math.random()}`;
     const options = { limit: 3, windowMs: 15 * MINUTE };
-    const now = new Date("2026-11-24T12:00:00.000Z").getTime();
 
     const results = [];
     for (let i = 0; i < 4; i++) {
-      results.push(await checkRateLimit(bucket, "ip", options, now));
+      results.push(await checkRateLimit(bucket, "ip", options));
     }
 
     expect(results.map((r) => r.allowed)).toEqual([true, true, true, false]);
@@ -99,10 +102,10 @@ describe("checkRateLimit (memory store)", () => {
   it("resets in the next window", async () => {
     const bucket = `test-${Math.random()}`;
     const options = { limit: 1, windowMs: MINUTE };
-    const now = new Date("2026-11-24T12:00:00.000Z").getTime();
 
-    expect((await checkRateLimit(bucket, "ip", options, now)).allowed).toBe(true);
-    expect((await checkRateLimit(bucket, "ip", options, now)).allowed).toBe(false);
-    expect((await checkRateLimit(bucket, "ip", options, now + MINUTE)).allowed).toBe(true);
+    expect((await checkRateLimit(bucket, "ip", options)).allowed).toBe(true);
+    expect((await checkRateLimit(bucket, "ip", options)).allowed).toBe(false);
+    vi.setSystemTime(now + MINUTE);
+    expect((await checkRateLimit(bucket, "ip", options)).allowed).toBe(true);
   });
 });

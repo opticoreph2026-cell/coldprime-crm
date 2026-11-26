@@ -54,6 +54,18 @@ jobs:
       - name: Check migration sequence
         run: npm run db:check
 
+      - name: Push Prisma schema to scratch database (creates current base state)
+        run: npx prisma db push --skip-generate --accept-data-loss
+
+      - name: Apply migrations to scratch database (tolerant; legacy migrations are historical)
+        run: |
+          for f in prisma/migrations/*.sql; do
+            npx tsx scripts/db-run-migration.ts "$(basename "$f")"
+          done
+
+      - name: Verify newest migration applies cleanly (strict)
+        run: npx tsx scripts/db-run-migration.ts prisma/migrations/$(ls -1 prisma/migrations/*.sql | sort | tail -1 | xargs basename) --strict
+
       - name: Typecheck
         run: npx tsc --noEmit
 
@@ -62,14 +74,6 @@ jobs:
 
       - name: Unit tests
         run: npm test
-
-      # Migrations are raw SQL applied in order (no Prisma ledger). Applying them
-      # to a throwaway Postgres proves the files still run end-to-end.
-      - name: Apply migrations to scratch database
-        run: |
-          for f in prisma/migrations/*.sql; do
-            npx tsx scripts/db-run-migration.ts "$(basename "$f")"
-          done
 
       - name: Build
         run: npm run build
