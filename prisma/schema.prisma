@@ -511,3 +511,21 @@ model RateLimit {
   @@index([expiresAt])
   @@map("RateLimit")
 }
+
+/// Event outbox: domain events emitted inside the same transaction as a
+/// business mutation, published exactly once by the outbox worker.
+model EventOutbox {
+  id         String   @id @default(cuid())
+  branchId   String   @map("branch_id")
+  eventType  String   @map("event_type")
+  payload    Json     @default("{}")
+  dedupeKey  String   @map("dedupe_key")
+  status     String   @default("pending") // pending | published | failed
+  createdAt  DateTime @default(now()) @map("created_at")
+  publishedAt DateTime? @map("published_at")
+
+  @@unique([dedupeKey])
+  @@index([status, createdAt])
+  @@index([branchId])
+  @@map("EventOutbox")
+}
