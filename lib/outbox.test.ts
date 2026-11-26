@@ -19,7 +19,7 @@ function fakePrisma(): {
   };
   const auditLog = { createCalls: [] as Array<{ data: unknown }> };
 
-  function buildTx() {
+  function buildTx(): any {
     return new Proxy(
       {},
       {
