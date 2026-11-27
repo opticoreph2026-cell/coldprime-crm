@@ -3,7 +3,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { LEAD_TYPES, LEAD_TYPE_STAGES } from "@/lib/enums";
 import type { Lead, CompanyOption } from "@/lib/types";
-import { PageHeader, ErrorBanner, EmptyRow, EmptyState, Pagination, SearchInput, Modal, ConfirmDialog } from "@/components/ui";
+import {
+  PageHeader,
+  ErrorBanner,
+  EmptyRow,
+  EmptyState,
+  Pagination,
+  SearchInput,
+  Modal,
+  ConfirmDialog,
+  Badge,
+  Button,
+} from "@/components/ui";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 
@@ -83,7 +94,10 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads();
-    fetch("/api/companies?limit=999").then((r) => r.json()).then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name })))).catch(console.error);
+    fetch("/api/companies?limit=999")
+      .then((r) => r.json())
+      .then((d) => setCompanies((d.data || []).map((c: CompanyOption) => ({ id: c.id, name: c.name }))))
+      .catch(console.error);
   }, [fetchLeads]);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -112,9 +126,9 @@ export default function LeadsPage() {
         title="Leads"
         subtitle={`${total} leads total`}
         actions={
-          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+          <Button variant="primary" onClick={() => setShowForm(true)}>
             + New Lead
-          </button>
+          </Button>
         }
       />
 
@@ -122,18 +136,25 @@ export default function LeadsPage() {
 
       <Modal open={showForm} title="New Lead" onClose={() => setShowForm(false)}>
         <form onSubmit={handleCreate}>
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="text-xs font-medium block mb-1">Company</label><select className="w-full" value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}><option value="">Select company</option>{companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-            <div><label className="text-xs font-medium block mb-1">Lead Type</label><select className="w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
-            <div><label className="text-xs font-medium block mb-1">Source</label><input className="w-full" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
-            <div><label className="text-xs font-medium block mb-1">Industry</label><input className="w-full" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
-            <div><label className="text-xs font-medium block mb-1">Priority</label><select className="w-full" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
-            <div><label className="text-xs font-medium block mb-1">Estimated Value</label><input type="number" className="w-full" value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0.00" /></div>
-            <div className="col-span-2"><label className="text-xs font-medium block mb-1">Notes</label><textarea rows={2} className="w-full" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-[11px] font-bold block mb-1 text-ink-muted">Company</label><select className="w-full border border-line rounded bg-white" value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}>
+              <option value="">Select company</option>
+              {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select></div>
+            <div><label className="text-[11px] font-bold block mb-1 text-ink-muted">Lead Type</label><select className="w-full border border-line rounded bg-white" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+              {LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
+            </select></div>
+            <div><label className="text-[11px] font-bold block mb-1 text-ink-muted">Source</label><input className="w-full border border-line rounded bg-white" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
+            <div><label className="text-[11px] font-bold block mb-1 text-ink-muted">Industry</label><input className="w-full border border-line rounded bg-white" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
+            <div><label className="text-[11px] font-bold block mb-1 text-ink-muted">Priority</label><select className="w-full border border-line rounded bg-white" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+              {PRIORITIES.map((p) => <option key={p}>{p}</option>)}
+            </select></div>
+            <div><label className="text-[11px] font-bold block mb-1 text-ink-muted">Estimated Value</label><input type="number" className="w-full border border-line rounded bg-white" value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0.00" /></div>
+            <div className="col-span-2"><label className="text-[11px] font-bold block mb-1 text-ink-muted">Notes</label><textarea rows={2} className="w-full border border-line rounded bg-white" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
-          <div className="mt-4 flex gap-2">
-            <button type="submit" className="btn btn-primary">Create Lead</button>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+          <div className="mt-3 flex gap-2">
+            <Button type="submit" variant="primary">Create Lead</Button>
+            <Button variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
           </div>
         </form>
       </Modal>
@@ -146,52 +167,62 @@ export default function LeadsPage() {
         onConfirm={handleDelete}
       />
 
-      <div className="flex gap-3 mb-4 flex-wrap">
+      <div className="mb-3 flex flex-wrap gap-2">
         <SearchInput placeholder="Search leads..." value={search} onChange={(v) => { setSearch(v); setPage(1); }} />
-        <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setStatusFilter(""); setPage(1); }}>
+        <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setStatusFilter(""); setPage(1); }} className="border border-line rounded bg-white text-[12px]">
           <option value="">All Types</option>
           {LEAD_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
         </select>
-        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
+        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="border border-line rounded bg-white text-[12px]">
           <option value="">All Statuses</option>
           {(typeFilter ? stagesFor(typeFilter) : statuses).map((s) => <option key={s}>{s}</option>)}
         </select>
       </div>
 
       <div className="page-scroll">
-      {!loading && leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
-        <EmptyState message="No leads yet — use + New Lead to create the first one." />
-      ) : (
-      <div className="bg-white border border-slate-200 overflow-hidden rounded-lg">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Company</th><th>Type</th><th>Source</th><th>Industry</th><th>Status</th><th>Priority</th><th>Next Follow-Up</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {leads.map((l) => (
-              <tr key={l.id}>
-                <td className="whitespace-nowrap">{new Date(l.dateAdded).toLocaleDateString("en-PH")}</td>
-                <td className="font-medium">{l.company?.name || "Walk-in"}</td>
-                <td><span className={`badge ${TYPE_BADGE[l.type] || "badge-gray"}`}>{TYPE_LABELS[l.type] || l.type}</span></td>
-                <td>{l.source || "-"}</td>
-                <td>{l.industry || "-"}</td>
-                <td>
-                  <select value={l.status} onChange={(e) => handleStatusChange(l.id, e.target.value)} className="px-1.5 py-0.5 text-xs">
-                    {stagesFor(l.type, l.status).map((s) => <option key={s}>{s}</option>)}
-                  </select>
-                </td>
-                <td><span className={`badge badge-${l.priority === "High" ? "red" : l.priority === "Low" ? "gray" : "blue"}`}>{l.priority}</span></td>
-                <td className="whitespace-nowrap">{l.nextFollowUp ? new Date(l.nextFollowUp).toLocaleDateString("en-PH") : "-"}</td>
-                <td>
-                  <button className="btn btn-ghost px-2 py-1 text-red-600" onClick={() => setDeleteTarget({ id: l.id, name: l.company?.name || "Walk-in" })}>Delete</button>
-                </td>
-              </tr>
-            ))}
-            {leads.length === 0 && <EmptyRow colSpan={9} message={loading ? "Loading…" : "No leads found"} />}
-          </tbody>
-        </table>
-      </div>
-      )}
+        {!loading && leads.length === 0 && !search && !debouncedSearch && !statusFilter && !typeFilter && !error ? (
+          <EmptyState message="No leads yet — use + New Lead to create the first one." />
+        ) : (
+          <div className="bg-white border border-line overflow-hidden rounded">
+            <table className="text-[12px]">
+              <thead>
+                <tr>
+                  <th className="text-ink-muted font-bold text-left pb-2">Date</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Company</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Type</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Source</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Industry</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Status</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Priority</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Next Follow-Up</th>
+                  <th className="text-ink-muted font-bold text-left pb-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((l) => (
+                  <tr key={l.id} className="border-b border-[#ecebea]">
+                    <td className="py-2 whitespace-nowrap text-ink-muted">{new Date(l.dateAdded).toLocaleDateString("en-PH")}</td>
+                    <td className="py-2 font-medium text-ink">{l.company?.name || "Walk-in"}</td>
+                    <td className="py-2"><Badge color="blue">{TYPE_LABELS[l.type] || l.type}</Badge></td>
+                    <td className="py-2 text-ink-muted">{l.source || "—"}</td>
+                    <td className="py-2 text-ink-muted">{l.industry || "—"}</td>
+                    <td className="py-2">
+                      <select value={l.status} onChange={(e) => handleStatusChange(l.id, e.target.value)} className="border border-line rounded bg-white text-[11px] px-1.5 py-0.5">
+                        {stagesFor(l.type, l.status).map((s) => <option key={s}>{s}</option>)}
+                      </select>
+                    </td>
+                    <td className="py-2"><Badge color={l.priority === "High" ? "red" : l.priority === "Low" ? "gray" : "blue"}>{l.priority}</Badge></td>
+                    <td className="py-2 whitespace-nowrap text-ink-muted">{l.nextFollowUp ? new Date(l.nextFollowUp).toLocaleDateString("en-PH") : "—"}</td>
+                    <td className="py-2">
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget({ id: l.id, name: l.company?.name || "Walk-in" })}>Delete</Button>
+                    </td>
+                  </tr>
+                ))}
+                {leads.length === 0 && <EmptyRow colSpan={9} message={loading ? "Loading…" : "No leads found"} />}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {total > 50 && (
