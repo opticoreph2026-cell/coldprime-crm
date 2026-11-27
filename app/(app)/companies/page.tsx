@@ -211,12 +211,9 @@ export default function CompaniesPage() {
     return lines[0] + (lines.length > 1 ? ` +${lines.length - 1}` : "");
   };
 
-  const inputStyle = { width: "100%" };
-  const labelStyle = { fontSize: "0.75rem", fontWeight: 500 as const, display: "block" as const, marginBottom: 4 };
-
   return (
-<div className="page">
-        <PageHeader
+    <div className="page">
+      <PageHeader
           title="Companies"
           subtitle={`${total} potential clients total`}
           actions={
@@ -232,7 +229,7 @@ export default function CompaniesPage() {
         />
 
         {replyMsg && (
-          <div className={`${`mb-4 ${replyMsg.ok ? "bg-green-100 text-green-800" : "bg-red-50 text-red-600"}`} p-3 rounded-lg`} style={{ border: `1px solid ${replyMsg.ok ? "#bbf7d0" : "#fecaca"}` }}>
+          <div className={`mb-4 p-3 rounded-lg ${replyMsg.ok ? "bg-green-100 text-green-800 border-[#bbf7d0]" : "bg-red-50 text-red-600 border-[#fecaca]"}`}>
             {replyMsg.text}
           </div>
         )}
@@ -246,16 +243,16 @@ export default function CompaniesPage() {
       <Modal open={showForm} title={editingId ? "Edit Company" : "New Company"} onClose={() => { setShowForm(false); setEditingId(null); }}>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
-            <div><label style={labelStyle}>Company Name *</label><input required style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><label style={labelStyle}>Client Type</label><select style={inputStyle} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
-            <div><label style={labelStyle}>Industry</label><select style={inputStyle} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{(industryList.includes(form.industry) ? industryList : [form.industry, ...industryList]).map((i) => <option key={i}>{i}</option>)}</select></div>
-            <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div><label style={labelStyle}>Website</label><input style={inputStyle} value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-            <div className="col-span-2"><label style={labelStyle}>Address</label><input style={inputStyle} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Company Name *</label><input required className="w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Client Type</label><select className="w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{COMPANY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}</select></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Industry</label><select className="w-full" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })}>{(industryList.includes(form.industry) ? industryList : [form.industry, ...industryList]).map((i) => <option key={i}>{i}</option>)}</select></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Email</label><input type="email" className="w-full" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Website</label><input className="w-full" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+            <div className="col-span-2"><label className="text-[0.75rem] font-medium block mb-[4px]">Address</label><input className="w-full" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
 
             {/* Mobile Numbers */}
             <div className="col-span-2">
-              <label style={{ ...labelStyle, marginBottom: 8, display: "block" }}>Mobile Numbers</label>
+              <label className="text-[0.75rem] font-medium block mb-[8px]">Mobile Numbers</label>
               {mobiles.map((val, i) => (
                 <div key={i} className="flex gap-2 mb-1.5">
                   <input className="flex-1" value={val} onChange={(e) => updateMobile(i, e.target.value)} placeholder="0917-123-4567" />
@@ -271,7 +268,7 @@ export default function CompaniesPage() {
 
             {/* Landline Numbers */}
             <div className="col-span-2">
-              <label style={{ ...labelStyle, marginBottom: 8, display: "block" }}>Landline Numbers</label>
+              <label className="text-[0.75rem] font-medium block mb-[8px]">Landline Numbers</label>
               {landlines.map((val, i) => (
                 <div key={i} className="flex gap-2 mb-1.5">
                   <input className="flex-1" value={val} onChange={(e) => updateLandline(i, e.target.value)} placeholder="(032) 123-4567" />
@@ -285,9 +282,9 @@ export default function CompaniesPage() {
               )}
             </div>
 
-            <div><label style={labelStyle}>Status</label><select style={inputStyle} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
-            <div><label style={labelStyle}>Source</label><input style={inputStyle} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
-            <div className="col-span-2"><label style={labelStyle}>Notes</label><textarea rows={2} style={inputStyle} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Status</label><select className="w-full" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div><label className="text-[0.75rem] font-medium block mb-[4px]">Source</label><input className="w-full" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Referral, Website, Walk-in..." /></div>
+            <div className="col-span-2"><label className="text-[0.75rem] font-medium block mb-[4px]">Notes</label><textarea rows={2} className="w-full" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <div className="mt-4 flex gap-2">
             <button type="submit" className="btn btn-primary">{editingId ? "Update" : "Create"}</button>

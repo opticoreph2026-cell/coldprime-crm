@@ -153,7 +153,7 @@ export function SearchInput({ value, onChange, placeholder, width = 300 }: {
   placeholder?: string;
   width?: number | string;
 }) {
-  return <input placeholder={placeholder} style={{ width }} value={value} onChange={(e) => onChange(e.target.value)} />;
+  return <input placeholder={placeholder} className={`w-[${typeof width === "number" ? width : width}px]`} value={value} onChange={(e) => onChange(e.target.value)} />;
 }
 
 export function FormField({ label, required, span, children }: {
@@ -163,7 +163,7 @@ export function FormField({ label, required, span, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div style={span === 2 ? { gridColumn: "span 2" } : undefined}>
+    <div className={span === 2 ? "col-span-2" : undefined}>
       <label className="text-xs font-medium block mb-1">
         {label}{required && " *"}
       </label>
@@ -189,13 +189,14 @@ export function Badge({ color = "blue", title, children }: {
   return <span className={`badge ${BADGE_COLORS[color] || BADGE_COLORS.gray}`} title={title}>{children}</span>;
 }
 
-export function Card({ children, padding = 24, style }: {
+export function Card({ children, padding = 24, className = "" }: {
   children: React.ReactNode;
   padding?: number;
-  style?: React.CSSProperties;
+  className?: string;
 }) {
+  const pad = `${padding}px`;
   return (
-    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding, ...style }}>
+    <div className={`bg-white border border-line rounded px-[${pad}] py-[${pad}] ${className}`}>
       {children}
     </div>
   );

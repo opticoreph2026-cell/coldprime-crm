@@ -42,7 +42,7 @@ function SetupChecklist({ stats }: { stats: DashboardStats }) {
   const dismiss = () => { localStorage.setItem("cp_setup_dismissed", "1"); setDismissed(true); };
 
   return (
-    <Card style={{ marginBottom: 24 }}>
+    <Card className="mb-[24px]">
       <div className="flex justify-between items-center mb-1">
         <h2 className="text-base font-semibold">Get started — {doneCount}/{steps.length} done</h2>
         <button className="btn btn-ghost px-2 py-1 text-xs" onClick={dismiss}>Dismiss</button>
