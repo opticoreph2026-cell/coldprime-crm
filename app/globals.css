@@ -1,19 +1,34 @@
 @import "tailwindcss";
 
+/* Coldprime design tokens (Lightning-style shell).
+   Deliberately our own names — no SLDS class names or Salesforce assets. */
+@theme {
+  --color-brand: #0176d3;
+  --color-brand-dark: #014486;
+  --color-brand-light: #eef4ff;
+  --color-shell: #f3f3f3;
+  --color-line: #dddbda;
+  --color-ink: #181818;
+  --color-ink-muted: #5c5c5c;
+  --color-success: #2e844a;
+  --color-warning: #a96404;
+  --color-danger: #ba0517;
+}
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f3f3f3;
+  --foreground: #181818;
   --card: #ffffff;
-  --card-foreground: #0f172a;
-  --primary: #1e40af;
+  --card-foreground: #181818;
+  --primary: #0176d3;
   --primary-foreground: #ffffff;
-  --secondary: #e2e8f0;
-  --secondary-foreground: #334155;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --ring: #3b82f6;
-  --destructive: #ef4444;
+  --secondary: #ffffff;
+  --secondary-foreground: #0176d3;
+  --muted: #f3f3f3;
+  --muted-foreground: #5c5c5c;
+  --border: #dddbda;
+  --ring: #0176d3;
+  --destructive: #ba0517;
 }
 
 /* App styles live in the components layer so Tailwind utilities (later layer)
@@ -22,7 +37,8 @@
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px;
   }
 
   /* Fixed app shell: the document never scrolls.
@@ -33,7 +49,7 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    padding: 24px;
+    padding: 20px;
   }
 
   .page-center {
@@ -56,49 +72,70 @@
   table {
     width: 100%;
     border-collapse: collapse;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
   }
 
   th, td {
     padding: 0.5rem 0.75rem;
     text-align: left;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #ecebea;
   }
 
   th {
-    background: var(--muted);
-    font-weight: 600;
-    font-size: 0.75rem;
+    background: #fafaf9;
+    font-weight: 700;
+    font-size: 0.6875rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted-foreground);
+    letter-spacing: 0.045em;
+    color: #5c5c5c;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr:hover {
+    background: #fafaf9;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 
   input, select, textarea {
-    padding: 0.5rem 0.75rem;
+    padding: 0.375rem 0.625rem;
     border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
     background: var(--card);
+    color: var(--foreground);
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
 
   input:focus, select:focus, textarea:focus {
     border-color: var(--ring);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 2px rgba(1, 118, 211, 0.18);
   }
 
   .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    border: none;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 
   .btn-primary {
@@ -106,17 +143,18 @@
     color: var(--primary-foreground);
   }
 
-  .btn-primary:hover {
-    background: #1e3a8a;
+  .btn-primary:hover:not(:disabled) {
+    background: var(--brand-dark, #014486);
   }
 
   .btn-secondary {
-    background: var(--secondary);
-    color: var(--secondary-foreground);
+    background: #fff;
+    color: var(--primary);
+    border-color: var(--border);
   }
 
-  .btn-secondary:hover {
-    background: #cbd5e1;
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--muted);
   }
 
   .btn-danger {
@@ -124,40 +162,170 @@
     color: white;
   }
 
-  .btn-danger:hover {
-    background: #dc2626;
+  .btn-danger:hover:not(:disabled) {
+    background: #970312;
   }
 
   .btn-ghost {
     background: transparent;
-    color: var(--muted-foreground);
+    color: var(--primary);
   }
 
-  .btn-ghost:hover {
+  .btn-ghost:hover:not(:disabled) {
     background: var(--muted);
   }
 
   .btn-sm {
-    padding: 0.25rem 0.625rem;
+    padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
-    gap: 0.375rem;
+    gap: 0.25rem;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.125rem 0.625rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: nowrap;
   }
 
-  .badge-blue { background: #dbeafe; color: #1e40af; }
-  .badge-green { background: #dcfce7; color: #166534; }
-  .badge-yellow { background: #fef9c3; color: #854d0e; }
-  .badge-red { background: #fee2e2; color: #991b1b; }
-  .badge-gray { background: #f1f5f9; color: #475569; }
-  .badge-purple { background: #f3e8ff; color: #6b21a8; }
+  .badge-blue { background: #eef4ff; color: #014486; }
+  .badge-green { background: #ebf7e6; color: #1d6b34; }
+  .badge-yellow { background: #fdf3e1; color: #8a4b04; }
+  .badge-red { background: #fdecec; color: #970312; }
+  .badge-gray { background: #f3f3f3; color: #5c5c5c; }
+  .badge-purple { background: #f3eaff; color: #5c1f99; }
+
+  /* ---------- App shell ---------- */
+
+  .shell-icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    min-width: 2rem;
+    padding: 0 0.375rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: #5c5c5c;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .shell-icon-btn:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .shell-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+    color: #5c5c5c;
+    border-bottom: 3px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .shell-tab:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .shell-tab-active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+  }
+
+  .shell-menu-label {
+    padding: 0.375rem 0.75rem 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5c5c5c;
+  }
+
+  .shell-menu-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    background: transparent;
+    font-size: 0.8125rem;
+    color: var(--foreground);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .shell-menu-item:hover {
+    background: var(--muted);
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ---------- Command palette (cmdk) ---------- */
+
+  [cmdk-overlay] {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(24, 24, 24, 0.45);
+  }
+
+  [cmdk-dialog] {
+    position: fixed;
+    left: 50%;
+    top: 10vh;
+    z-index: 81;
+    width: min(640px, calc(100vw - 32px));
+    transform: translateX(-50%);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.24);
+  }
+
+  .cp-palette [cmdk-group-heading] {
+    padding: 0.5rem 0.625rem 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5c5c5c;
+  }
+
+  .cp-palette [cmdk-item] {
+    color: var(--foreground);
+  }
+
+  .cp-palette [cmdk-item][data-selected="true"] {
+    background: #eef4ff;
+    color: #014486;
+  }
+
+  .cp-palette [cmdk-item][data-selected="true"] svg,
+  .cp-palette [cmdk-item][data-selected="true"] .cp-item-meta {
+    color: var(--primary);
+  }
 
   /* Phones/tablets: tables scroll horizontally instead of overflowing the page */
   @media (max-width: 768px) {
